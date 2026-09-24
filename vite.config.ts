@@ -8,7 +8,7 @@ export default defineConfig({
           name: 'debug',
           setupFiles: [],
           include: ['src/**/*.{debug}.{js,ts}'],
-          exclude: ['node_modules/**', 'dist/**'],
+          exclude: ['node_modules/**', 'dist/**', 'src/__legacy/**'],
         },
       },
       {
@@ -18,11 +18,11 @@ export default defineConfig({
           name: 'unit',
           setupFiles: [],
           include: ['src/**/*.{test,unit.test,spec,unit.spec}.{js,ts}'],
-          exclude: ['node_modules/**', 'dist/**'],
+          exclude: ['node_modules/**', 'dist/**', 'src/__legacy/**'],
           typecheck: {
             enabled: true,
             include: ['src/**/*.{test,unit.test,spec,unit.spec}.ts'],
-            exclude: ['node_modules/**', 'dist/**'],
+            exclude: ['node_modules/**', 'dist/**', 'src/__legacy/**'],
             tsconfig: './tsconfig.test.json',
             // Vitest 5.0.1 documents, but does not apply, a default for this, but consumes it unguarded when spawning the checker
             spawnTimeout: 10000,

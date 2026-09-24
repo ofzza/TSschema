@@ -35,7 +35,8 @@ export default ts.config(
     files: ['src/*.ts'],
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        project: './tsconfig.test.json',
+        tsconfigRootDir: import.meta.dirname,
         extraFileExtensions: [],
         parser: ts.parser,
       },

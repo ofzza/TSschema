@@ -39,7 +39,7 @@ src/
   index.ts                 Barrel, currently a placeholder exporting nothing
   index.test.ts            Placeholder test
   __legacy/                Previous implementation (OntologyService, Infer* utility types, runtime reflection) and its tests.
-                           GITIGNORED and excluded from both tsconfigs - local reference only, never committed or built
+                           GITIGNORED and excluded from both tsconfigs and both Vitest projects - local reference only, never committed, built or tested
 tsconfig.json              Build config. EXCLUDES *.test.ts / *.spec.ts and src/__legacy
 tsconfig.test.json         Typecheck config. Includes everything but src/__legacy, emits nothing
 vite.config.ts             Two Vitest projects: debug, unit
@@ -113,7 +113,8 @@ Enforced by `ci:prettier` and `ci:eslint`, both of which only look at `src` — 
 ## Gotchas and known issues
 
 - **Relative imports in `src/` must carry an explicit `.js` extension.** `moduleResolution: bundler` lets TSC accept `./module`, and TSC does not rewrite specifiers on emit — so the extensionless form ships to `dist/` and Node's ESM resolver rejects it (`ERR_UNSUPPORTED_DIR_IMPORT`). Write `./module/index.js`.
-- **`src/__legacy/` is still run by `npm test` locally.** It is gitignored and excluded from both tsconfigs (so it is neither built nor type checked, and ESLint skips it via the `.gitignore` import), but `vite.config.ts` does not exclude it — its `*.unit.test.ts` files match the `unit` glob and are executed by the runtime pool. CI never sees them because they are not committed, so local and CI test counts differ. Add `'src/__legacy/**'` to the `unit` project's `exclude`, or delete the directory once it has been ported.
+- **`src/__legacy/` must stay excluded everywhere.** Its tests import a generated `../models/ndr_ontology.js` that does not exist here, so they fail if collected. It is kept out of the build and type check by both tsconfigs, out of ESLint by the `.gitignore` import, and out of Vitest by `'src/__legacy/**'` in every project's `exclude` (and `typecheck.exclude`). Keep all of those in place when touching any of these configs, or delete the directory once it has been ported.
+- **ESLint's typed-parser block uses `project: './tsconfig.test.json'`, not `projectService: true`.** The project service resolves the nearest `tsconfig.json`, which excludes test files, so any test matched by the block's `files: ['src/*.ts']` (e.g. `src/index.test.ts`) fails with "was not found by the project service". `tsconfig.test.json` covers all of `src/`.
 - **Never use `npm ci --ignore-scripts` here.** `unrs-resolver` (`postinstall`) and `@parcel/watcher` (`install`) rely on their install hooks to link native bindings; skipping them risks breaking ESLint. The CI workflow uses plain `npm ci` for this reason.
 - **`prepare` builds during install**, so `npm ci` compiles once and `ci:build` compiles again. The duplicate build costs about a second and is accepted.
 - **The real Node floor is 22.13.0 / 24.0.0**, not the bare major versions — imposed by `vitest@5` (`^22.12.0 || ^24.0.0 || >=26.0.0`), `vite@8` (`^20.19.0 || >=22.12.0`) and `eslint-visitor-keys@5` (`^22.13.0 || >=24`). Node 20 is not supported. `actions/setup-node` with `node-version: 22` resolves to the latest 22.x and satisfies this; a pinned older patch would not. There is no `engines` field declaring this.
