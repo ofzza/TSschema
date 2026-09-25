@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="UI tests" tests="10" failures="0" errors="0" time="0.004855761">
+    <testsuite name="src/types/TSSchema.test.ts" timestamp="2026-09-25T09:20:58.959Z" hostname="OfzzaXPS" tests="2" failures="0" errors="0" skipped="0" time="0.002323199">
+        <testcase classname="src/types/TSSchema.test.ts" name="TSSchema &gt; UnwrapJSONSchemaWrapper" time="0.001119507">
+        </testcase>
+        <testcase classname="src/types/TSSchema.test.ts" name="TSSchema &gt; TSSchema" time="0.000202634">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/types/TSSchema.test.ts" timestamp="2026-09-25T09:20:58.961Z" hostname="OfzzaXPS" tests="2" failures="0" errors="0" skipped="0" time="0">
+        <testcase classname="src/types/TSSchema.test.ts" name="TSSchema &gt; UnwrapJSONSchemaWrapper" time="0">
+        </testcase>
+        <testcase classname="src/types/TSSchema.test.ts" name="TSSchema &gt; TSSchema" time="0">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/types/TSSchemaDefinition.test.ts" timestamp="2026-09-25T09:20:58.963Z" hostname="OfzzaXPS" tests="3" failures="0" errors="0" skipped="0" time="0.002532562">
+        <testcase classname="src/types/TSSchemaDefinition.test.ts" name="TSSchemaDefinition &gt; UnwrapJSONSchemaDefinitionWrapper" time="0.001143161">
+        </testcase>
+        <testcase classname="src/types/TSSchemaDefinition.test.ts" name="TSSchemaDefinition &gt; TSSchemaDefinitionName" time="0.00021893">
+        </testcase>
+        <testcase classname="src/types/TSSchemaDefinition.test.ts" name="TSSchemaDefinition &gt; TSSchemaDefinition" time="0.000142818">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/types/TSSchemaDefinition.test.ts" timestamp="2026-09-25T09:20:58.964Z" hostname="OfzzaXPS" tests="3" failures="0" errors="0" skipped="0" time="0">
+        <testcase classname="src/types/TSSchemaDefinition.test.ts" name="TSSchemaDefinition &gt; UnwrapJSONSchemaDefinitionWrapper" time="0">
+        </testcase>
+        <testcase classname="src/types/TSSchemaDefinition.test.ts" name="TSSchemaDefinition &gt; TSSchemaDefinitionName" time="0">
+        </testcase>
+        <testcase classname="src/types/TSSchemaDefinition.test.ts" name="TSSchemaDefinition &gt; TSSchemaDefinition" time="0">
+        </testcase>
+    </testsuite>
+</testsuites>

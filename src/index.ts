@@ -1,2 +1,1 @@
-type Test = undefined;
-const _test: Test = undefined;
+export * from './types/index.js';

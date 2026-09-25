@@ -4,7 +4,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "declaration": true,
-    "rootDir": "src",
+    "rootDir": "./",
     "outDir": "dist",
     "strict": true,
     "isolatedModules": true,
@@ -13,7 +13,9 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "$lib": ["./src"],
-      "$lib/*": ["./src/*"]
+      "$lib/*": ["./src/*"],
+      "$res": ["./res"],
+      "$res/*": ["./res/*"]
     }
   },
   "include": ["src/*.ts", "src/**/*.ts", "src/*.json", "src/**/*.json"],
