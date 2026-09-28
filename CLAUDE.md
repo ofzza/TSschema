@@ -77,7 +77,7 @@ Vitest, with `describe`/`it`/`expect` imported explicitly (`globals` is not enab
 
 ### Type level assertions
 
-This library is mostly utility types, which have no runtime behaviour to unit test — they are kept honest by compile-time assertions. This repo defines no assertion types of its own; use the ones from the sibling `@ofzza/std-ts` (`AssertTypeEquality`, `AssertTypeInequality`, `AssertTypeAssignable`, `AssertTypeUnassignable`), which resolve to `true` when they hold and `never` when they don't.
+This library is mostly utility types, which have no runtime behaviour to unit test — they are kept honest by compile-time assertions. This repo defines no assertion types of its own; use the ones from the sibling `@ofzza/TSstd` (`AssertTypeEquality`, `AssertTypeInequality`, `AssertTypeAssignable`, `AssertTypeUnassignable`), which resolve to `true` when they hold and `never` when they don't.
 
 **Consume an assertion by assigning `true` to it — never through a generic constraint.** `never` is assignable to everything, so `never extends true` is `true` and a constraint like `<T extends true>` is satisfied by a _failing_ assertion exactly as happily as by a passing one. Assigning a value is the only sound discriminator, because nothing is assignable to `never`.
 
