@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/std-ts';
+import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/TSstd';
 import type { TSSchemaDefinitionIsEnum } from './TSSchemaDefinitionEnum';
 
 import type { default as schoolJsonSchema } from '../../res/school';

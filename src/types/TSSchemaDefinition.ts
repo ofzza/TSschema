@@ -1,5 +1,5 @@
 /**
- * Typescript utilities for type inference from a JSON schema
+ * Typescript utilities for type inference from a JSON schema definitions
  */
 
 import type { JSONSchema7 } from './JSONSchema';

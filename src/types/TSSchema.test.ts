@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/std-ts';
+import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/TSstd';
 import type { JSONSchema7 } from './JSONSchema';
 import type { UnwrapJSONSchemaWrapper, TSSchema } from './TSSchema';
 
