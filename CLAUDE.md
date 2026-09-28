@@ -21,7 +21,7 @@ Any code sample added to `README.md` must be verified against `tsc` before being
 
 ## Project
 
-`@ofzza/jsonschema-reflect-ts` — helps generate TS data models, provides TS utility types for deep type inference and provides TS runtime utilities for type reflection, all based off of a JSON schema. MIT, published to NPM, built from `src/` to `dist/`.
+`@ofzza/TSschema` — helps generate TS data models, provides TS utility types for deep type inference and provides TS runtime utilities for type reflection, all based off of a JSON schema. MIT, published to NPM, built from `src/` to `dist/`.
 
 - **ESM only** (`"type": "module"`). `main` is `dist/index.js`, `types` is `dist/index.d.ts`.
 - **No public API yet.** `src/index.ts` is a placeholder that exports nothing, and `src/index.test.ts` a placeholder test. The previous implementation lives in the gitignored `src/__legacy/` (see [Layout](#layout)) as reference material while the library is rebuilt.

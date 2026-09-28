@@ -1,4 +1,4 @@
-# jsonschema-reflect-ts
+# TSschema
 
 Helps generate TS data models, provides TS utility types for deep type inference and provides TS runtime utilities for type reflection, all based off of a JSON schema.
 
@@ -6,17 +6,17 @@ Helps generate TS data models, provides TS utility types for deep type inference
 
 Jump to section:
 
-- [Get jsonschema-reflect-ts](#get-jsonschema-reflect-ts)
+- [Get TSschema](#get-TSschema)
 - [Usage](#usage)
 - [Development](#development)
 - [Contributing](#contributing)
 
-# Get jsonschema-reflect-ts
+# Get TSschema
 
-To start using `jsonschema-reflect-ts` in your project, simply install it from NPM by running the following in your terminal:
+To start using `TSschema` in your project, simply install it from NPM by running the following in your terminal:
 
 ```sh
-$ npm install @ofzza/jsonschema-reflect-ts --save
+$ npm install @ofzza/TSschema --save
 ```
 
 # Usage

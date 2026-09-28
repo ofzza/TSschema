@@ -1,14 +1,14 @@
 {
-  "name": "@ofzza/jsonschema-reflect-ts",
-  "version": "1.0.0",
+  "name": "@ofzza/TSschema",
+  "version": "0.0.1",
   "description": "Helps generate TS data models, provides TS utility types for deep type inference and provides TS runtime utilities for type reflection, all based off of a JSON schema",
-  "homepage": "https://github.com/ofzza/jsonschema-reflect-ts#readme",
+  "homepage": "https://github.com/ofzza/TSschema#readme",
   "bugs": {
-    "url": "https://github.com/ofzza/jsonschema-reflect-ts/issues"
+    "url": "https://github.com/ofzza/TSschema/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ofzza/jsonschema-reflect-ts.git"
+    "url": "git+https://github.com/ofzza/TSschema.git"
   },
   "license": "MIT",
   "author": "ofzza",
