@@ -3,7 +3,7 @@
  * a JSON schema as a constant, certain properties need to be optionally read-only.
  */
 
-import type { JSONSchema7 as OriginalJSONSchema7, JSONSchema7Definition as OriginalJSONSchema7Definition } from 'json-schema';
+import type { JSONSchema7 as OriginalJSONSchema7 } from 'json-schema';
 
 type DeepOptionallyReadOnly<T> = {
   readonly [K in keyof T]?: DeepOptionallyReadOnly<T[K]>;

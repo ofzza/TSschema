@@ -4,6 +4,7 @@
 
 import type { JSONSchema7 } from './JSONSchema';
 import type { JSONSchemaDefinitionModelWrapper, UnwrapJSONSchemaDefinitionModelWrapper } from './TSSchemaDefinitionModel';
+import { JSONSchemaDefinitionValueWrapper, TSSchemaDefinitionValueType, UnwrapJSONSchemaDefinitionValueWrapper } from './TSSchemaDefinitionValue';
 
 /**
  * Provides the type for the name of a JSON schema definition model property from within the JSON schema
@@ -14,21 +15,19 @@ export type TSSchemaDefinitionModelPropertyName<TJSONSchema extends JSONSchema7 
 /**
  * Wrapper type for a JSON schema model property, allowing type inference from the schema itself.
  */
-export type JSONSchemaDefinitionModelPropertyWrapper<TJSONSchema extends JSONSchema7 = JSONSchema7> = {
-  __property: TJSONSchema;
-};
+export type JSONSchemaDefinitionModelPropertyWrapper<TJSONSchema extends JSONSchema7 = JSONSchema7> = JSONSchemaDefinitionValueWrapper<TJSONSchema>;
 /**
  * Unwraps a JSON schema model property wrapper to obtain the original JSON schema model property type.
  */
 export type UnwrapJSONSchemaDefinitionModelPropertyWrapper<TJSONSchema extends JSONSchema7 | JSONSchemaDefinitionModelPropertyWrapper> =
-  TJSONSchema extends JSONSchemaDefinitionModelPropertyWrapper<infer T> ? T : TJSONSchema;
+  UnwrapJSONSchemaDefinitionValueWrapper<TJSONSchema>;
 
 /**
  * Provides a type-safe wrapper around a JSON schema definition model property for TypeScript type inference.
  */
 export type TSSchemaDefinitionModelProperty<
   TJSONSchema extends JSONSchema7 | JSONSchemaDefinitionModelWrapper,
-  TName extends TSSchemaDefinitionModelPropertyName<TJSONSchema> | undefined = undefined,
+  TName extends TSSchemaDefinitionModelPropertyName<TJSONSchema> | undefined = undefined, // FIXME: Support passing a path instead of property name
 > =
   UnwrapJSONSchemaDefinitionModelWrapper<TJSONSchema> extends infer T
     ? T extends { properties: Record<PropertyKey, unknown> }
@@ -41,3 +40,9 @@ export type TSSchemaDefinitionModelProperty<
           : never
       : never // Provided JSON schema must contain properties
     : never;
+
+/**
+ * Infers model property type from JSON schema model property wrapper
+ */
+export type TSSchemaDefinitionModelPropertyType<TJSONSchema extends JSONSchema7 | JSONSchemaDefinitionModelPropertyWrapper> =
+  TSSchemaDefinitionValueType<TJSONSchema>;

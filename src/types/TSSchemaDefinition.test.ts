@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/TSstd';
-import type { JSONSchema7 } from './JSONSchema';
 import type { TSSchema } from './TSSchema';
 import type { TSSchemaDefinitionName, TSSchemaDefinition } from './TSSchemaDefinition';
-import type { UnwrapJSONSchemaDefinitionEnumWrapper } from './TSSchemaDefinitionEnum';
+import type { UnwrapJSONSchemaDefinitionValueWrapper } from './TSSchemaDefinitionValue';
 import type { UnwrapJSONSchemaDefinitionModelWrapper } from './TSSchemaDefinitionModel';
+
+// FIXME: Append enum handling tests on top of Value and Model tests
 
 import type { default as schoolJsonSchema } from '../../res/school';
 type SchoolJsonSchema = typeof schoolJsonSchema;
@@ -63,11 +64,11 @@ describe('TSSchemaDefinition', () => {
   });
 
   it('UnwrapJSONSchemaDefinitionEnumWrapper', () => {
-    type UnwrappedAssessmentKindDefinition = UnwrapJSONSchemaDefinitionEnumWrapper<AssessmentKindJsonSchema>;
+    type UnwrappedAssessmentKindDefinition = UnwrapJSONSchemaDefinitionValueWrapper<AssessmentKindJsonSchema>;
     //   ^?
-    type UnwrappedAssessmentKindDefinitionWrapper = UnwrapJSONSchemaDefinitionEnumWrapper<TSSchemaDefinition<AssessmentKindJsonSchema>>;
+    type UnwrappedAssessmentKindDefinitionWrapper = UnwrapJSONSchemaDefinitionValueWrapper<TSSchemaDefinition<AssessmentKindJsonSchema>>;
     //   ^?
-    type UnwrappedSchoolDefinitionAssessmentKindDefinitionWrapper = UnwrapJSONSchemaDefinitionEnumWrapper<
+    type UnwrappedSchoolDefinitionAssessmentKindDefinitionWrapper = UnwrapJSONSchemaDefinitionValueWrapper<
       TSSchemaDefinition<SchoolJsonSchema, 'AssessmentKind'>
     >;
     //   ^?
@@ -99,9 +100,9 @@ describe('TSSchemaDefinition', () => {
     //   ^?
 
     // TSSchema with a specific JSON schema should have that schema as its underlying type
-    expect(true satisfies AssertTypeEquality<AssessmentKindDefinition['__enum'], AssessmentKindJsonSchema>).toBe(true);
+    expect(true satisfies AssertTypeEquality<AssessmentKindDefinition['__value'], AssessmentKindJsonSchema>).toBe(true);
     // TSSchema with a specific JSON schema and provided definition name should extract a definition of that schema and have it as its underlying type
-    expect(true satisfies AssertTypeEquality<SchoolSchemaAssessmentKindDefinition['__enum'], AssessmentKindJsonSchema>).toBe(true);
+    expect(true satisfies AssertTypeEquality<SchoolSchemaAssessmentKindDefinition['__value'], AssessmentKindJsonSchema>).toBe(true);
 
     type AssessmentDefinition = TSSchemaDefinition<AssessmentJsonSchema>;
     //   ^?

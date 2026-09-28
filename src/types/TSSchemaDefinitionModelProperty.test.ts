@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { JSONSchema7 } from './JSONSchema';
 import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/TSstd';
 import type { TSSchemaDefinition } from './TSSchemaDefinition';
 import type {
@@ -52,11 +51,11 @@ describe('TSSchemaModel', () => {
     type AssessmentUnknownPropertyDefinition = TSSchemaDefinitionModelProperty<AssessmentJsonSchema>;
     //   ^?
     // Property name is mandatory
-    expect(true satisfies AssertTypeEquality<AssessmentUnknownPropertyDefinition['__property'], never>).toBe(true);
+    expect(true satisfies AssertTypeEquality<AssessmentUnknownPropertyDefinition['__value'], never>).toBe(true);
 
     type AssessmentIdPropertyDefinition = TSSchemaDefinitionModelProperty<AssessmentJsonSchema, 'id'>;
     //   ^?
     // TSSchema with a specific JSON schema model and provided model definition property name should extract a definition of that property and have it as its underlying type
-    expect(true satisfies AssertTypeEquality<AssessmentIdPropertyDefinition['__property'], AssessmentJsonSchema['properties']['id']>).toBe(true);
+    expect(true satisfies AssertTypeEquality<AssessmentIdPropertyDefinition['__value'], AssessmentJsonSchema['properties']['id']>).toBe(true);
   });
 });

@@ -2,9 +2,11 @@
  * Typescript utilities for type inference from a JSON schema definitions
  */
 
+// FIXME: Append enum handling on top of Value and Model schemas
+
 import type { JSONSchema7 } from './JSONSchema';
 import type { JSONSchemaWrapper, UnwrapJSONSchemaWrapper } from './TSSchema';
-import type { TSSchemaDefinitionIsEnum, JSONSchemaDefinitionEnumWrapper } from './TSSchemaDefinitionEnum';
+import type { TSSchemaDefinitionIsValue, JSONSchemaDefinitionValueWrapper } from './TSSchemaDefinitionValue';
 import type { TSSchemaDefinitionIsModel, JSONSchemaDefinitionModelWrapper } from './TSSchemaDefinitionModel';
 
 /**
@@ -23,8 +25,8 @@ export type TSSchemaDefinition<TJSONSchema extends JSONSchema7 | JSONSchemaWrapp
         ? never // If provided JSON schema, definition name is mandatory
         : TName extends keyof T['$defs']
           ? T['$defs'][TName] extends infer TDef extends JSONSchema7
-            ? TSSchemaDefinitionIsEnum<TDef> extends true // If JSON schema definition found by name, detect if Enum or Modal
-              ? JSONSchemaDefinitionEnumWrapper<TDef> // Return JSON Schema Enum definition
+            ? TSSchemaDefinitionIsValue<TDef> extends true // If JSON schema definition found by name, detect if Value or Modal
+              ? JSONSchemaDefinitionValueWrapper<TDef> // Return JSON Schema Value definition
               : TSSchemaDefinitionIsModel<TDef> extends true
                 ? JSONSchemaDefinitionModelWrapper<TDef> // Return JSON Schema Model definition
                 : never
@@ -32,8 +34,8 @@ export type TSSchemaDefinition<TJSONSchema extends JSONSchema7 | JSONSchemaWrapp
           : never
       : TName extends undefined // If JSON schema definition provided, no need to extract by name
         ? T extends JSONSchema7
-          ? TSSchemaDefinitionIsEnum<T> extends true // Detect if Enum or Modal
-            ? JSONSchemaDefinitionEnumWrapper<T> // Return JSON Schema Enum definition
+          ? TSSchemaDefinitionIsValue<T> extends true // Detect if Value or Modal
+            ? JSONSchemaDefinitionValueWrapper<T> // Return JSON Schema Value definition
             : TSSchemaDefinitionIsModel<T> extends true
               ? JSONSchemaDefinitionModelWrapper<T> // Return JSON Schema Model definition
               : never

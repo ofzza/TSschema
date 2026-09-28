@@ -9,6 +9,8 @@ type AssessmentJsonSchema = SchoolJsonSchema['$defs']['Assessment'];
 //   ^?
 type AssessmentKindJsonSchema = SchoolJsonSchema['$defs']['AssessmentKind'];
 //   ^?
+type ColorsEnumJsonSchema = { enum: ['red', 'amber', 'green'] };
+//   ^?
 
 describe('TSSchemaEnum', () => {
   it('Imported testing schema', () => {
@@ -20,8 +22,11 @@ describe('TSSchemaEnum', () => {
     //   ^?
     type AssessmentKindJsonSchemaDefinitionIsEnum = TSSchemaDefinitionIsEnum<AssessmentKindJsonSchema>;
     //   ^?
+    type ColorsEnumJsonSchemaDefinitionIsEnum = TSSchemaDefinitionIsEnum<ColorsEnumJsonSchema>;
+    //   ^?
 
     expect(true satisfies AssertTypeEquality<AssessmentJsonSchemaDefinitionIsEnum, false>).toBe(true);
-    expect(true satisfies AssertTypeEquality<AssessmentKindJsonSchemaDefinitionIsEnum, true>).toBe(true);
+    expect(true satisfies AssertTypeEquality<AssessmentKindJsonSchemaDefinitionIsEnum, false>).toBe(true);
+    expect(true satisfies AssertTypeEquality<ColorsEnumJsonSchemaDefinitionIsEnum, true>).toBe(true);
   });
 });

@@ -1,5 +1,5 @@
 /**
- * Typescript utilities for type inference from a JSON schema enum definitions
+ * Typescript utilities for type inference from a JSON schema model definitions
  */
 
 import type { JSONSchema7 } from './JSONSchema';
@@ -7,7 +7,7 @@ import type { JSONSchema7 } from './JSONSchema';
 /**
  * Determines if a given JSON schema definition represents a model. Returns `true` if it is a model, `false` otherwise.
  */
-export type TSSchemaDefinitionIsModel<TSchemaDefinition extends JSONSchema7> = TSchemaDefinition extends { properties: unknown } ? true : false;
+export type TSSchemaDefinitionIsModel<TSchemaDefinition extends JSONSchema7> = TSchemaDefinition extends { type: 'object'; properties: unknown } ? true : false;
 
 /**
  * Wrapper type for a JSON schema model, allowing type inference from the schema itself.
@@ -20,3 +20,9 @@ export type JSONSchemaDefinitionModelWrapper<TJSONSchema extends JSONSchema7 = J
  */
 export type UnwrapJSONSchemaDefinitionModelWrapper<TJSONSchema extends JSONSchema7 | JSONSchemaDefinitionModelWrapper> =
   TJSONSchema extends JSONSchemaDefinitionModelWrapper<infer T> ? T : TJSONSchema;
+
+/**
+ * Infers model type from JSON schema model wrapper
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export type TSSchemaDefinitionModelType<TJSONSchema extends JSONSchema7 | JSONSchemaDefinitionModelWrapper> = never; // FIXME: Implement type inference
