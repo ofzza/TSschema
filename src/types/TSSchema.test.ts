@@ -1,36 +1,47 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/TSstd';
-import type { JSONSchema7 } from './JSONSchema';
-import type { UnwrapJSONSchemaWrapper, TSSchema } from './TSSchema';
+import type { TSSchema, UnwrapJSONSchemaWrapper } from './TSSchema';
+
+// FIXME: Append enum handling tests on top of Value and Model tests
 
 import type { default as schoolJsonSchema } from '../../res/school';
-type SchoolJsonSchema = typeof schoolJsonSchema;
+import { JSONSchemaCollection } from './JSONSchema';
+type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
+//   ^?
+type JSONSchemaAssessmentModel = JSONSchemaSchoolCollection['$defs']['Assessment'];
 //   ^?
 
 describe('TSSchema', () => {
   it('Imported testing schema', () => {
-    expect(true satisfies AssertTypeInequality<SchoolJsonSchema, any>).toBe(true);
-  });
-
-  it('UnwrapJSONSchemaWrapper', () => {
-    type UnwrappedSchoolSchema = UnwrapJSONSchemaWrapper<SchoolJsonSchema>;
-    //   ^?
-    type UnwrappedSchoolSchemaWrapper = UnwrapJSONSchemaWrapper<TSSchema<SchoolJsonSchema>>;
-    //   ^?
-
-    // Unwrapping a JSON schema or a JSON schema wrapper should yield the same type
-    expect(true satisfies AssertTypeEquality<UnwrappedSchoolSchema, UnwrappedSchoolSchemaWrapper>).toBe(true);
+    expect(true satisfies AssertTypeInequality<JSONSchemaSchoolCollection, any>).toBe(true);
   });
 
   it('TSSchema', () => {
-    type DefaultSchoolSchema = TSSchema;
+    type AssessmentDefinition = TSSchema<JSONSchemaAssessmentModel>;
     //   ^?
-    type TSSchoolSchema = TSSchema<SchoolJsonSchema>;
+    type SchoolJsonSchemaCollectionAssessmentDefinition = TSSchema<JSONSchemaSchoolCollection, 'Assessment'>;
     //   ^?
 
-    // Default TSSchema should have JSONSchema7 as its underlying schema type
-    expect(true satisfies AssertTypeEquality<DefaultSchoolSchema['__schema'], JSONSchema7>).toBe(true);
-    // TSSchema with a specific JSON schema should have that schema as its underlying type
-    expect(true satisfies AssertTypeEquality<TSSchoolSchema['__schema'], SchoolJsonSchema>).toBe(true);
+    // Wrapping a JSON schema definition should yield the same internal definition as wrapping it by addressing it from collection by name
+    expect(true satisfies AssertTypeEquality<AssessmentDefinition['__definition'], SchoolJsonSchemaCollectionAssessmentDefinition['__definition']>).toBe(true);
+
+    // Wrapping a JSON schema definition directly will wrap it with a default parent collection type
+    expect(true satisfies AssertTypeEquality<AssessmentDefinition['__collection'], JSONSchemaCollection>).toBe(true);
+    // Wrapping a JSON schema definition by addressing it from collection by name will wrap it with a parent collection type
+    expect(true satisfies AssertTypeEquality<SchoolJsonSchemaCollectionAssessmentDefinition['__collection'], JSONSchemaSchoolCollection>).toBe(true);
+  });
+
+  it('UnwrapJSONSchemaWrapper', () => {
+    type UnwrappedAssessmentJsonSchema = UnwrapJSONSchemaWrapper<JSONSchemaAssessmentModel>;
+    //   ^?
+    type UnwrappedAssessmentJsonSchemaWrapper = UnwrapJSONSchemaWrapper<TSSchema<JSONSchemaAssessmentModel>>;
+    //   ^?
+
+    // Unwrapping a JSON schema definition or a JSON schema definition wrapper should yield the same type
+    expect(true satisfies AssertTypeEquality<UnwrappedAssessmentJsonSchema, UnwrappedAssessmentJsonSchemaWrapper>).toBe(true);
+  });
+
+  it('TSSchemaType', () => {
+    // FIXME: Implement type inference testing
   });
 });
