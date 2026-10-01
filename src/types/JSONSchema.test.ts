@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeAssignable, AssertTypeUnassignable, AssertTypeInequality } from '@ofzza/TSstd';
 import {
-  JSONSchemaFragmentArrayType,
-  JSONSchemaFragmentCollection,
-  JSONSchemaFragmentConst,
-  JSONSchemaFragmentEnum,
+  JSONSchemaArrayTypeFragment,
+  JSONSchemaCollection,
+  JSONSchemaConstFragment,
+  JSONSchemaEnumFragment,
   JSONSchemaFragmentIsArrayType,
   JSONSchemaFragmentIsCollection,
   JSONSchemaFragmentIsConst,
@@ -13,23 +13,23 @@ import {
   JSONSchemaFragmentIsNotCollection,
   JSONSchemaFragmentIsAllOfType,
   JSONSchemaFragmentIsPrimitiveType,
-  JSONSchemaFragmentModel,
-  JSONSchemaFragmentNotCollection,
-  JSONSchemaFragmentAllOfType,
+  JSONSchemaModelFragment,
+  JSONSchemaNotCollectionFragment,
+  JSONSchemaAllOfTypeFragment,
   JSONSchemaPrimitiveType,
-  JSONSchemaFragmentPrimitiveType,
+  JSONSchemaPrimitiveTypeFragment,
   JSONSchemaPrimitiveTypeFromName,
   JSONSchemaPrimitiveTypeName,
   JSONSchemaFragmentIsObjectType,
-  JSONSchemaFragmentObjectType,
-  JSONSchemaFragmentAnyOfType,
+  JSONSchemaObjectTypeFragment,
+  JSONSchemaAnyOfTypeFragment,
   JSONSchemaFragmentIsAnyOfType,
   JSONSchemaFragmentIsNotType,
-  JSONSchemaFragmentNotType,
+  JSONSchemaNotTypeFragment,
   JSONSchemaFragmentIsOneOfType,
-  JSONSchemaFragmentOneOfType,
+  JSONSchemaOneOfTypeFragment,
   JSONSchemaFragmentIsReference,
-  JSONSchemaFragmentReference,
+  JSONSchemaReferenceFragment,
 } from './JSONSchema';
 
 import type { default as schoolJsonSchema } from '../../res/school';
@@ -68,78 +68,89 @@ describe('JSONSchema', () => {
     it('Collection fragment', () => {
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsCollection<JSONSchemaSchoolCollection>, true>).toBe(true);
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsNotCollection<JSONSchemaSchoolCollection>, false>).toBe(true);
-      expect(true satisfies AssertTypeAssignable<JSONSchemaSchoolCollection, JSONSchemaFragmentCollection>).toBe(true);
-      expect(true satisfies AssertTypeUnassignable<JSONSchemaSchoolCollection, JSONSchemaFragmentNotCollection>).toBe(true);
+      expect(true satisfies AssertTypeAssignable<JSONSchemaSchoolCollection, JSONSchemaCollection>).toBe(true);
+      expect(true satisfies AssertTypeUnassignable<JSONSchemaSchoolCollection, JSONSchemaNotCollectionFragment>).toBe(true);
     });
 
     it('Model fragment', () => {
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsModel<AssessmentModel>, true>).toBe(true);
-      expect(true satisfies AssertTypeAssignable<AssessmentModel, JSONSchemaFragmentModel>).toBe(true);
+      expect(true satisfies AssertTypeAssignable<AssessmentModel, JSONSchemaModelFragment>).toBe(true);
+      // !FIXME: Test type inference
     });
 
     it('Const fragment', () => {
       const _const = { const: 123 } as const;
       //    ^?
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsConst<typeof _const>, true>).toBe(true);
-      expect(true satisfies AssertTypeAssignable<typeof _const, JSONSchemaFragmentConst>).toBe(true);
+      expect(true satisfies AssertTypeAssignable<typeof _const, JSONSchemaConstFragment>).toBe(true);
+      // !FIXME: Test type inference
     });
 
     it('Enum fragment', () => {
       const _enum = { enum: ['a', 'b', 'c'] } as const;
       //    ^?
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsEnum<typeof _enum>, true>).toBe(true);
-      expect(true satisfies AssertTypeAssignable<typeof _enum, JSONSchemaFragmentEnum>).toBe(true);
+      expect(true satisfies AssertTypeAssignable<typeof _enum, JSONSchemaEnumFragment>).toBe(true);
+      // !FIXME: Test type inference
     });
 
     it('Primitive Type fragment', () => {
       const _primitiveType = { type: 'number' } as const;
       //    ^?
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsPrimitiveType<typeof _primitiveType>, true>).toBe(true);
-      expect(true satisfies AssertTypeAssignable<typeof _primitiveType, JSONSchemaFragmentPrimitiveType>).toBe(true);
+      expect(true satisfies AssertTypeAssignable<typeof _primitiveType, JSONSchemaPrimitiveTypeFragment>).toBe(true);
+      // !FIXME: Test type inference
     });
     it('Array Type fragment', () => {
       const _arrayType = { type: 'array' } as const;
       //    ^?
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsArrayType<typeof _arrayType>, true>).toBe(true);
-      expect(true satisfies AssertTypeAssignable<typeof _arrayType, JSONSchemaFragmentArrayType>).toBe(true);
+      expect(true satisfies AssertTypeAssignable<typeof _arrayType, JSONSchemaArrayTypeFragment>).toBe(true);
+      // !FIXME: Test type inference
     });
     it('Object Type fragment', () => {
       const _objectType = { type: 'object' } as const;
       //    ^?
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsObjectType<typeof _objectType>, true>).toBe(true);
-      expect(true satisfies AssertTypeAssignable<typeof _objectType, JSONSchemaFragmentObjectType>).toBe(true);
+      expect(true satisfies AssertTypeAssignable<typeof _objectType, JSONSchemaObjectTypeFragment>).toBe(true);
+      // !FIXME: Test type inference
     });
 
     it('AllOf fragment', () => {
       const _allOfType = { allOf: [{ type: 'number' }] } as const;
       //    ^?
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsAllOfType<typeof _allOfType>, true>).toBe(true);
-      expect(true satisfies AssertTypeAssignable<typeof _allOfType, JSONSchemaFragmentAllOfType>).toBe(true);
+      expect(true satisfies AssertTypeAssignable<typeof _allOfType, JSONSchemaAllOfTypeFragment>).toBe(true);
+      // !FIXME: Test type inference
     });
     it('AnyOf fragment', () => {
       const _anyOfType = { anyOf: [{ type: 'number' }] } as const;
       //    ^?
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsAnyOfType<typeof _anyOfType>, true>).toBe(true);
-      expect(true satisfies AssertTypeAssignable<typeof _anyOfType, JSONSchemaFragmentAnyOfType>).toBe(true);
+      expect(true satisfies AssertTypeAssignable<typeof _anyOfType, JSONSchemaAnyOfTypeFragment>).toBe(true);
+      // !FIXME: Test type inference
     });
     it('OneOf fragment', () => {
       const _oneOfType = { oneOf: [{ type: 'number' }] } as const;
       //    ^?
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsOneOfType<typeof _oneOfType>, true>).toBe(true);
-      expect(true satisfies AssertTypeAssignable<typeof _oneOfType, JSONSchemaFragmentOneOfType>).toBe(true);
+      expect(true satisfies AssertTypeAssignable<typeof _oneOfType, JSONSchemaOneOfTypeFragment>).toBe(true);
+      // !FIXME: Test type inference
     });
     it('Not fragment', () => {
       const _notType = { not: { type: 'number' } } as const;
       //    ^?
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsNotType<typeof _notType>, true>).toBe(true);
-      expect(true satisfies AssertTypeAssignable<typeof _notType, JSONSchemaFragmentNotType>).toBe(true);
+      expect(true satisfies AssertTypeAssignable<typeof _notType, JSONSchemaNotTypeFragment>).toBe(true);
+      // !FIXME: Test type inference
     });
 
     it('$Ref fragment', () => {
       const _refType = { $ref: '#/...' } as const;
       //    ^?
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsReference<typeof _refType>, true>).toBe(true);
-      expect(true satisfies AssertTypeAssignable<typeof _refType, JSONSchemaFragmentReference>).toBe(true);
+      expect(true satisfies AssertTypeAssignable<typeof _refType, JSONSchemaReferenceFragment>).toBe(true);
+      // !FIXME: Test type inference
     });
   });
 });

@@ -2,27 +2,33 @@
  * Typescript utilities for type inference from a JSON schema
  */
 
-import type { JSONSchemaFragmentCollection } from './JSONSchema';
+import type { JSONSchemaCollection } from './JSONSchema';
 
 /**
- * Provides the type for the name of a JSON schema definition from within the JSON schema
+ * Provides the type for the name of a JSON schema fragment from within the JSON schema collection
  */
-export type TSSchemaName<T extends JSONSchemaFragmentCollection | JSONSchemaCollectionWrapper = JSONSchemaFragmentCollection> =
-  UnwrapJSONSchemaCollectionWrapper<T> extends infer U extends JSONSchemaFragmentCollection ? keyof U['$defs'] : string | number;
+export type _TSSchemaFragmentName<T extends JSONSchemaCollection = JSONSchemaCollection> = keyof T['$defs'];
+
+/**
+ * Provides the type for the name of a JSON schema fragment from within the JSON schema collection or JSON schema collection wrapper
+ */
+export type TSSchemaFragmentName<T extends JSONSchemaCollection | JSONSchemaCollectionWrapper = JSONSchemaCollection> =
+  UnwrapJSONSchemaCollectionWrapper<T> extends infer U extends JSONSchemaCollection ? keyof U['$defs'] : string | number;
 
 /**
  * Wrapper type for a JSON schema collection, allowing type inference from the schema itself.
  */
-export type JSONSchemaCollectionWrapper<T extends JSONSchemaFragmentCollection = JSONSchemaFragmentCollection> = {
+export type JSONSchemaCollectionWrapper<T extends JSONSchemaCollection = JSONSchemaCollection> = {
   __collection: T;
 };
 /**
  * Unwraps a JSON schema collection wrapper to obtain the original JSON schema collection type.
  */
-export type UnwrapJSONSchemaCollectionWrapper<T extends JSONSchemaFragmentCollection | JSONSchemaCollectionWrapper> =
-  T extends JSONSchemaCollectionWrapper<JSONSchemaFragmentCollection> ? T['__collection'] : T;
+export type UnwrapJSONSchemaCollectionWrapper<T extends JSONSchemaCollection | JSONSchemaCollectionWrapper> = T extends JSONSchemaCollectionWrapper
+  ? T['__collection']
+  : T;
 
 /**
  * Provides a type-safe wrapper around a JSON schema for TypeScript type inference.
  */
-export type TSSchemaCollection<T extends JSONSchemaFragmentCollection = JSONSchemaFragmentCollection> = JSONSchemaCollectionWrapper<T>; // Wrap schema
+export type TSSchemaCollection<T extends JSONSchemaCollection = JSONSchemaCollection> = JSONSchemaCollectionWrapper<T>; // Wrap schema

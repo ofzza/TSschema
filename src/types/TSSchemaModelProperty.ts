@@ -2,57 +2,109 @@
  * Typescript utilities for type inference from a JSON schema definition of a model property type
  */
 
-import type { JSONSchemaFragmentCollection, JSONSchemaFragmentNotCollection, JSONSchemaFragmentModel } from './JSONSchema';
-import { JSONSchemaWrapper, UnwrapJSONSchemaWrapper } from './TSSchema';
-import { JSONSchemaCollectionWrapper, TSSchemaName } from './TSSchemaCollection';
-import { TSPropertyName } from './TSSchemaModel';
+import type { JSONSchemaCollection, JSONSchemaNotCollectionFragment, JSONSchemaModelFragment } from './JSONSchema';
+import type { JSONSchemaFragmentWrapper, UnwrapJSONSchemaFragmentWrapper } from './TSSchemaFragment';
+import type { _TSSchemaFragmentName, JSONSchemaCollectionWrapper, TSSchemaFragmentName, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection';
+
+/**
+ * Provides the type for the name of a JSON schema model property from within the JSON schema model fragment
+ */
+export type _TSPropertyName<T extends JSONSchemaModelFragment = JSONSchemaModelFragment> = keyof T['properties'];
+
+/**
+ * Provides the type for the name of a JSON schema model property from within the JSON schema model fragment or JSON schema fragment wrapper
+ */
+export type TSPropertyName<T extends JSONSchemaModelFragment | JSONSchemaFragmentWrapper = JSONSchemaModelFragment> =
+  UnwrapJSONSchemaFragmentWrapper<T> extends infer U extends JSONSchemaModelFragment ? keyof U['properties'] : string | number;
 
 /**
  * Wrapper type for a JSON schema model property definition, allowing type inference from the schema itself.
  */
 export type JSONSchemaModelPropertyWrapper<
-  T extends JSONSchemaFragmentNotCollection = JSONSchemaFragmentNotCollection,
-  TModel extends JSONSchemaFragmentModel = JSONSchemaFragmentModel,
-  TCollection extends JSONSchemaFragmentCollection = JSONSchemaFragmentCollection,
-> = {
-  __definition: T;
-  __model: TModel;
-  __collection: TCollection;
+  T extends JSONSchemaNotCollectionFragment = JSONSchemaNotCollectionFragment,
+  TModel extends JSONSchemaModelFragment = JSONSchemaModelFragment,
+  TCollection extends JSONSchemaCollection = JSONSchemaCollection,
+  TName extends _TSPropertyName<TModel> = _TSPropertyName<TModel>,
+> = JSONSchemaFragmentWrapper<TModel, TCollection, TName> & {
+  __property: T;
+  __propertyName: TName;
 };
 /**
  * Unwraps a JSON schema model property definition wrapper to obtain the original JSON schema model property definition type.
  */
-export type UnwrapJSONSchemaModelPropertyWrapper<T extends JSONSchemaFragmentNotCollection | JSONSchemaWrapper> =
-  T extends JSONSchemaWrapper<JSONSchemaFragmentNotCollection> ? T['__definition'] : T;
+export type UnwrapJSONSchemaModelPropertyWrapper<T extends JSONSchemaNotCollectionFragment | JSONSchemaModelPropertyWrapper> =
+  T extends JSONSchemaModelPropertyWrapper ? T['__property'] : T;
+
+/**
+ * Provides the type for the name of a JSON schema model property from within a model fragment addressed by name from a JSON schema collection or
+ * JSON schema collection wrapper
+ */
+type _TSCollectionPropertyName<T extends JSONSchemaCollection | JSONSchemaCollectionWrapper, TName> =
+  UnwrapJSONSchemaCollectionWrapper<T> extends infer C extends JSONSchemaCollection // Unwrap JSON schema collection
+    ? TName extends _TSSchemaFragmentName<C> // Narrow fragment name against the unwrapped collection
+      ? C['$defs'][TName] extends infer M extends JSONSchemaModelFragment // Check if addressed fragment is a model
+        ? _TSPropertyName<M>
+        : never
+      : never
+    : never;
 
 /**
  * Provides a type-safe wrapper around a JSON schema definition for TypeScript type inference.
  */
 export type TSSchemaModelProperty<
-  T extends JSONSchemaFragmentNotCollection | JSONSchemaFragmentModel | JSONSchemaWrapper | JSONSchemaFragmentCollection | JSONSchemaCollectionWrapper,
-  TName extends never = never,
-  TKey extends never = never,
-> = never; // FIXME: Implement
-
-/*
-T extends
-  JSONSchemaCollection | JSONSchemaCollectionWrapper // If T is a JSON schema collection or a JSON definition collection wrapper
-  ? UnwrapJSONSchemaCollectionWrapper<T> extends infer U extends JSONSchemaCollection // Unwrap JSON schema collection
-    ? TName extends keyof U['$defs']
-      ? U['$defs'][TName] extends infer V extends JSONSchemaNotCollection // Check if requested model exists on schema collection
-        ? JSONSchemaWrapper<V, U>
-        : JSONSchemaWrapper // Fall through to default JSON schema definition
-      : JSONSchemaWrapper
-    : T extends JSONSchemaNotCollection // Fall through to wrapping schema as given
-      ? JSONSchemaWrapper<T>
-      : JSONSchemaWrapper
-  : T extends JSONSchemaNotCollection // Fall through to wrapping schema as given
-    ? JSONSchemaWrapper<T>
-    : JSONSchemaWrapper;
-*/
+  T extends JSONSchemaNotCollectionFragment | JSONSchemaModelFragment | JSONSchemaFragmentWrapper | JSONSchemaCollection | JSONSchemaCollectionWrapper,
+  // A JSONSchemaFragmentWrapper is structurally also a JSONSchemaCollectionWrapper (both carry `__collection`), so model/fragment wrapper is checked first
+  TName extends (T extends
+    JSONSchemaModelFragment | JSONSchemaFragmentWrapper // Model: Property name
+    ? TSPropertyName<T>
+    : T extends
+          JSONSchemaCollection | JSONSchemaCollectionWrapper // Collection: Collection fragment name
+      ? TSSchemaFragmentName<T>
+      : never) = never, // Else: Not needed
+  TKey extends (T extends JSONSchemaFragmentWrapper // Fragment wrapper: Not needed (property name is passed as TName)
+    ? never
+    : T extends
+          JSONSchemaCollection | JSONSchemaCollectionWrapper // Collection: Property name of the model fragment addressed by TName
+      ? _TSCollectionPropertyName<T, TName>
+      : never) = never, // Else: Not needed
+> = T extends JSONSchemaFragmentWrapper // If T is a JSON schema fragment wrapper
+  ? UnwrapJSONSchemaFragmentWrapper<T> extends infer M extends JSONSchemaModelFragment // Unwrap model fragment
+    ? TName extends _TSPropertyName<M>
+      ? _TSSchemaModelProperty<M, UnwrapJSONSchemaCollectionWrapper<T>, TName>
+      : JSONSchemaModelPropertyWrapper
+    : JSONSchemaModelPropertyWrapper
+  : T extends
+        JSONSchemaCollection | JSONSchemaCollectionWrapper // If T is a JSON schema collection
+    ? UnwrapJSONSchemaCollectionWrapper<T> extends infer C extends JSONSchemaCollection // Unwrap JSON schema collection
+      ? TName extends _TSSchemaFragmentName<C>
+        ? C['$defs'][TName] extends infer M extends JSONSchemaModelFragment // Check if addressed fragment is a model
+          ? TKey extends _TSPropertyName<M>
+            ? _TSSchemaModelProperty<M, C, TKey>
+            : JSONSchemaModelPropertyWrapper
+          : JSONSchemaModelPropertyWrapper
+        : JSONSchemaModelPropertyWrapper
+      : JSONSchemaModelPropertyWrapper
+    : T extends JSONSchemaModelFragment // If T is a JSON schema model fragment
+      ? TName extends _TSPropertyName<T>
+        ? _TSSchemaModelProperty<T, JSONSchemaCollection, TName>
+        : JSONSchemaModelPropertyWrapper
+      : T extends JSONSchemaNotCollectionFragment // Else, T is a JSON schema model property fragment
+        ? JSONSchemaModelPropertyWrapper<T>
+        : JSONSchemaModelPropertyWrapper;
 
 /**
- * Infers model property type from JSON schema definition
+ * Wraps a single property of an already unwrapped JSON schema model fragment
+ */
+type _TSSchemaModelProperty<
+  TModel extends JSONSchemaModelFragment,
+  TCollection extends JSONSchemaCollection,
+  TKey extends _TSPropertyName<TModel>,
+> = TModel['properties'][TKey] extends infer V extends JSONSchemaNotCollectionFragment
+  ? JSONSchemaModelPropertyWrapper<V, TModel, TCollection, TKey>
+  : JSONSchemaModelPropertyWrapper;
+
+/**
+ * Infers type from JSON schema fragment or JSON schema model property wrapper
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type TSSchemaModelPropertyType<T extends JSONSchemaFragmentModel | JSONSchemaWrapper> = never; // FIXME: Implement type inference
+export type TSSchemaModelPropertyType<T extends JSONSchemaNotCollectionFragment | JSONSchemaModelPropertyWrapper> = never; // !FIXME: Implement type inference

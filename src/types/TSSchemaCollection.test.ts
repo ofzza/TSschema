@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/TSstd';
-import type { JSONSchemaFragmentCollection } from './JSONSchema';
-import type { TSSchemaName, UnwrapJSONSchemaCollectionWrapper, TSSchemaCollection } from './TSSchemaCollection';
+import type { JSONSchemaCollection } from './JSONSchema';
+import type { TSSchemaFragmentName, UnwrapJSONSchemaCollectionWrapper, TSSchemaCollection } from './TSSchemaCollection';
 
 import type { default as schoolJsonSchema } from '../../res/school';
 type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
@@ -12,10 +12,10 @@ describe('TSSchemaCollection', () => {
     expect(true satisfies AssertTypeInequality<JSONSchemaSchoolCollection, any>).toBe(true);
   });
 
-  it('TSSchemaName', () => {
-    type DefaultSchemaDefinitionName = TSSchemaName;
+  it('TSSchemaFragmentName', () => {
+    type DefaultSchemaDefinitionName = TSSchemaFragmentName;
     //   ^?
-    type SchoolSchemaDefinitionName = TSSchemaName<TSSchemaCollection<JSONSchemaSchoolCollection>>;
+    type SchoolSchemaDefinitionName = TSSchemaFragmentName<TSSchemaCollection<JSONSchemaSchoolCollection>>;
     //   ^?
 
     // Default TS Schema definition names are typed as string | number | symbol
@@ -62,7 +62,7 @@ describe('TSSchemaCollection', () => {
     //   ^?
 
     // Default TSSchema should have JSONSchema7 as its underlying schema type
-    expect(true satisfies AssertTypeEquality<DefaultSchoolSchema['__collection'], JSONSchemaFragmentCollection>).toBe(true);
+    expect(true satisfies AssertTypeEquality<DefaultSchoolSchema['__collection'], JSONSchemaCollection>).toBe(true);
     // TSSchema with a specific JSON schema should have that schema as its underlying type
     expect(true satisfies AssertTypeEquality<TSSchoolSchema['__collection'], JSONSchemaSchoolCollection>).toBe(true);
   });
