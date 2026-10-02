@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/TSstd';
-import type { TSSchemaFragment, UnwrapJSONSchemaFragmentWrapper } from './TSSchemaFragment';
+import type { TSSchemaFragmentPropertyName, TSSchemaFragment, UnwrapJSONSchemaFragmentWrapper } from './TSSchemaFragment';
 
 // FIXME: Append enum handling tests on top of Value and Model tests
 
@@ -44,6 +44,23 @@ describe('TSSchemaFragment', () => {
 
     // Unwrapping a JSON schema definition or a JSON schema definition wrapper should yield the same type
     expect(true satisfies AssertTypeEquality<UnwrappedAssessmentJsonSchema, UnwrappedAssessmentJsonSchemaWrapper>).toBe(true);
+  });
+
+  it('TSSchemaFragmentPropertyName', () => {
+    type DefaultSchemaDefinitionName = TSSchemaFragmentPropertyName;
+    //   ^?
+    type SchoolSchemaDefinitionName = TSSchemaFragmentPropertyName<TSSchemaFragment<JSONSchemaAssessmentModel>>;
+    //   ^?
+
+    // Default TS Schema definition model property names are typed as string | number | symbol
+    expect(true satisfies AssertTypeEquality<DefaultSchemaDefinitionName, string | number>).toBe(true);
+    // TSSchema model property with a specific JSON schema definition should have the corresponding definition model property names
+    expect(
+      true satisfies AssertTypeEquality<
+        SchoolSchemaDefinitionName,
+        'id' | 'kind' | 'title' | 'weight' | 'maximumMarks' | 'dueAt' | 'isOpenBook' | 'record' | 'class'
+      >,
+    ).toBe(true);
   });
 
   it('TSSchemaFragmentType', () => {

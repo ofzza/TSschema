@@ -4,7 +4,7 @@
 
 // FIXME: Append enum handling on top of Value and Model schemas
 
-import type { JSONSchemaCollection, JSONSchemaNotCollectionFragment } from './JSONSchema';
+import type { JSONSchemaCollection, JSONSchemaModelFragment, JSONSchemaNotCollectionFragment } from './JSONSchema';
 import type { _TSSchemaFragmentName, JSONSchemaCollectionWrapper, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection';
 import type { TSSchemaFragmentName } from './TSSchemaCollection';
 
@@ -46,6 +46,17 @@ export type TSSchemaFragment<
   : T extends JSONSchemaNotCollectionFragment // Fall through to wrapping schema as given
     ? JSONSchemaFragmentWrapper<T>
     : JSONSchemaFragmentWrapper;
+
+/**
+ * Provides the type for the name of a JSON schema model property from within the JSON schema model fragment
+ */
+export type _TSPropertyName<T extends JSONSchemaModelFragment = JSONSchemaModelFragment> = keyof T['properties'];
+
+/**
+ * Provides the type for the name of a JSON schema model property from within the JSON schema model fragment or JSON schema fragment wrapper
+ */
+export type TSSchemaFragmentPropertyName<T extends JSONSchemaModelFragment | JSONSchemaFragmentWrapper = JSONSchemaModelFragment> =
+  UnwrapJSONSchemaFragmentWrapper<T> extends infer U extends JSONSchemaModelFragment ? keyof U['properties'] : string | number;
 
 /**
  * Infers type from JSON schema fragment or JSON schema fragment wrapper

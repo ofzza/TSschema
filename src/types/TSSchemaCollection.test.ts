@@ -12,6 +12,28 @@ describe('TSSchemaCollection', () => {
     expect(true satisfies AssertTypeInequality<JSONSchemaSchoolCollection, any>).toBe(true);
   });
 
+  it('TSSchemaCollection', () => {
+    type DefaultSchoolSchema = TSSchemaCollection;
+    //   ^?
+    type TSSchoolSchema = TSSchemaCollection<JSONSchemaSchoolCollection>;
+    //   ^?
+
+    // Default TSSchema should have JSONSchema7 as its underlying schema type
+    expect(true satisfies AssertTypeEquality<DefaultSchoolSchema['__collection'], JSONSchemaCollection>).toBe(true);
+    // TSSchema with a specific JSON schema should have that schema as its underlying type
+    expect(true satisfies AssertTypeEquality<TSSchoolSchema['__collection'], JSONSchemaSchoolCollection>).toBe(true);
+  });
+
+  it('UnwrapJSONSchemaCollectionWrapper', () => {
+    type UnwrappedSchoolSchema = UnwrapJSONSchemaCollectionWrapper<JSONSchemaSchoolCollection>;
+    //   ^?
+    type UnwrappedSchoolSchemaWrapper = UnwrapJSONSchemaCollectionWrapper<TSSchemaCollection<JSONSchemaSchoolCollection>>;
+    //   ^?
+
+    // Unwrapping a JSON schema or a JSON schema wrapper should yield the same type
+    expect(true satisfies AssertTypeEquality<UnwrappedSchoolSchema, UnwrappedSchoolSchemaWrapper>).toBe(true);
+  });
+
   it('TSSchemaFragmentName', () => {
     type DefaultSchemaDefinitionName = TSSchemaFragmentName;
     //   ^?
@@ -53,27 +75,5 @@ describe('TSSchemaCollection', () => {
         | 'Term'
       >,
     ).toBe(true);
-  });
-
-  it('TSSchemaCollection', () => {
-    type DefaultSchoolSchema = TSSchemaCollection;
-    //   ^?
-    type TSSchoolSchema = TSSchemaCollection<JSONSchemaSchoolCollection>;
-    //   ^?
-
-    // Default TSSchema should have JSONSchema7 as its underlying schema type
-    expect(true satisfies AssertTypeEquality<DefaultSchoolSchema['__collection'], JSONSchemaCollection>).toBe(true);
-    // TSSchema with a specific JSON schema should have that schema as its underlying type
-    expect(true satisfies AssertTypeEquality<TSSchoolSchema['__collection'], JSONSchemaSchoolCollection>).toBe(true);
-  });
-
-  it('UnwrapJSONSchemaCollectionWrapper', () => {
-    type UnwrappedSchoolSchema = UnwrapJSONSchemaCollectionWrapper<JSONSchemaSchoolCollection>;
-    //   ^?
-    type UnwrappedSchoolSchemaWrapper = UnwrapJSONSchemaCollectionWrapper<TSSchemaCollection<JSONSchemaSchoolCollection>>;
-    //   ^?
-
-    // Unwrapping a JSON schema or a JSON schema wrapper should yield the same type
-    expect(true satisfies AssertTypeEquality<UnwrappedSchoolSchema, UnwrappedSchoolSchemaWrapper>).toBe(true);
   });
 });

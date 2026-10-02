@@ -4,6 +4,7 @@
  */
 
 import type { JSONSchema7 as OriginalJSONSchema7, JSONSchema7Array, JSONSchema7Object, JSONSchema7Type, JSONSchema7TypeName } from 'json-schema';
+import { ArrayIsEmpty, ArrayHead, ArrayTail } from '@ofzza/TSstd';
 
 type DeepOptionallyReadOnly<T> = {
   readonly [K in keyof T]?: DeepOptionallyReadOnly<T[K]>;
@@ -270,11 +271,21 @@ export type JSONSchemaAllOfTypeFragment = JSONSchemaNotCollectionFragment & {
  * Infers a value type from a JSON schema all-of-type definition
  */
 export type JSONSchemaAllOfTypeFragmentType<
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   T extends JSONSchemaNotCollectionFragment,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection,
-> = unknown; //!FIXME: Implement
+> = T extends { allOf: infer U extends Array<JSONSchemaNotCollectionFragment> | ReadonlyArray<JSONSchemaNotCollectionFragment> }
+  ? _JSONSchemaAllOfTypeFragmentType<U, TSchemaCollection, never>
+  : never;
+type _JSONSchemaAllOfTypeFragmentType<
+  T extends Array<JSONSchemaNotCollectionFragment> | ReadonlyArray<JSONSchemaNotCollectionFragment>,
+  TSchemaCollection extends JSONSchemaCollection,
+  TDefault = unknown,
+> =
+  ArrayIsEmpty<T> extends true
+    ? TDefault
+    : ArrayHead<T> extends infer H extends JSONSchemaNotCollectionFragment
+      ? JSONSchemaFragmentType<H, TSchemaCollection> & _JSONSchemaAllOfTypeFragmentType<ArrayTail<T>, TSchemaCollection, unknown>
+      : TDefault;
 
 /**
  * Determines if a JSON schema fragment is a any-of-types type definition (i.e., contains a `anyOf` property).
@@ -296,11 +307,21 @@ export type JSONSchemaAnyOfTypeFragment = JSONSchemaNotCollectionFragment & {
  * Infers a value type from a JSON schema any-of-type definition
  */
 export type JSONSchemaAnyOfTypeFragmentType<
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   T extends JSONSchemaNotCollectionFragment,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection,
-> = unknown; //!FIXME: Implement
+> = T extends { anyOf: infer U extends Array<JSONSchemaNotCollectionFragment> | ReadonlyArray<JSONSchemaNotCollectionFragment> }
+  ? _JSONSchemaAnyOfTypeFragmentType<U, TSchemaCollection, never>
+  : never;
+type _JSONSchemaAnyOfTypeFragmentType<
+  T extends Array<JSONSchemaNotCollectionFragment> | ReadonlyArray<JSONSchemaNotCollectionFragment>,
+  TSchemaCollection extends JSONSchemaCollection,
+  TDefault = never,
+> =
+  ArrayIsEmpty<T> extends true
+    ? TDefault
+    : ArrayHead<T> extends infer H extends JSONSchemaNotCollectionFragment
+      ? JSONSchemaFragmentType<H, TSchemaCollection> | _JSONSchemaAnyOfTypeFragmentType<ArrayTail<T>, TSchemaCollection, never>
+      : TDefault;
 
 /**
  * Determines if a JSON schema fragment is a one-of-types type definition (i.e., contains a `oneOf` property).
@@ -326,7 +347,7 @@ export type JSONSchemaOneOfTypeFragmentType<
   T extends JSONSchemaNotCollectionFragment,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection,
-> = unknown; //!FIXME: Implement
+> = unknown; // TODO: Implement support for One-Of
 
 /**
  * Determines if a JSON schema fragment is a not-types type definition (i.e., contains a `not` property).
@@ -352,7 +373,7 @@ export type JSONSchemaNotTypeFragmentType<
   T extends JSONSchemaNotCollectionFragment,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection,
-> = unknown; //!FIXME: Implement
+> = unknown; // TODO: Implement suppoer for Not
 
 /**
  * Determines if a JSON schema fragment is a reference definition (i.e., contains a `$ref` property).

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/TSstd';
-import type { TSPropertyName, TSSchemaModelProperty, UnwrapJSONSchemaModelPropertyWrapper } from './TSSchemaModelProperty';
+import type { TSSchemaModelProperty, UnwrapJSONSchemaModelPropertyWrapper } from './TSSchemaModelProperty';
 
 import type { default as schoolJsonSchema } from '../../res/school';
 import type { JSONSchemaCollection, JSONSchemaModelFragment } from './JSONSchema';
@@ -15,23 +15,6 @@ type JSONSchemaAssessmentTitleProperty = JSONSchemaAssessmentModel['properties']
 describe('TSSchemaModel', () => {
   it('Imported testing schema', () => {
     expect(true satisfies AssertTypeInequality<JSONSchemaSchoolCollection, any>).toBe(true);
-  });
-
-  it('TSPropertyName', () => {
-    type DefaultSchemaDefinitionName = TSPropertyName;
-    //   ^?
-    type SchoolSchemaDefinitionName = TSPropertyName<TSSchemaFragment<JSONSchemaAssessmentModel>>;
-    //   ^?
-
-    // Default TS Schema definition model property names are typed as string | number | symbol
-    expect(true satisfies AssertTypeEquality<DefaultSchemaDefinitionName, string | number>).toBe(true);
-    // TSSchema model property with a specific JSON schema definition should have the corresponding definition model property names
-    expect(
-      true satisfies AssertTypeEquality<
-        SchoolSchemaDefinitionName,
-        'id' | 'kind' | 'title' | 'weight' | 'maximumMarks' | 'dueAt' | 'isOpenBook' | 'record' | 'class'
-      >,
-    ).toBe(true);
   });
 
   it('TSSchemaModelProperty', () => {

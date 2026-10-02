@@ -41,6 +41,6 @@
     "typescript": "^5.4.0",
     "typescript-eslint": "^8.43.0",
     "vitest": "^5.0.1",
-    "@ofzza/TSstd": "https://github.com/ofzza/TSstd.git"
+    "@ofzza/TSstd": "https://github.com/ofzza/TSstd.git#master"
   }
 }

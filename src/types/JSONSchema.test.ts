@@ -38,6 +38,10 @@ import {
   JSONSchemaEnumFragmentType,
   JSONSchemaReferenceFragmentType,
   JSONSchemaAnyOfTypeFragmentType,
+  JSONSchemaAllOfTypeFragmentType,
+  JSONSchemaOneOfTypeFragmentType,
+  JSONSchemaNotTypeFragmentType,
+  JSONSchemaModelFragmentType,
 } from './JSONSchema';
 
 import type { default as constJsonSchema } from '../../res/const';
@@ -56,12 +60,6 @@ import type { default as schoolJsonSchema } from '../../res/school';
 type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
 //   ^?
 type AssessmentModel = JSONSchemaSchoolCollection['$defs']['Assessment'];
-
-// !FIXME: Remove, just for during-development testing
-type _Assessment = JSONSchemaFragmentType<JSONSchemaSchoolCollection['$defs']['Assessment'], JSONSchemaSchoolCollection>;
-//   ^?
-type _AssessmentKind = JSONSchemaFragmentType<JSONSchemaSchoolCollection['$defs']['AssessmentKind']>;
-//   ^?
 
 describe('JSONSchema', () => {
   it('Imported testing schema', () => {
@@ -119,7 +117,27 @@ describe('JSONSchema', () => {
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsModel<AssessmentModel>, true>).toBe(true);
       expect(true satisfies AssertTypeAssignable<AssessmentModel, JSONSchemaModelFragment>).toBe(true);
 
-      // !FIXME: Test type inference
+      type Assessment = JSONSchemaModelFragmentType<JSONSchemaSchoolCollection['$defs']['Assessment'], JSONSchemaSchoolCollection>;
+      //   ^?
+      expect(true satisfies AssertTypeAssignable<Assessment, object>).toBe(true);
+      expect(true satisfies AssertTypeEquality<Assessment['id'], string>).toBe(true);
+      expect(true satisfies AssertTypeEquality<Assessment['title'], string>).toBe(true);
+      expect(true satisfies AssertTypeEquality<Assessment['weight'], number>).toBe(true);
+      expect(true satisfies AssertTypeEquality<Assessment['maximumMarks'], number>).toBe(true);
+      expect(true satisfies AssertTypeEquality<Assessment['dueAt'], string>).toBe(true);
+      expect(true satisfies AssertTypeEquality<Assessment['isOpenBook'], boolean>).toBe(true);
+
+      type AssessmentKindType = JSONSchemaReferenceFragmentType<AssessmentModel['properties']['kind'], JSONSchemaSchoolCollection>;
+      //   ^?
+      expect(true satisfies AssertTypeEquality<Assessment['kind'], AssessmentKindType>).toBe(true);
+
+      type ClassType = JSONSchemaAnyOfTypeFragmentType<AssessmentModel['properties']['class'], JSONSchemaSchoolCollection>;
+      //   ^?
+      expect(true satisfies AssertTypeEquality<Assessment['class'], ClassType>).toBe(true);
+
+      type RecordType = JSONSchemaReferenceFragmentType<AssessmentModel['properties']['record'], JSONSchemaSchoolCollection>;
+      //   ^?
+      expect(true satisfies AssertTypeEquality<Assessment['record'], RecordType>).toBe(true);
     });
 
     it('Const fragment', () => {
@@ -181,32 +199,48 @@ describe('JSONSchema', () => {
     });
 
     it('AllOf fragment', () => {
-      const _allOfTypeFragment = { allOf: [{ type: 'number' }] } as const;
+      const _allOfTypeFragment = { allOf: [{ type: 'number' }, { const: 123 }] } as const;
       //    ^?
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsAllOfType<typeof _allOfTypeFragment>, true>).toBe(true);
       expect(true satisfies AssertTypeAssignable<typeof _allOfTypeFragment, JSONSchemaAllOfTypeFragment>).toBe(true);
-      // !FIXME: Test type inference
+
+      type AllOfTypeFragmentType = JSONSchemaAllOfTypeFragmentType<typeof _allOfTypeFragment>;
+      //   ^?
+      expect(true satisfies AssertTypeEquality<AllOfTypeFragmentType, 123>).toBe(true);
     });
     it('AnyOf fragment', () => {
-      const _anyOfTypeFragment = { anyOf: [{ type: 'number' }] } as const;
+      const _anyOfTypeFragment = { anyOf: [{ type: 'number' }, { type: 'string' }, { const: true }] } as const;
       //    ^?
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsAnyOfType<typeof _anyOfTypeFragment>, true>).toBe(true);
       expect(true satisfies AssertTypeAssignable<typeof _anyOfTypeFragment, JSONSchemaAnyOfTypeFragment>).toBe(true);
-      // !FIXME: Test type inference
+
+      type AnyOfTypeFragmentType = JSONSchemaAnyOfTypeFragmentType<typeof _anyOfTypeFragment>;
+      //   ^?
+      expect(true satisfies AssertTypeEquality<AnyOfTypeFragmentType, number | string | true>).toBe(true);
     });
     it('OneOf fragment', () => {
-      const _oneOfTypeFragment = { oneOf: [{ type: 'number' }] } as const;
+      const _oneOfTypeFragment = { oneOf: [{ type: 'number' }, { type: 'string' }] } as const;
       //    ^?
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsOneOfType<typeof _oneOfTypeFragment>, true>).toBe(true);
       expect(true satisfies AssertTypeAssignable<typeof _oneOfTypeFragment, JSONSchemaOneOfTypeFragment>).toBe(true);
-      // !FIXME: Test type inference
+
+      // TODO: Test type inference
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      type OneOfTypeFragmentType = JSONSchemaOneOfTypeFragmentType<typeof _oneOfTypeFragment>;
+      //   ^?
+      // expect(true satisfies AssertTypeEquality<OneOfTypeFragmentType, never>).toBe(true);
     });
     it('Not fragment', () => {
       const _notTypeFragment = { not: { type: 'number' } } as const;
       //    ^?
       expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsNotType<typeof _notTypeFragment>, true>).toBe(true);
       expect(true satisfies AssertTypeAssignable<typeof _notTypeFragment, JSONSchemaNotTypeFragment>).toBe(true);
-      // !FIXME: Test type inference
+
+      // TODO: Test type inference
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      type NotTypeFragmentType = JSONSchemaNotTypeFragmentType<typeof _notTypeFragment>;
+      //   ^?
+      // expect(true satisfies AssertTypeEquality<NotTypeFragmentType, never>).toBe(true);
     });
 
     it('$Ref fragment', () => {
@@ -228,17 +262,14 @@ describe('JSONSchema', () => {
       type AssessmentKindType = JSONSchemaReferenceFragmentType<AssessmentModel['properties']['kind'], JSONSchemaSchoolCollection>;
       //   ^?
       expect(true satisfies AssertTypeEquality<AssessmentType['kind'], AssessmentKindType>).toBe(true);
-      // !FIXME: Test type inference
 
       type ClassType = JSONSchemaAnyOfTypeFragmentType<AssessmentModel['properties']['class'], JSONSchemaSchoolCollection>;
       //   ^?
       expect(true satisfies AssertTypeEquality<AssessmentType['class'], ClassType>).toBe(true);
-      // !FIXME: Test type inference
 
       type RecordType = JSONSchemaReferenceFragmentType<AssessmentModel['properties']['record'], JSONSchemaSchoolCollection>;
       //   ^?
       expect(true satisfies AssertTypeEquality<AssessmentType['record'], RecordType>).toBe(true);
-      // !FIXME: Test type inference
     });
   });
 });

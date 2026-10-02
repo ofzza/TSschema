@@ -3,19 +3,8 @@
  */
 
 import type { JSONSchemaCollection, JSONSchemaNotCollectionFragment, JSONSchemaModelFragment } from './JSONSchema';
-import type { JSONSchemaFragmentWrapper, UnwrapJSONSchemaFragmentWrapper } from './TSSchemaFragment';
+import type { _TSPropertyName, JSONSchemaFragmentWrapper, TSSchemaFragmentPropertyName, UnwrapJSONSchemaFragmentWrapper } from './TSSchemaFragment';
 import type { _TSSchemaFragmentName, JSONSchemaCollectionWrapper, TSSchemaFragmentName, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection';
-
-/**
- * Provides the type for the name of a JSON schema model property from within the JSON schema model fragment
- */
-export type _TSPropertyName<T extends JSONSchemaModelFragment = JSONSchemaModelFragment> = keyof T['properties'];
-
-/**
- * Provides the type for the name of a JSON schema model property from within the JSON schema model fragment or JSON schema fragment wrapper
- */
-export type TSPropertyName<T extends JSONSchemaModelFragment | JSONSchemaFragmentWrapper = JSONSchemaModelFragment> =
-  UnwrapJSONSchemaFragmentWrapper<T> extends infer U extends JSONSchemaModelFragment ? keyof U['properties'] : string | number;
 
 /**
  * Wrapper type for a JSON schema model property definition, allowing type inference from the schema itself.
@@ -56,7 +45,7 @@ export type TSSchemaModelProperty<
   // A JSONSchemaFragmentWrapper is structurally also a JSONSchemaCollectionWrapper (both carry `__collection`), so model/fragment wrapper is checked first
   TName extends (T extends
     JSONSchemaModelFragment | JSONSchemaFragmentWrapper // Model: Property name
-    ? TSPropertyName<T>
+    ? TSSchemaFragmentPropertyName<T>
     : T extends
           JSONSchemaCollection | JSONSchemaCollectionWrapper // Collection: Collection fragment name
       ? TSSchemaFragmentName<T>
