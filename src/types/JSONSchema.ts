@@ -13,13 +13,9 @@ type DeepOptionallyReadOnly<T> = {
 export type JSONSchema7 = DeepOptionallyReadOnly<OriginalJSONSchema7>;
 
 /**
- * Number type aliases
- */
-type JSONSchemaNumericTypeName = 'number' | 'byte' | 'long' | 'integer' | 'float' | 'double';
-/**
  * Primitive value type names
  */
-export type JSONSchemaPrimitiveTypeName = Exclude<JSONSchema7TypeName, 'array' | 'object'> | JSONSchemaNumericTypeName;
+export type JSONSchemaPrimitiveTypeName = Exclude<JSONSchema7TypeName, 'array' | 'object'>;
 /**
  * Primitive value types
  */
@@ -35,7 +31,7 @@ export type JSONSchemaPrimitiveTypeFromName<TName extends JSONSchemaPrimitiveTyp
       TName extends 'string'
       ? string
       : // number
-        TName extends JSONSchemaNumericTypeName
+        TName extends 'number' | 'integer'
         ? number
         : // boolean
           TName extends 'boolean'
@@ -66,11 +62,33 @@ export type JSONSchemaNotCollectionFragment = JSONSchema7 & { $defs?: never };
 /**
  * Infers a value type from a JSON schema fragment
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type JSONSchemaFragmentType<T extends JSONSchemaNotCollectionFragment> = never; //!FIXME: Implement
+export type JSONSchemaFragmentType<T extends JSONSchemaNotCollectionFragment, TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection> =
+  // Model type
+  (T extends JSONSchemaModelFragment ? JSONSchemaModelFragmentType<T, TSchemaCollection> : unknown) &
+    // Const type
+    (T extends JSONSchemaConstFragment ? JSONSchemaConstFragmentType<T> : unknown) &
+    // Enum type
+    (T extends JSONSchemaEnumFragment ? JSONSchemaEnumFragmentType<T> : unknown) &
+    // Primitive type
+    (T extends JSONSchemaPrimitiveTypeFragment ? JSONSchemaPrimitiveTypeFragmentType<T> : unknown) &
+    // Array type
+    (T extends JSONSchemaArrayTypeFragment ? JSONSchemaArrayTypeFragmentType<T, TSchemaCollection> : unknown) &
+    // Object type
+    (T extends JSONSchemaObjectTypeFragment ? JSONSchemaObjectTypeFragmentType<T, TSchemaCollection> : unknown) &
+    // AllOf type
+    (T extends JSONSchemaAllOfTypeFragment ? JSONSchemaAllOfTypeFragmentType<T, TSchemaCollection> : unknown) &
+    // AnyOf type
+    (T extends JSONSchemaAnyOfTypeFragment ? JSONSchemaAnyOfTypeFragmentType<T, TSchemaCollection> : unknown) &
+    // OneOf type
+    (T extends JSONSchemaOneOfTypeFragment ? JSONSchemaOneOfTypeFragmentType<T, TSchemaCollection> : unknown) &
+    // Not type
+    (T extends JSONSchemaNotTypeFragment ? JSONSchemaNotTypeFragmentType<T, TSchemaCollection> : unknown) &
+    // Reference type
+    (T extends JSONSchemaReferenceFragment ? JSONSchemaReferenceFragmentType<T, TSchemaCollection> : unknown);
 
 /**
  * Determines if a JSON schema fragment is a model definition (i.e., an object with `properties`).
+ * TODO: Support `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`
  */
 export type JSONSchemaFragmentIsModel<T extends JSONSchema7> = T extends JSONSchemaNotCollectionFragment
   ? T extends { type: 'object'; properties: infer U }
@@ -81,13 +99,22 @@ export type JSONSchemaFragmentIsModel<T extends JSONSchema7> = T extends JSONSch
   : false;
 /**
  * Represents a JSON schema model definition, which is any object schema fragment containing `properties`.
+ * TODO: Support `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`
  */
 export type JSONSchemaModelFragment = JSONSchemaNotCollectionFragment & { type: 'object'; properties: Record<string, JSONSchema7> };
 /**
  * Infers a value type from a JSON schema model definition
+ * TODO: Support `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type JSONSchemaModelFragmentType<T extends JSONSchemaNotCollectionFragment> = never; //!FIXME: Implement
+export type JSONSchemaModelFragmentType<
+  T extends JSONSchemaNotCollectionFragment,
+  TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection,
+> = T extends {
+  type: 'object';
+  properties: infer P extends Record<string, JSONSchema7>;
+}
+  ? { [key in keyof P]: P[key] extends JSONSchemaNotCollectionFragment ? JSONSchemaFragmentType<P[key], TSchemaCollection> : unknown }
+  : unknown;
 
 /**
  * Determines if a JSON schema fragment is a const definition (i.e., contains a `const` property).
@@ -104,8 +131,7 @@ export type JSONSchemaConstFragment = JSONSchemaNotCollectionFragment & { const:
 /**
  * Infers a value type from a SON schema const definition
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type JSONSchemaConstFragmentType<T extends JSONSchemaNotCollectionFragment> = never; //!FIXME: Implement
+export type JSONSchemaConstFragmentType<T extends JSONSchemaNotCollectionFragment> = T extends { const: infer C } ? C : unknown;
 
 /**
  * Determines if a JSON schema fragment is an enum definition (i.e., contains an `enum` property).
@@ -124,8 +150,13 @@ export type JSONSchemaEnumFragment = JSONSchemaNotCollectionFragment & { enum: A
 /**
  * Infers a value type from a JSON schema enum definition
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type JSONSchemaEnumFragmentType<T extends JSONSchemaNotCollectionFragment> = never; //!FIXME: Implement
+export type JSONSchemaEnumFragmentType<T extends JSONSchemaNotCollectionFragment> = T extends { enum: infer E extends Array<unknown> | ReadonlyArray<unknown> }
+  ? E extends Array<infer U>
+    ? U
+    : E extends ReadonlyArray<infer U>
+      ? U
+      : unknown
+  : unknown;
 
 /**
  * Determines if a JSON schema fragment is a primitive type definition (i.e., contains a `type` property).
@@ -144,8 +175,11 @@ export type JSONSchemaPrimitiveTypeFragment = JSONSchemaNotCollectionFragment & 
 /**
  * Infers a value type from a JSON schema primitive type definition
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type JSONSchemaPrimitiveTypeFragmentType<T extends JSONSchemaNotCollectionFragment> = never; //!FIXME: Implement
+export type JSONSchemaPrimitiveTypeFragmentType<T extends JSONSchemaPrimitiveTypeFragment> = T extends {
+  type: infer U extends JSONSchemaPrimitiveTypeName;
+}
+  ? JSONSchemaPrimitiveTypeFromName<U>
+  : never;
 
 /**
  * Determines if a JSON schema fragment is a array type definition (i.e., contains a `type="array"` property and an optional `items` property).
@@ -169,11 +203,20 @@ export type JSONSchemaArrayTypeFragment = JSONSchemaNotCollectionFragment & {
 /**
  * Infers a value type from a JSON schema array type definition
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type JSONSchemaArrayTypeFragmentType<T extends JSONSchemaNotCollectionFragment> = never; //!FIXME: Implement
+export type JSONSchemaArrayTypeFragmentType<
+  T extends JSONSchemaNotCollectionFragment,
+  TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection,
+> = T extends {
+  type: 'array';
+}
+  ? T extends { items: infer U extends JSONSchemaNotCollectionFragment }
+    ? Array<JSONSchemaFragmentType<U, TSchemaCollection>>
+    : Array<unknown>
+  : never;
 
 /**
  * Determines if a JSON schema fragment is a object type definition (i.e., contains a `type="object"` property and no `properties` property).
+ * TODO: Support `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`
  */
 export type JSONSchemaFragmentIsObjectType<T extends JSONSchema7> = T extends JSONSchemaNotCollectionFragment
   ? T extends { type: 'object' }
@@ -186,6 +229,7 @@ export type JSONSchemaFragmentIsObjectType<T extends JSONSchema7> = T extends JS
   : false;
 /**
  * Represents a JSON schema object type definition, which is any schema fragment containing a `type="object"` property and no `properties` property.
+ * TODO: Support `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`
  */
 export type JSONSchemaObjectTypeFragment = JSONSchemaNotCollectionFragment & {
   type: 'object';
@@ -193,9 +237,18 @@ export type JSONSchemaObjectTypeFragment = JSONSchemaNotCollectionFragment & {
 };
 /**
  * Infers a value type from a JSON schema object type definition
+ * TODO: Support `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type JSONSchemaObjectTypeFragmentType<T extends JSONSchemaNotCollectionFragment> = never; //!FIXME: Implement
+export type JSONSchemaObjectTypeFragmentType<
+  T extends JSONSchemaNotCollectionFragment,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection,
+> = T extends {
+  type: 'object';
+  properties?: never;
+}
+  ? object
+  : never;
 
 /**
  * Determines if a JSON schema fragment is a all-of-types type definition (i.e., contains a `allOf` property).
@@ -216,8 +269,12 @@ export type JSONSchemaAllOfTypeFragment = JSONSchemaNotCollectionFragment & {
 /**
  * Infers a value type from a JSON schema all-of-type definition
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type JSONSchemaAllOfTypeFragmentType<T extends JSONSchemaNotCollectionFragment> = never; //!FIXME: Implement
+export type JSONSchemaAllOfTypeFragmentType<
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  T extends JSONSchemaNotCollectionFragment,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection,
+> = unknown; //!FIXME: Implement
 
 /**
  * Determines if a JSON schema fragment is a any-of-types type definition (i.e., contains a `anyOf` property).
@@ -238,8 +295,12 @@ export type JSONSchemaAnyOfTypeFragment = JSONSchemaNotCollectionFragment & {
 /**
  * Infers a value type from a JSON schema any-of-type definition
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type JSONSchemaAnyOfTypeFragmentType<T extends JSONSchemaNotCollectionFragment> = never; //!FIXME: Implement
+export type JSONSchemaAnyOfTypeFragmentType<
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  T extends JSONSchemaNotCollectionFragment,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection,
+> = unknown; //!FIXME: Implement
 
 /**
  * Determines if a JSON schema fragment is a one-of-types type definition (i.e., contains a `oneOf` property).
@@ -260,8 +321,12 @@ export type JSONSchemaOneOfTypeFragment = JSONSchemaNotCollectionFragment & {
 /**
  * Infers a value type from a JSON schema one-of-type definition
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type JSONSchemaOneOfTypeFragmentType<T extends JSONSchemaNotCollectionFragment> = never; //!FIXME: Implement
+export type JSONSchemaOneOfTypeFragmentType<
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  T extends JSONSchemaNotCollectionFragment,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection,
+> = unknown; //!FIXME: Implement
 
 /**
  * Determines if a JSON schema fragment is a not-types type definition (i.e., contains a `not` property).
@@ -282,8 +347,12 @@ export type JSONSchemaNotTypeFragment = JSONSchemaNotCollectionFragment & {
 /**
  * Infers a value type from a JSON schema not-type definition
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type JSONSchemaNotTypeFragmentType<T extends JSONSchemaNotCollectionFragment> = never; //!FIXME: Implement
+export type JSONSchemaNotTypeFragmentType<
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  T extends JSONSchemaNotCollectionFragment,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection,
+> = unknown; //!FIXME: Implement
 
 /**
  * Determines if a JSON schema fragment is a reference definition (i.e., contains a `$ref` property).
@@ -302,5 +371,14 @@ export type JSONSchemaReferenceFragment = JSONSchemaNotCollectionFragment & {
 /**
  * Infers a value type from a JSON schema reference definition
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type JSONSchemaReferenceFragmentType<T extends JSONSchemaNotCollectionFragment> = never; //!FIXME: Implement
+export type JSONSchemaReferenceFragmentType<T extends JSONSchemaNotCollectionFragment, TSchemaCollection extends JSONSchemaCollection> = T extends {
+  $ref: infer P extends string;
+}
+  ? P extends `#/$defs/${infer N}`
+    ? N extends keyof TSchemaCollection['$defs']
+      ? TSchemaCollection['$defs'][N] extends infer M extends JSONSchemaNotCollectionFragment
+        ? JSONSchemaFragmentType<M, TSchemaCollection>
+        : unknown
+      : unknown
+    : unknown
+  : unknown;

@@ -1,0 +1,10 @@
+export default {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  $id: 'urn:tsschema:schema:enum',
+  title: 'enum',
+  $defs: {
+    Enum: {
+      enum: ['Aaa', 'Bbb', 'Ccc'],
+    },
+  },
+} as const;
