@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/TSstd';
-import type { TSSchemaModelProperty, UnwrapJSONSchemaModelPropertyWrapper } from './TSSchemaModelProperty';
+import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/tsstd';
+import type { TSSchemaModelProperty, UnwrapJSONSchemaModelPropertyWrapper } from './TSSchemaModelProperty.js';
 
-import type { default as schoolJsonSchema } from '../../res/school';
-import type { JSONSchemaCollection, JSONSchemaModelFragment } from './JSONSchema';
-import type { TSSchemaFragment } from './TSSchemaFragment';
+import type { default as schoolJsonSchema } from '../../res/school.js';
+import type { JSONSchemaCollection, JSONSchemaModelFragment } from './JSONSchema.js';
+import type { TSSchemaFragment } from './TSSchemaFragment.js';
 type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
 //   ^?
 type JSONSchemaAssessmentModel = JSONSchemaSchoolCollection['$defs']['Assessment'];

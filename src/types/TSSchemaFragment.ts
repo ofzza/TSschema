@@ -4,9 +4,9 @@
 
 // FIXME: Append enum handling on top of Value and Model schemas
 
-import type { JSONSchemaCollection, JSONSchemaModelFragment, JSONSchemaNotCollectionFragment } from './JSONSchema';
-import type { _TSSchemaFragmentName, JSONSchemaCollectionWrapper, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection';
-import type { TSSchemaFragmentName } from './TSSchemaCollection';
+import type { JSONSchemaCollection, JSONSchemaModelFragment, JSONSchemaNotCollectionFragment } from './JSONSchema.js';
+import type { _TSSchemaFragmentName, JSONSchemaCollectionWrapper, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection.js';
+import type { TSSchemaFragmentName } from './TSSchemaCollection.js';
 
 /**
  * Wrapper type for a JSON schema definition, allowing type inference from the schema itself.

@@ -2,7 +2,7 @@
  * Typescript utilities for type inference from a JSON schema
  */
 
-import type { JSONSchemaCollection } from './JSONSchema';
+import type { JSONSchemaCollection } from './JSONSchema.js';
 
 /**
  * Provides the type for the name of a JSON schema fragment from within the JSON schema collection

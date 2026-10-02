@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/TSstd';
-import type { JSONSchemaCollection } from './JSONSchema';
-import type { TSSchemaFragmentName, UnwrapJSONSchemaCollectionWrapper, TSSchemaCollection } from './TSSchemaCollection';
+import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/tsstd';
+import type { JSONSchemaCollection } from './JSONSchema.js';
+import type { TSSchemaFragmentName, UnwrapJSONSchemaCollectionWrapper, TSSchemaCollection } from './TSSchemaCollection.js';
 
-import type { default as schoolJsonSchema } from '../../res/school';
+import type { default as schoolJsonSchema } from '../../res/school.js';
 type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
 //   ^?
 

@@ -1,3 +1,3 @@
-export type { TSSchemaCollection, TSSchemaFragmentName } from './TSSchemaCollection';
-export type { TSSchemaFragment, TSSchemaFragmentPropertyName as TSPropertyName } from './TSSchemaFragment';
-export type { TSSchemaModelProperty } from './TSSchemaModelProperty';
+export type { TSSchemaCollection, TSSchemaFragmentName } from './TSSchemaCollection.js';
+export type { TSSchemaFragment, TSSchemaFragmentPropertyName as TSPropertyName } from './TSSchemaFragment.js';
+export type { TSSchemaModelProperty } from './TSSchemaModelProperty.js';

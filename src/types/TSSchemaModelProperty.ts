@@ -2,9 +2,9 @@
  * Typescript utilities for type inference from a JSON schema definition of a model property type
  */
 
-import type { JSONSchemaCollection, JSONSchemaNotCollectionFragment, JSONSchemaModelFragment } from './JSONSchema';
-import type { _TSPropertyName, JSONSchemaFragmentWrapper, TSSchemaFragmentPropertyName, UnwrapJSONSchemaFragmentWrapper } from './TSSchemaFragment';
-import type { _TSSchemaFragmentName, JSONSchemaCollectionWrapper, TSSchemaFragmentName, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection';
+import type { JSONSchemaCollection, JSONSchemaNotCollectionFragment, JSONSchemaModelFragment } from './JSONSchema.js';
+import type { _TSPropertyName, JSONSchemaFragmentWrapper, TSSchemaFragmentPropertyName, UnwrapJSONSchemaFragmentWrapper } from './TSSchemaFragment.js';
+import type { _TSSchemaFragmentName, JSONSchemaCollectionWrapper, TSSchemaFragmentName, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection.js';
 
 /**
  * Wrapper type for a JSON schema model property definition, allowing type inference from the schema itself.

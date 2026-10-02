@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/TSstd';
-import type { TSSchemaFragmentPropertyName, TSSchemaFragment, UnwrapJSONSchemaFragmentWrapper } from './TSSchemaFragment';
+import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/tsstd';
+import type { TSSchemaFragmentPropertyName, TSSchemaFragment, UnwrapJSONSchemaFragmentWrapper } from './TSSchemaFragment.js';
 
 // FIXME: Append enum handling tests on top of Value and Model tests
 
-import type { default as schoolJsonSchema } from '../../res/school';
-import { JSONSchemaCollection } from './JSONSchema';
+import type { default as schoolJsonSchema } from '../../res/school.js';
+import { JSONSchemaCollection } from './JSONSchema.js';
 type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
 //   ^?
 type JSONSchemaAssessmentModel = JSONSchemaSchoolCollection['$defs']['Assessment'];
