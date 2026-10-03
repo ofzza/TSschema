@@ -1,15 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/tsstd';
-import type { TSSchemaFragmentPropertyName, TSSchemaFragment, UnwrapJSONSchemaFragmentWrapper } from './TSSchemaFragment.js';
-
-// FIXME: Append enum handling tests on top of Value and Model tests
+import type { TSSchemaFragmentPropertyName, TSSchemaFragment, UnwrapJSONSchemaFragmentWrapper, TSSchemaFragmentType } from './TSSchemaFragment.js';
 
 import type { default as schoolJsonSchema } from '../../res/school.js';
-import { JSONSchemaCollection } from './JSONSchema.js';
+import { JSONSchemaCollection, JSONSchemaFragmentType } from './JSONSchema.js';
 type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
 //   ^?
 type JSONSchemaAssessmentModel = JSONSchemaSchoolCollection['$defs']['Assessment'];
 //   ^?
+
+/**
+ * Infers the type of a model definition from the school schema collection, addressed by name
+ */
+type _SchoolModel<TName extends string> = JSONSchemaFragmentType<{ readonly $ref: `#/$defs/${TName}` }, JSONSchemaSchoolCollection>;
 
 describe('TSSchemaFragment', () => {
   it('Imported testing schema', () => {
@@ -63,7 +66,63 @@ describe('TSSchemaFragment', () => {
     ).toBe(true);
   });
 
-  it('TSSchemaFragmentType', () => {
-    // !FIXME: Implement type inference testing
+  describe('TSSchemaFragmentType', () => {
+    it("Types inferred from fragments, with no reference to parent JSON schema collection can't resolve $refs", () => {
+      type JSONSchemaAssessmentModelType = TSSchemaFragmentType<JSONSchemaAssessmentModel>;
+      //   ^?
+      expect(true satisfies AssertTypeEquality<JSONSchemaAssessmentModelType['class'], unknown>).toBe(true);
+    });
+
+    it('Types inferred from fragments, with explicitly passed reference to parent JSON schema collection can resolve $refs', () => {
+      type JSONSchemaAssessmentModelWithExplicitSchoolJsonSchemaCollectionType = TSSchemaFragmentType<JSONSchemaAssessmentModel, JSONSchemaSchoolCollection>;
+      expect(true satisfies AssertTypeInequality<JSONSchemaAssessmentModelWithExplicitSchoolJsonSchemaCollectionType['class'], unknown>).toBe(true);
+    });
+
+    it("Types inferred from fragment wrappers, with no internal (wrapped) reference to parent JSON schema collection can't resolve $refs", () => {
+      type AssessmentWrapper = TSSchemaFragment<JSONSchemaAssessmentModel>;
+      //   ^?
+      type AssessmentWrapperType = TSSchemaFragmentType<AssessmentWrapper>;
+      //   ^?
+      expect(true satisfies AssertTypeEquality<AssessmentWrapperType['class'], unknown>).toBe(true);
+    });
+
+    it("Types inferred from fragment wrappers, with no internal (wrapped) reference to parent JSON schema collection, even when explicitly passed reference to the parent JSON schema collection can't resolve $refs", () => {
+      type AssessmentWrapper = TSSchemaFragment<JSONSchemaAssessmentModel>;
+      type AssessmentWrapperWithExplicitSchoolJsonSchemaCollectionType = TSSchemaFragmentType<AssessmentWrapper, JSONSchemaSchoolCollection>;
+      //   ^?
+      expect(true satisfies AssertTypeEquality<AssessmentWrapperWithExplicitSchoolJsonSchemaCollectionType['class'], unknown>).toBe(true);
+    });
+
+    it('Types inferred from fragment wrappers, with internal (wrapped) reference to parent JSON schema collection can resolve $refs', () => {
+      type AssessmentWrapperWithIncludedSchoolJsonSchemaCollection = TSSchemaFragment<JSONSchemaSchoolCollection, 'Assessment'>;
+      //   ^?
+      type AssessmentWrapperWithIncludedSchoolJsonSchemaCollectionType = TSSchemaFragmentType<AssessmentWrapperWithIncludedSchoolJsonSchemaCollection>;
+      //   ^?
+      expect(true satisfies AssertTypeInequality<AssessmentWrapperWithIncludedSchoolJsonSchemaCollectionType['class'], unknown>).toBe(true);
+    });
+
+    it('Non-referencing properties are inferred correctly', () => {
+      type AssessmentWrapper = TSSchemaFragment<JSONSchemaAssessmentModel>;
+      type AssessmentType = TSSchemaFragmentType<AssessmentWrapper>;
+      expect(true satisfies AssertTypeEquality<AssessmentType['id'], string>).toBe(true);
+    });
+
+    it('Referencing properties are inferred correctly', () => {
+      type AssessmentWrapper = TSSchemaFragment<JSONSchemaSchoolCollection, 'Assessment'>;
+      type AssessmentType = TSSchemaFragmentType<AssessmentWrapper>;
+      expect(true satisfies AssertTypeEquality<AssessmentType['kind'], number>).toBe(true);
+      expect(true satisfies AssertTypeEquality<AssessmentType['class'], _SchoolModel<'Class'> | null>).toBe(true);
+      expect(true satisfies AssertTypeEquality<AssessmentType['record']['battery']['isProctored'], boolean>).toBe(true);
+    });
+
+    it('Recursively nested types are successfully inferred', () => {
+      type AssessmentWrapper = TSSchemaFragment<JSONSchemaSchoolCollection, 'Assessment'>;
+      type AssessmentType = TSSchemaFragmentType<AssessmentWrapper>;
+      type AssessmentClassType = AssessmentType['class'];
+      type AssessmentClassNonNullableType = Exclude<AssessmentClassType, null>;
+      type AssessmentClassAssessmentsType = AssessmentClassNonNullableType['assessments'];
+      type AssessmentClassAssessmentsItemType = AssessmentClassAssessmentsType extends Array<infer U> ? U : never;
+      expect(true satisfies AssertTypeEquality<AssessmentType, AssessmentClassAssessmentsItemType>).toBe(true);
+    });
   });
 });

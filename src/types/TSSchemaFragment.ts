@@ -4,7 +4,7 @@
 
 // FIXME: Append enum handling on top of Value and Model schemas
 
-import type { JSONSchemaCollection, JSONSchemaModelFragment, JSONSchemaNotCollectionFragment } from './JSONSchema.js';
+import type { JSONSchemaCollection, JSONSchemaFragmentType, JSONSchemaModelFragment, JSONSchemaNotCollectionFragment } from './JSONSchema.js';
 import type { _TSSchemaFragmentName, JSONSchemaCollectionWrapper, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection.js';
 import type { TSSchemaFragmentName } from './TSSchemaCollection.js';
 
@@ -61,5 +61,13 @@ export type TSSchemaFragmentPropertyName<T extends JSONSchemaModelFragment | JSO
 /**
  * Infers type from JSON schema fragment or JSON schema fragment wrapper
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type TSSchemaFragmentType<T extends JSONSchemaNotCollectionFragment | JSONSchemaFragmentWrapper> = never; // !FIXME: Implement type inference
+export type TSSchemaFragmentType<
+  T extends JSONSchemaNotCollectionFragment | JSONSchemaFragmentWrapper,
+  TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection,
+> = T extends JSONSchemaNotCollectionFragment
+  ? JSONSchemaFragmentType<T, TSchemaCollection>
+  : T extends JSONSchemaFragmentWrapper
+    ? UnwrapJSONSchemaFragmentWrapper<T> extends infer U extends JSONSchemaNotCollectionFragment
+      ? JSONSchemaFragmentType<U, T['__collection']>
+      : unknown
+    : unknown;

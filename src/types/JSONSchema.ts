@@ -5,7 +5,13 @@
  * constants and keep their literal types for inference.
  */
 
-import type { JSONSchema7 as OriginalJSONSchema7, JSONSchema7Array, JSONSchema7Object, JSONSchema7Type, JSONSchema7TypeName } from 'json-schema';
+import type {
+  JSONSchema7 as OriginalJSONSchema,
+  JSONSchema7Array as OriginalJSONSchemaArray,
+  JSONSchema7Object as OriginalJSONSchemaObject,
+  JSONSchema7Type as OriginalJSONSchemaType,
+  JSONSchema7TypeName as OriginalJSONSchemaTypeName,
+} from 'json-schema';
 
 /**
  * Makes every property of a type, recursively, optional and read-only
@@ -17,16 +23,16 @@ type _DeepOptionallyReadOnly<T> = {
 /**
  * JSON Schema Draft 7 schema type, with every property made optional and read-only recursively so that `as const` schemas are assignable to it
  */
-export type JSONSchema7 = _DeepOptionallyReadOnly<OriginalJSONSchema7>;
+export type JSONSchema7 = _DeepOptionallyReadOnly<OriginalJSONSchema>;
 
 /**
  * Primitive value type names
  */
-export type JSONSchemaPrimitiveTypeName = Exclude<JSONSchema7TypeName, 'array' | 'object'>;
+export type JSONSchemaPrimitiveTypeName = Exclude<OriginalJSONSchemaTypeName, 'array' | 'object'>;
 /**
  * Primitive value types
  */
-export type JSONSchemaPrimitiveType = Exclude<JSONSchema7Type, JSONSchema7Object | JSONSchema7Array>;
+export type JSONSchemaPrimitiveType = Exclude<OriginalJSONSchemaType, OriginalJSONSchemaObject | OriginalJSONSchemaArray>;
 /**
  * Maps a primitive type name, or a union of primitive type names, to its corresponding TypeScript type
  */
@@ -106,7 +112,8 @@ type _JSONSchemaFragmentType<T extends JSONSchemaNotCollectionFragment, TSchemaC
 
 /**
  * Represents a JSON schema model definition, which is any object schema fragment containing `properties`.
- * TODO: Support `boolean schemas (valid JSON schema)`, `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`
+ * TODO: Support `type` arrays of primitive types: example `["object", "string"]`
+ * TODO: Support `boolean schemas (valid JSON schema)`, `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`, `readOnly`. `writeOnly`
  */
 export type JSONSchemaModelFragment = JSONSchemaNotCollectionFragment & { type: 'object'; properties: Record<string, JSONSchema7> };
 /**
@@ -114,9 +121,10 @@ export type JSONSchemaModelFragment = JSONSchemaNotCollectionFragment & { type: 
  */
 export type JSONSchemaFragmentIsModel<T extends JSONSchema7> = T extends JSONSchemaModelFragment ? true : false;
 /**
- * Infers a value type from a JSON schema model definition. Every property is inferred as required, and keeps the `readonly` modifier it was declared
- * with in the schema (so all properties of an `as const` schema are inferred as `readonly`).
- * TODO: Support `boolean schemas (valid JSON schema)`, `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`
+ * Infers a value type from a JSON schema model definition. Every property is inferred as required and mutable, regardless of any `readonly` or `?`
+ * modifiers the schema's own `properties` object was declared with (e.g. the `readonly` that `as const` adds to every key).
+ * TODO: Support `type` arrays of primitive types: example `["object", "string"]`
+ * TODO: Support `boolean schemas (valid JSON schema)`, `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`, `readOnly`. `writeOnly`
  */
 export type JSONSchemaModelFragmentType<
   T extends JSONSchemaNotCollectionFragment,
@@ -125,7 +133,13 @@ export type JSONSchemaModelFragmentType<
   type: 'object';
   properties: infer P extends Record<string, JSONSchema7>;
 }
-  ? { [key in keyof P]: P[key] extends JSONSchemaNotCollectionFragment ? JSONSchemaFragmentType<P[key], TSchemaCollection> : unknown }
+  ? // Homomorphic mapped type: strip the `readonly` / `?` modifiers it would otherwise copy from the schema literal, and the `undefined` an optional key
+    // adds to its schema, so that it does not fail the fragment check below
+    {
+      -readonly [key in keyof P]-?: Exclude<P[key], undefined> extends infer F extends JSONSchemaNotCollectionFragment
+        ? JSONSchemaFragmentType<F, TSchemaCollection>
+        : unknown;
+    }
   : unknown;
 
 /**
@@ -159,7 +173,7 @@ export type JSONSchemaEnumFragmentType<T extends JSONSchemaNotCollectionFragment
 /**
  * Represents a JSON schema primitive type definition, which is any schema fragment containing a `type` property naming a primitive type, or an array of
  * primitive type names.
- * TODO: Support `type` arrays naming 'array' or 'object' alongside primitive types
+ * TODO: Support `type` arrays of primitive types: example `["number", "string"]`
  */
 export type JSONSchemaPrimitiveTypeFragment = JSONSchemaNotCollectionFragment & {
   type: JSONSchemaPrimitiveTypeName | ReadonlyArray<JSONSchemaPrimitiveTypeName>;
@@ -184,6 +198,7 @@ export type JSONSchemaPrimitiveTypeFragmentType<T extends JSONSchemaNotCollectio
 
 /**
  * Represents a JSON schema array type definition, which is any schema fragment containing a `type="array"` property and an optional `items` property.
+ * TODO: Support `type` arrays of primitive types: example `["array", "string"]`
  */
 export type JSONSchemaArrayTypeFragment = JSONSchemaNotCollectionFragment & {
   type: 'array';
@@ -210,7 +225,8 @@ export type JSONSchemaArrayTypeFragmentType<
 
 /**
  * Represents a JSON schema object type definition, which is any schema fragment containing a `type="object"` property and no `properties` property.
- * TODO: Support `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`
+ * TODO: Support `type` arrays of primitive types: example `["object", "string"]`
+ * TODO: Support `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`, `readOnly`. `writeOnly`
  */
 export type JSONSchemaObjectTypeFragment = JSONSchemaNotCollectionFragment & {
   type: 'object';
@@ -222,7 +238,8 @@ export type JSONSchemaObjectTypeFragment = JSONSchemaNotCollectionFragment & {
 export type JSONSchemaFragmentIsObjectType<T extends JSONSchema7> = T extends JSONSchemaObjectTypeFragment ? true : false;
 /**
  * Infers a value type from a JSON schema object type definition
- * TODO: Support `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`
+ * TODO: Support `type` arrays of primitive types: example `["object", "string"]`
+ * TODO: Support `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`, `readOnly`. `writeOnly`
  */
 export type JSONSchemaObjectTypeFragmentType<
   T extends JSONSchemaNotCollectionFragment,

@@ -2,7 +2,7 @@
  * Typescript utilities for type inference from a JSON schema definition of a model property type
  */
 
-import type { JSONSchemaCollection, JSONSchemaNotCollectionFragment, JSONSchemaModelFragment } from './JSONSchema.js';
+import type { JSONSchemaCollection, JSONSchemaNotCollectionFragment, JSONSchemaModelFragment, JSONSchemaFragmentType } from './JSONSchema.js';
 import type { _TSPropertyName, JSONSchemaFragmentWrapper, TSSchemaFragmentPropertyName, UnwrapJSONSchemaFragmentWrapper } from './TSSchemaFragment.js';
 import type { _TSSchemaFragmentName, JSONSchemaCollectionWrapper, TSSchemaFragmentName, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection.js';
 
@@ -95,5 +95,13 @@ type _TSSchemaModelProperty<
 /**
  * Infers type from JSON schema fragment or JSON schema model property wrapper
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type TSSchemaModelPropertyType<T extends JSONSchemaNotCollectionFragment | JSONSchemaModelPropertyWrapper> = never; // !FIXME: Implement type inference
+export type TSSchemaModelPropertyType<
+  T extends JSONSchemaNotCollectionFragment | JSONSchemaModelPropertyWrapper,
+  TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection,
+> = T extends JSONSchemaNotCollectionFragment
+  ? JSONSchemaFragmentType<T, TSchemaCollection>
+  : T extends JSONSchemaModelPropertyWrapper
+    ? UnwrapJSONSchemaModelPropertyWrapper<T> extends infer U extends JSONSchemaNotCollectionFragment
+      ? JSONSchemaFragmentType<U, TSchemaCollection extends never ? T['__collection'] : TSchemaCollection>
+      : unknown
+    : unknown;

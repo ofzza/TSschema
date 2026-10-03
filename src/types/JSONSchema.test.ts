@@ -170,7 +170,7 @@ describe('JSONSchema', () => {
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<{ readonly type: 'string' } | { readonly type: 'number' }>, string | number>).toBe(
           true,
         );
-        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<{ readonly type: 'string' } | _ModelA>, string | { readonly a: number }>).toBe(true);
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<{ readonly type: 'string' } | _ModelA>, string | { a: number }>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<{ readonly const: 1 } | { readonly enum: readonly [2, 3] }>, 1 | 2 | 3>).toBe(true);
       });
 
@@ -218,11 +218,20 @@ describe('JSONSchema', () => {
         expect(true satisfies AssertTypeEquality<_SchoolModel<'Class'>['code'], string>).toBe(true);
       });
 
-      it('Keeps the readonly modifier of model properties', () => {
+      it('Does not carry the readonly modifier of schema properties over to model properties', () => {
+        expect(true satisfies AssertTypeEquality<JSONSchemaModelFragmentType<_ModelA>, { a: number }>).toBe(true);
+        // @ts-expect-error `as const` schema properties are readonly, but the inferred model properties are not
         expect(true satisfies AssertTypeEquality<JSONSchemaModelFragmentType<_ModelA>, { readonly a: number }>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaModelFragmentType<{ type: 'object'; properties: { a: { type: 'number' } } }>, { a: number }>).toBe(
           true,
         );
+      });
+
+      it('Does not carry the optional modifier of schema properties over to model properties', () => {
+        type Model = JSONSchemaModelFragmentType<{ type: 'object'; properties: { a?: { type: 'number' } } }>;
+        expect(true satisfies AssertTypeEquality<Model, { a: number }>).toBe(true);
+        // @ts-expect-error an optional schema property still infers a required model property
+        expect(true satisfies AssertTypeEquality<Model, { a?: number }>).toBe(true);
       });
 
       it('Infers unknown from a model with boolean schema properties', () => {
@@ -361,7 +370,7 @@ describe('JSONSchema', () => {
         const _arrayNullTypeFragment = { type: 'array', items: { type: 'null' } } as const;
         expect(true satisfies AssertTypeEquality<JSONSchemaArrayTypeFragmentType<typeof _arrayNullTypeFragment>, Array<null>>).toBe(true);
         const _arrayModelTypeFragment = { type: 'array', items: { type: 'object', properties: { a: { type: 'number' } } } } as const;
-        expect(true satisfies AssertTypeEquality<JSONSchemaArrayTypeFragmentType<typeof _arrayModelTypeFragment>, Array<{ readonly a: number }>>).toBe(true);
+        expect(true satisfies AssertTypeEquality<JSONSchemaArrayTypeFragmentType<typeof _arrayModelTypeFragment>, Array<{ a: number }>>).toBe(true);
       });
 
       it('Infers an array of unknown when items are not a single schema', () => {
@@ -420,8 +429,8 @@ describe('JSONSchema', () => {
 
       it('Infers the intersection of models', () => {
         type AllOfModels = JSONSchemaFragmentType<{ readonly allOf: readonly [_ModelA, _ModelB] }>;
-        expect(true satisfies AssertTypeAssignable<AllOfModels, { readonly a: number; readonly b: string }>).toBe(true);
-        expect(true satisfies AssertTypeAssignable<{ readonly a: number; readonly b: string }, AllOfModels>).toBe(true);
+        expect(true satisfies AssertTypeAssignable<AllOfModels, { a: number; b: string }>).toBe(true);
+        expect(true satisfies AssertTypeAssignable<{ a: number; b: string }, AllOfModels>).toBe(true);
       });
 
       it('Infers never from conflicting types', () => {
@@ -474,10 +483,7 @@ describe('JSONSchema', () => {
 
       it('Infers the union of models and other types', () => {
         expect(
-          true satisfies AssertTypeEquality<
-            JSONSchemaFragmentType<{ readonly anyOf: readonly [_ModelA, { readonly type: 'null' }] }>,
-            { readonly a: number } | null
-          >,
+          true satisfies AssertTypeEquality<JSONSchemaFragmentType<{ readonly anyOf: readonly [_ModelA, { readonly type: 'null' }] }>, { a: number } | null>,
         ).toBe(true);
       });
 

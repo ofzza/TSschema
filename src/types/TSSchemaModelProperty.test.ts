@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/tsstd';
-import type { TSSchemaModelProperty, UnwrapJSONSchemaModelPropertyWrapper } from './TSSchemaModelProperty.js';
+import type { TSSchemaModelProperty, TSSchemaModelPropertyType, UnwrapJSONSchemaModelPropertyWrapper } from './TSSchemaModelProperty.js';
 
 import type { default as schoolJsonSchema } from '../../res/school.js';
 import type { JSONSchemaCollection, JSONSchemaModelFragment } from './JSONSchema.js';
@@ -10,6 +10,8 @@ type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
 type JSONSchemaAssessmentModel = JSONSchemaSchoolCollection['$defs']['Assessment'];
 //   ^?
 type JSONSchemaAssessmentTitleProperty = JSONSchemaAssessmentModel['properties']['title'];
+//   ^?
+type JSONSchemaAssessmentClassProperty = JSONSchemaAssessmentModel['properties']['class'];
 //   ^?
 
 describe('TSSchemaModel', () => {
@@ -27,10 +29,10 @@ describe('TSSchemaModel', () => {
     type SchoolJsonSchemaCollectionAssessmentTitleProperty = TSSchemaModelProperty<JSONSchemaSchoolCollection, 'Assessment', 'title'>;
     //   ^?
     type SchoolJsonSchemaCollectionAssessmentDefinitionTitleProperty = TSSchemaModelProperty<
+      // ^?
       TSSchemaFragment<JSONSchemaSchoolCollection, 'Assessment'>,
       'title'
     >;
-    //   ^?
 
     // Wrapping a JSON schema model property definition directly, or addressing it by name from a model, a model wrapper, a collection or a collection
     // addressed model wrapper should all yield the same internal definition
@@ -88,6 +90,6 @@ describe('TSSchemaModel', () => {
   });
 
   it('TSSchemaModelPropertyType', () => {
-    // !FIXME: Implement type inference testing
+    // TODO: Write tests
   });
 });
