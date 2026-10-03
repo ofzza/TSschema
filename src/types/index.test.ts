@@ -5,7 +5,7 @@ import type { TSSchemaFragmentName } from './TSSchemaCollection.js';
 import type { TSSchemaModelType } from './TSSchemaFragment.js';
 import type { TSSchemaCollection, TSSchemaFragment, TSSchemaName, TSSchemaProperty, TSSchemaType } from './index.js';
 
-import type { default as schoolJsonSchema } from '../../res/school.js';
+import type { default as schoolJsonSchema } from '../../res/school.json';
 type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
 //   ^?
 type JSONSchemaAssessmentModel = JSONSchemaSchoolCollection['$defs']['Assessment'];

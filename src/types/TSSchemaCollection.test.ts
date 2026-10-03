@@ -5,7 +5,7 @@ import type { TSSchemaCollection, TSSchemaFragmentName, UnwrapJSONSchemaCollecti
 import type { TSSchemaFragment } from './TSSchemaFragment.js';
 import type { TSSchemaProperty } from './TSSchemaProperty.js';
 
-import type { default as schoolJsonSchema } from '../../res/school.js';
+import type { default as schoolJsonSchema } from '../../res/school.json';
 type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
 //   ^?
 

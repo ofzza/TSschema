@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeAssignable } from '@ofzza/tsstd';
 import type { JSONSchemaFragmentIsObjectType, JSONSchemaObjectTypeFragment, JSONSchemaObjectTypeFragmentType } from './index.js';
 
-import type { default as schoolJsonSchema } from '../../../res/school.js';
+import type { default as schoolJsonSchema } from '../../../res/school.json';
 type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
 //   ^?
 type AssessmentModel = JSONSchemaSchoolCollection['$defs']['Assessment'];
