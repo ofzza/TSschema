@@ -65,6 +65,10 @@ export type JSONSchemaFragmentIsCollection<T extends JSONSchema7> = T extends { 
  */
 export type JSONSchemaCollection = JSONSchema7 & { $defs: Record<string, JSONSchema7> };
 /**
+ * Gets the names of all fragments defined in a JSON schema collection's `$defs`. The default, unspecified collection infers `string | number`.
+ */
+export type JSONSchemaFragmentName<T extends JSONSchemaCollection = JSONSchemaCollection> = keyof T['$defs'];
+/**
  * Determines if a JSON schema fragment is a definition (i.e., not a collection).
  */
 export type JSONSchemaFragmentIsNotCollection<T extends JSONSchema7> = JSONSchemaFragmentIsCollection<T> extends true ? false : true;
@@ -120,6 +124,10 @@ export type JSONSchemaModelFragment = JSONSchemaNotCollectionFragment & { type: 
  * Determines if a JSON schema fragment is a model definition (i.e., an object with `properties`).
  */
 export type JSONSchemaFragmentIsModel<T extends JSONSchema7> = T extends JSONSchemaModelFragment ? true : false;
+/**
+ * Gets the names of all properties defined in a JSON schema model definition's `properties`. The default, unspecified model infers `string | number`.
+ */
+export type JSONSchemaFragmentPropertyName<T extends JSONSchemaModelFragment = JSONSchemaModelFragment> = keyof T['properties'];
 /**
  * Infers a value type from a JSON schema model definition. Every property is inferred as required and mutable, regardless of any `readonly` or `?`
  * modifiers the schema's own `properties` object was declared with (e.g. the `readonly` that `as const` adds to every key).

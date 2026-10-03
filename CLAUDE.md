@@ -39,13 +39,15 @@ TSschema — helps generate TS data models, provides TS utility types for deep t
 src/
   index.ts                 Barrel, re-exports src/types/ (type-only)
   types/
-    index.ts               Barrel of the public type exports
+    index.ts               Public type surface: re-exports the three wrappers and defines TSSchemaName / TSSchemaType, which dispatch to the
+                           per-module name and value type utilities
     JSONSchema.ts          JSONSchema7 override and value type inference from JSON schema fragments (JSONSchemaFragmentType, per-keyword
-                           JSONSchema*Fragment / JSONSchemaFragmentIs* / JSONSchema*FragmentType utilities). Not re-exported from the barrel
+                           JSONSchema*Fragment / JSONSchemaFragmentIs* / JSONSchema*FragmentType utilities), plus the JSONSchemaFragmentName /
+                           JSONSchemaFragmentPropertyName key utilities. Not re-exported from the barrel
     TSSchemaCollection.ts  Wrapper and fragment-name utilities for a JSON schema collection (a schema with `$defs`)
-    TSSchemaFragment.ts    Wrapper and property-name utilities for a single JSON schema fragment
-    TSSchemaModelProperty.ts  Wrapper for a single property of a JSON schema model fragment
-    *.test.ts              Compile-time (and runtime) assertions for each of the above
+    TSSchemaFragment.ts    Wrapper, property-name and value type (TSSchemaModelType) utilities for a single JSON schema fragment
+    TSSchemaProperty.ts    Wrapper and value type (TSSchemaPropertyType) utilities for a single property of a JSON schema model fragment
+    *.test.ts              Compile-time (and runtime) assertions for each of the above (including index.test.ts for the barrel's own types)
   __legacy/                Previous implementation (OntologyService, Infer* utility types, runtime reflection) and its tests.
                            GITIGNORED and excluded from both tsconfigs and both Vitest projects - local reference only, never committed, built or tested
 res/                       JSON schema test fixtures, each as `.json` and as an `as const` `.ts` (only `.ts` is imported, by tests only)
@@ -113,11 +115,12 @@ When `README.md` gains code samples, annotate them `// This will work` / `// Thi
 Enforced by `ci:prettier` and `ci:eslint`, both of which only look at `src` — **`README.md` and `CLAUDE.md` are not format-enforced**, so keep them tidy by hand.
 
 - Prettier: `printWidth: 160`, single quotes, 2-space indent, semicolons, trailing commas, always-parenthesised arrow params.
-- JSDoc on every exported symbol. One-line summary in imperative third person ("Gets ...", "Asserts ...", "Checks if ..."). Types get a prefix: `Utility type: ...`. Only `@param` and `@returns` are used — no `@example`, `@template` or `@see`.
+- JSDoc on every exported symbol, following `src/types/JSONSchema.ts`: a descriptive file header comment, and a summary in third person ("Gets ...", "Infers ...", "Wraps ...", "Represents ...") with no `Utility type:` prefix, followed by any fallback behaviour (what an unspecified / unsupported input infers). Only `@param` and `@returns` are used — no `@example`, `@template` or `@see`.
+- In conditional type chains, put a `// comment` line before each branch saying what it handles (Prettier places it after the `?` / `:`), rather than trailing comments.
 - Internal, non-exported symbols are `_`-prefixed and still get JSDoc. ESLint's `no-unused-vars` ignores `_`-prefixed vars, args and catch bindings.
 - Group sections with `// #region Name` / `// #endregion`.
 - Generic parameters are `T`-prefixed and descriptive (`TSchema`, `TModelName`).
-- `it()` names are capitalised verb phrases: `it('Infers all model names from the schema', ...)`.
+- `it()` names are capitalised verb phrases: `it('Infers all model names from the schema', ...)`. Each test file has one top-level `describe` named after its module, with a nested `describe` per exported type.
 - Rules deliberately off: `@typescript-eslint/no-explicit-any`, `ban-ts-comment`, `no-empty-object-type`. `any` and `@ts-expect-error` are fine to use where they earn their place.
 
 ## Gotchas and known issues
@@ -140,16 +143,18 @@ Enforced by `ci:prettier` and `ci:eslint`, both of which only look at `src` — 
 - **`tsc` never cleans `dist/` by itself** — `npm run build` does, through `prebuild`/`clean`. `ci:build` and `npm run dev` call `tsc` directly and do not, so stale output can linger after them; it is only published through `npm publish`, whose `prepare` runs the cleaning `build`.
 - **`@ofzza/tsstd` is a git devDependency (`#master`), not an npm one**, because it is not published yet. The lockfile pins a commit; `npm update @ofzza/tsstd` moves it to the current `master`. Switch to a semver range once it is on npm.
 - **The `.vscode/` re-includes in `.gitignore` are ineffective.** The bare `.vscode/` line ignores the whole directory, and git cannot re-include a file whose parent directory is excluded, so the later `!.vscode/settings.json`, `!.vscode/launch.json` etc. lines do nothing and `.vscode/launch.json` / `extensions.json` are untracked. Remove the `.vscode/` line (keeping `.vscode/*`) to actually commit them.
-- **Never forward a type parameter whose constraint is a conditional type into another generic.** While `T` is generic, a constraint like `TName extends (T extends X ? A<T> : never)` is left unresolved. TS can't prove anything fits it: narrowing `T` in the body never re-checks another parameter's constraint, nested conditionals are split into branches that must all fit, and constraints written about different parameters (`T` vs an `infer U`) never relate. Public types may keep conditional constraints for call-site errors, but internal `_`-prefixed helpers take already-unwrapped types with plain `keyof X` constraints (`_TSSchemaFragmentName`, `_TSPropertyName`). At each hand-off, `infer` the concrete type and narrow with `TName extends keyof X ? … : fallback`; the narrowed `keyof X & TName` then trivially fits.
+- **Never forward a type parameter whose constraint is a conditional type into another generic.** While `T` is generic, a constraint like `TName extends (T extends X ? A<T> : never)` is left unresolved. TS can't prove anything fits it: narrowing `T` in the body never re-checks another parameter's constraint, nested conditionals are split into branches that must all fit, and constraints written about different parameters (`T` vs an `infer U`) never relate. Public types may keep conditional constraints for call-site errors, but internal `_`-prefixed helpers take already-unwrapped types and either plain `keyof X` constraints (`JSONSchemaFragmentName`, `JSONSchemaFragmentPropertyName`) or unconstrained names they narrow themselves. At each hand-off, `infer` the concrete type and narrow with `TName extends keyof X ? … : fallback`; the narrowed `keyof X & TName` then trivially fits.
 - **`rootDir` differs between the two tsconfigs on purpose.** `tsconfig.json` uses `./src` so the build output matches `main`/`types` (`dist/index.*`); `tsconfig.test.json` overrides it to `./` because tests import fixtures from `res/`, which would otherwise fail with TS6059. A non-test source importing from `res/` will break the build.
 - **A conditional type on a bare type parameter distributes over unions — per conditional.** `JSONSchemaFragmentType` intersects one conditional per keyword, so a union input made each one distribute separately, and any branch matching only some union members produced `X | unknown`, i.e. `unknown`, collapsing the whole result. Distribute once at the entry point (`T extends unknown ? _Impl<T> : never`) and keep the per-keyword logic in the non-distributed helper.
 - **Define every `JSONSchemaFragmentIs*<T>` as `T extends JSONSchema*Fragment ? true : false`.** Hand-written shape checks drifted from the fragment types that `JSONSchemaFragmentType` dispatches on (e.g. tuple `items` were "not an array" to the check but an array to the dispatcher).
 - **Recurse over tuples with `T extends readonly [infer H, ...infer R]`, and handle the non-tuple case explicitly.** A plain `X[]` matches neither the empty-tuple nor the head/rest pattern; the TSstd `ArrayIsEmpty`/`ArrayHead` helpers return `boolean` / `X | undefined` for it, which previously fell through to `never` and wiped out the whole inferred type.
 - **A homomorphic mapped type over a schema object copies the schema literal's modifiers into the inferred value type.** `{ [K in keyof P]: ... }`, with `P` a type parameter or `infer`red type, keeps each key's `readonly` and `?`. So an `as const` schema made every inferred model property `readonly`. `JSONSchemaModelFragmentType` maps with `-readonly` / `-?`. An optional key also adds `| undefined` to `P[K]` (which `-?` does not remove inside the body), so `Exclude` it before testing the fragment. Readonly-ness of the data should come from the schema's `readOnly` keyword (not yet supported), never from how the schema was declared. `const` / `enum` values are still returned as declared, so an object or array `const` in an `as const` schema infers a `readonly` value.
 - **JSON schema type inference uses `unknown` for "no constraint".** Every per-keyword `JSONSchema*FragmentType` returns `unknown` when its keyword is absent or unsupported, so it is neutral in `JSONSchemaFragmentType`'s intersection. `never` is reserved for unsatisfiable schemas (conflicting siblings, empty `anyOf`).
-- **`JSONSchemaFragmentWrapper` is structurally also a `JSONSchemaCollectionWrapper`**, because both carry `__collection`. Any conditional that dispatches on both must test the fragment wrapper first.
+- **Wrappers nest structurally: `JSONSchemaModelPropertyWrapper` ⊂ `JSONSchemaFragmentWrapper` ⊂ `JSONSchemaCollectionWrapper`.** A property wrapper is the fragment wrapper of its parent model plus `__property` / `__propertyName`, and every wrapper carries `__collection`. Any conditional that dispatches on several must test the most specific first — e.g. `TSSchemaType` tests the property wrapper before the fragment wrapper, and `TSSchemaName` tests the fragment wrapper before the collection wrapper (getting either backwards silently picks the wrong branch, which the `index.test.ts` regressions cover). Some of this is deliberate and tested: a fragment or property wrapper can be passed wherever a collection is accepted (addressing another fragment of the parent collection), a property wrapper wherever a fragment wrapper is (addressing a sibling property), and `TSSchemaModelType` of a property wrapper infers its parent model's type.
+- **A name parameter defaulting to `never` must be guarded before a distributive check.** `TName extends keyof X ? ... : ...` with `TName = never` distributes over nothing and silently yields `never`. The wrappers test `[TName] extends [never]` first and substitute "all names", so an omitted name wraps every fragment / property (a union of wrappers), as a union of names does. `TSSchemaProperty<TModel>` with no name is the exception: it wraps the model itself as a property (e.g. an inline nested model).
+- **`*Type` utilities prefer an explicitly passed collection over the wrapper's own.** "Passed" is detected as `JSONSchemaCollection extends TSchemaCollection` being false, so explicitly passing the bare `JSONSchemaCollection` counts as not passing one.
 - The recommended VS Code extension set includes `orta.vscode-twoslash-queries`, which powers the `// ^?` type-inspection comments used in sibling repos.
-- **Not yet adopted:** the sibling `ts-std` repo keeps a `src/readme.spec.ts` whose `describe`/`it` tree mirrors its README headings 1:1, turning documentation examples into executable tests. This repo has no equivalent — consider adding one once the README documents an API.
+- **Not yet adopted:** the sibling `ts-std` repo keeps a `src/readme.spec.ts` whose `describe`/`it` tree mirrors its README headings 1:1, turning documentation examples into executable tests. This repo has no equivalent yet, although the README now documents the type exports — README samples are verified by hand (see [Verifying README samples](#verifying-readme-samples)).
 
 ## Continuous integration
 
@@ -167,8 +172,7 @@ The public surface, re-exported from `src/index.ts`. Keep this list in sync (see
 
 All type-only, all from `src/types/` via `src/types/index.ts`:
 
-- `TSSchemaCollection.ts`: `TSSchemaCollection`, `TSSchemaFragmentName`
-- `TSSchemaFragment.ts`: `TSSchemaFragment`, `TSPropertyName` (re-export of `TSSchemaFragmentPropertyName`)
-- `TSSchemaModelProperty.ts`: `TSSchemaModelProperty`
+- Re-exported wrappers: `TSSchemaCollection` (`TSSchemaCollection.ts`), `TSSchemaFragment` (`TSSchemaFragment.ts`), `TSSchemaProperty` (`TSSchemaProperty.ts`)
+- Defined in `src/types/index.ts` itself: `TSSchemaName` (dispatches to `TSSchemaFragmentPropertyName` / `TSSchemaFragmentName`) and `TSSchemaType` (dispatches to `TSSchemaPropertyType` / `TSSchemaModelType`)
 
-`src/types/JSONSchema.ts` is exported per module (consumed by the other `src/types/` modules and tests) but not re-exported from the barrel.
+The per-module name and value type utilities (`TSSchemaFragmentName`, `TSSchemaFragmentPropertyName`, `TSSchemaModelType`, `TSSchemaPropertyType`), `src/types/JSONSchema.ts` and the wrapper types themselves (`JSONSchema*Wrapper`, `UnwrapJSONSchema*Wrapper`) are exported per module (consumed by the other `src/types/` modules and tests) but deliberately not re-exported from the barrel — README samples must only import the barrel exports above.
