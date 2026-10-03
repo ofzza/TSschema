@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/tsstd';
 import type { JSONSchemaPrimitiveType, JSONSchemaPrimitiveTypeFromName, JSONSchemaPrimitiveTypeName } from './index.js';
 
-import type { default as schoolJsonSchema } from '../../../res/school.js';
+import type { default as schoolJsonSchema } from '../../../res/school.json';
 type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
 //   ^?
 

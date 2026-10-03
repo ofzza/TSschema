@@ -2,10 +2,11 @@
  * Public type surface of the library.
  *
  * Re-exports the wrappers for a JSON schema collection, fragment and model property, and provides `TSSchemaName` and `TSSchemaType`, which infer names
- * and value types from any of them by dispatching to the per-module utilities based on what they are given.
+ * and value types from any of them by dispatching to the per-module utilities based on what they are given, as well as `TSSchemaJSONSchema` and
+ * `TSSchemaJSONCollection`, which an `as const` schema can be checked against with `satisfies`.
  */
 
-import type { JSONSchemaCollection, JSONSchemaModelFragment, JSONSchemaNotCollectionFragment } from './JSONSchema/index.js';
+import type { JSONSchema7, JSONSchemaCollection, JSONSchemaModelFragment, JSONSchemaNotCollectionFragment } from './JSONSchema/index.js';
 import type { JSONSchemaCollectionWrapper, TSSchemaFragmentName } from './TSSchemaCollection.js';
 import type { JSONSchemaFragmentWrapper, TSSchemaFragmentPropertyName, TSSchemaModelType } from './TSSchemaFragment.js';
 import type { JSONSchemaModelPropertyWrapper, TSSchemaPropertyType } from './TSSchemaProperty.js';
@@ -13,6 +14,17 @@ import type { JSONSchemaModelPropertyWrapper, TSSchemaPropertyType } from './TSS
 export type { TSSchemaCollection } from './TSSchemaCollection.js';
 export type { TSSchemaFragment } from './TSSchemaFragment.js';
 export type { TSSchemaProperty } from './TSSchemaProperty.js';
+
+/**
+ * Represents any JSON schema, with every property optionally read-only, so that a schema declared `as const` can be checked against it with `satisfies`
+ * without losing its literal types.
+ */
+export type TSSchemaJSONSchema = JSONSchema7;
+/**
+ * Represents a JSON schema collection (a JSON schema defining its fragments in `$defs`), with every property optionally read-only, so that a collection
+ * declared `as const` can be checked against it with `satisfies` without losing its literal types.
+ */
+export type TSSchemaJSONCollection = JSONSchemaCollection;
 
 /**
  * Gets the names addressable within a JSON schema collection, model fragment or wrapper:

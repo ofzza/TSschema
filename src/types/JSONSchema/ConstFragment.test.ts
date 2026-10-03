@@ -2,13 +2,13 @@ import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeAssignable } from '@ofzza/tsstd';
 import type { JSONSchemaConstFragment, JSONSchemaConstFragmentType, JSONSchemaFragmentIsConst } from './index.js';
 
-import type { default as constJsonSchema } from '../../../res/const.js';
+import type { default as constJsonSchema } from '../../../res/const.json';
 type JSONSchemaConstCollection = typeof constJsonSchema;
 //   ^?
 type JSONSchemaConst = JSONSchemaConstCollection['$defs']['Const'];
 //   ^?
 
-import type { default as enumJsonSchema } from '../../../res/enum.js';
+import type { default as enumJsonSchema } from '../../../res/enum.json';
 type JSONSchemaEnumCollection = typeof enumJsonSchema;
 //   ^?
 type JSONSchemaEnum = JSONSchemaEnumCollection['$defs']['Enum'];

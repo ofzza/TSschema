@@ -3,15 +3,16 @@
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "bundler",
-    "declaration": true,
-    "rootDir": "./src",
-    "outDir": "dist",
+    "rootDir": "./",
+    "noEmit": true,
     "strict": true,
     "isolatedModules": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "allowArbitraryExtensions": true,
+    "resolveJsonModule": true
   },
-  "include": ["src/*.ts", "src/**/*.ts", "src/*.json", "src/**/*.json"],
-  "exclude": ["src/__legacy", "src/*.spec.ts", "src/**/*.spec.ts", "src/*.test.ts", "src/**/*.test.ts", "node_modules", "dist", "vite.config.ts"]
+  "include": ["src/*.ts", "src/**/*.ts", "src/*.json", "src/**/*.json", "res/**/*.ts"],
+  "exclude": ["node_modules", "dist", "vite.config.ts"]
 }
