@@ -5,7 +5,7 @@
  * that any `$ref` between fragments of the collection can later be resolved when inferring their value types.
  */
 
-import type { JSONSchemaCollection, JSONSchemaFragmentName } from './JSONSchema.js';
+import type { JSONSchemaCollection, JSONSchemaFragmentName } from './JSONSchema/index.js';
 
 /**
  * Wrapper type for a JSON schema collection, holding on to the collection as `__collection`.

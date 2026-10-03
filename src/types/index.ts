@@ -5,7 +5,7 @@
  * and value types from any of them by dispatching to the per-module utilities based on what they are given.
  */
 
-import type { JSONSchemaCollection, JSONSchemaModelFragment, JSONSchemaNotCollectionFragment } from './JSONSchema.js';
+import type { JSONSchemaCollection, JSONSchemaModelFragment, JSONSchemaNotCollectionFragment } from './JSONSchema/index.js';
 import type { JSONSchemaCollectionWrapper, TSSchemaFragmentName } from './TSSchemaCollection.js';
 import type { JSONSchemaFragmentWrapper, TSSchemaFragmentPropertyName, TSSchemaModelType } from './TSSchemaFragment.js';
 import type { JSONSchemaModelPropertyWrapper, TSSchemaPropertyType } from './TSSchemaProperty.js';

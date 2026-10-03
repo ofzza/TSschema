@@ -12,7 +12,7 @@ import type {
   JSONSchemaFragmentType,
   JSONSchemaModelFragment,
   JSONSchemaNotCollectionFragment,
-} from './JSONSchema.js';
+} from './JSONSchema/index.js';
 import type { JSONSchemaCollectionWrapper, TSSchemaFragmentName, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection.js';
 
 /**
