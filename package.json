@@ -1,7 +1,15 @@
 {
-  "name": "@ofzza/TSschema",
+  "name": "@ofzza/tsschema",
   "version": "0.0.1",
   "description": "Helps generate TS data models, provides TS utility types for deep type inference and provides TS runtime utilities for type reflection, all based off of a JSON schema",
+  "keywords": [
+    "typescript",
+    "types",
+    "json-schema",
+    "type-inference",
+    "utility-types",
+    "reflection"
+  ],
   "homepage": "https://github.com/ofzza/TSschema#readme",
   "bugs": {
     "url": "https://github.com/ofzza/TSschema/issues"
@@ -15,32 +23,58 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "tsschema": "dist/codegen/bin.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./codegen": {
+      "types": "./dist/codegen/index.d.ts",
+      "default": "./dist/codegen/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
+    "prebuild": "npm run clean",
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "fixtures": "npm run build && node dist/codegen/bin.js generate --models --import-from ../src/index.js \"res/*.json\" && node dist/codegen/bin.js generate --mode module --models --out-dir res/module --import-from ../../src/index.js \"res/*.json\" && node dist/codegen/bin.js generate --mode types --models --out-dir res/types --import-from ../../src/index.js \"res/*.json\"",
     "ci": "npm-run-all ci:*",
-    "ci:build": "tsc",
+    "ci:build": "tsc -p tsconfig.build.json",
     "ci:eslint": "eslint src",
     "ci:prettier": "prettier --check src",
     "ci:test-unit": "npm-run-all test:unit",
     "test": "npm-run-all test:*",
     "test:unit": "vitest run --passWithNoTests --project unit",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run ci"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@types/json-schema": "^7.0.15"
   },
   "devDependencies": {
     "@eslint/compat": "^2.1.1",
     "@eslint/js": "^10.0.1",
-    "@types/node": "^22.20.4",
-    "@types/json-schema": "^7.0.15",
+    "@ofzza/tsstd": "https://github.com/ofzza/TSstd.git#master",
+    "@types/node": "^22.20.5",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.0.1",
     "globals": "^17.12.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.8.1",
-    "ts-jest": "^29.4.1",
     "typescript": "^5.4.0",
     "typescript-eslint": "^8.43.0",
-    "vitest": "^5.0.1",
-    "@ofzza/std-ts": "https://github.com/ofzza/std-ts.git"
+    "vitest": "^5.0.1"
   }
 }
