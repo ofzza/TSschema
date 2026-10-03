@@ -25,6 +25,8 @@ import type {
   JSONSchemaFragmentIsOneOfType,
   JSONSchemaFragmentIsPrimitiveType,
   JSONSchemaFragmentIsReference,
+  JSONSchemaFragmentName,
+  JSONSchemaFragmentPropertyName,
   JSONSchemaFragmentType,
   JSONSchemaModelFragment,
   JSONSchemaModelFragmentType,
@@ -134,6 +136,17 @@ describe('JSONSchema', () => {
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsReference<{ $defs: {}; $ref: '#/$defs/A' }>, false>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsPrimitiveType<{ $defs: {}; type: 'string' }>, false>).toBe(true);
       });
+
+      it('Gets the names of all fragments of a collection', () => {
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentName<_JSONSchemaTreeCollection>, 'Node'>).toBe(true);
+        expect(true satisfies AssertTypeAssignable<'Assessment' | 'Class' | 'Term', JSONSchemaFragmentName<JSONSchemaSchoolCollection>>).toBe(true);
+        expect(true satisfies AssertTypeUnassignable<'Unknown' | number, JSONSchemaFragmentName<JSONSchemaSchoolCollection>>).toBe(true);
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentName<{ $defs: {} }>, never>).toBe(true);
+      });
+
+      it('Gets string | number fragment names from the default collection', () => {
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentName, string | number>).toBe(true);
+      });
     });
 
     describe('Any fragment', () => {
@@ -191,6 +204,22 @@ describe('JSONSchema', () => {
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsModel<{ type: 'object' }>, false>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsModel<{ properties: { a: { type: 'string' } } }>, false>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsModel<{ type: 'string' }>, false>).toBe(true);
+      });
+
+      it('Gets the names of all properties of a model', () => {
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentPropertyName<_ModelA>, 'a'>).toBe(true);
+        expect(
+          true satisfies AssertTypeEquality<
+            JSONSchemaFragmentPropertyName<AssessmentModel>,
+            'id' | 'kind' | 'title' | 'weight' | 'maximumMarks' | 'dueAt' | 'isOpenBook' | 'record' | 'class'
+          >,
+        ).toBe(true);
+        // A union of models only gets the property names they all share (here, none)
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentPropertyName<_ModelA | _ModelB>, never>).toBe(true);
+      });
+
+      it('Gets string | number property names from the default model', () => {
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentPropertyName, string | number>).toBe(true);
       });
 
       it('Infers a model type', () => {
