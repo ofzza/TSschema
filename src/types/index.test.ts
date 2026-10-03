@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/tsstd';
-import type { JSONSchemaFragmentType } from './JSONSchema.js';
+import type { JSONSchemaFragmentType } from './JSONSchema/index.js';
 import type { TSSchemaFragmentName } from './TSSchemaCollection.js';
 import type { TSSchemaModelType } from './TSSchemaFragment.js';
 import type { TSSchemaCollection, TSSchemaFragment, TSSchemaName, TSSchemaProperty, TSSchemaType } from './index.js';
