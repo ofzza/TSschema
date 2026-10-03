@@ -8,7 +8,7 @@ import type {
   JSONSchemaReferenceFragmentType,
 } from './index.js';
 
-import type { default as schoolJsonSchema } from '../../../res/school.js';
+import type { default as schoolJsonSchema } from '../../../res/school.json';
 type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
 //   ^?
 type AssessmentModel = JSONSchemaSchoolCollection['$defs']['Assessment'];
