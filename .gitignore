@@ -9,7 +9,11 @@ npm-debug.log*
 /build/
 
 # IDE/editor
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo
@@ -19,12 +23,6 @@ npm-debug.log*
 # Misc
 .env
 .env.*
-
-# Windows
-Thumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-*.ZoneIdentifier
 
 # Other
 *.log
@@ -42,12 +40,12 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
-# IDE - VS Code
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+# OS garbage
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*:Zone.Identifier
+.DS_Store
 
 # Explicitly omitted files
 *.gitignore.*
