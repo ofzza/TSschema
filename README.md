@@ -237,6 +237,8 @@ or newer.
   - `npm run test:unit` - a single Vitest invocation that executes test files, runs their runtime expectations, and type checks them, reporting type errors as test failures.
 - `npm run ci` - runs every `ci:*` script: build, ESLint, Prettier and the tests. This is what GitHub Actions runs on every pull request targeting `master` or `develop` and on every push to either, against Node 22 and 24. It also runs on `prepublishOnly`, so `npm publish` refuses to publish a failing build.
 
+To release a new version, follow the checklist and steps in [PUBLISH.md](PUBLISH.md).
+
 # Contributing
 
 ## Reporting Issues

@@ -87,6 +87,8 @@ Convention for new modules: one directory per module under `src/`, each an `inde
 - `npm run prepare` — builds; invoked automatically by a local `npm install`/`npm ci` and before `npm publish`, but **not** when the package is installed as a dependency.
 - `prepublishOnly` — runs `npm run ci` before `npm publish`, so a failing build is never published.
 
+Releasing a version (pre-publish checklist, then the version bump, merge to `master` and `npm publish` steps) is documented in `PUBLISH.md`. Keep it in sync when a change affects packaging, the release flow or what the checklist checks.
+
 **Script wiring matters when adding one.** `test` is `npm-run-all test:*` and `ci` is `npm-run-all ci:*`, so a new `test:<name>` joins `npm test` automatically — but it will _not_ run in CI until a matching `ci:test-<name>` script exists. Add both.
 
 ## Testing
