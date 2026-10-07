@@ -19,6 +19,8 @@ description: Publishes the package to NPM
 
 6. Report on success/failure of npm publish and if successful:
 
+- Link me to the published version's NPM page: https://www.npmjs.com/package/@ofzza/tsschema/v/<version>
+
 - Tag the current commit with the version number you just published as
 
 - Ask me if I'd like to commit changes. If I do want to commit, use the `commit` skill.

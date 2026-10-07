@@ -1,6 +1,6 @@
 # Publishing `@ofzza/tsschema`
 
-How to release a new version to NPM. Releases follow the branching model in `AGENTS.md`: work lands on `develop`, a release merges `develop` into
+How to release a new version to [NPM](https://www.npmjs.com/package/@ofzza/tsschema). Releases follow the branching model in `AGENTS.md`: work lands on `develop`, a release merges `develop` into
 `master`, and NPM is published from `master`.
 
 ## Pre-publish checklist
@@ -95,6 +95,7 @@ Go through every item before each publish.
    ```sh
    npm view @ofzza/tsschema version dist-tags
    ```
+   and check that the package page at https://www.npmjs.com/package/@ofzza/tsschema shows the new version and README.
    Then re-run the [consumer smoke test](#consumer-smoke-test) with `npm install @ofzza/tsschema@<version>` in place of the tarball.
 7. **Create the GitHub release** for the `v<version>` tag, using the release notes from the checklist.
 8. **Continue on `develop`:**

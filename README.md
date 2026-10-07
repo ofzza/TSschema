@@ -1,5 +1,7 @@
 # TSschema
 
+[![npm](https://img.shields.io/npm/v/@ofzza/tsschema)](https://www.npmjs.com/package/@ofzza/tsschema)
+
 Helps generate TS data models, provides TS utility types for deep type inference and provides TS runtime utilities for type reflection, all based off of a JSON schema.
 
 ---
@@ -14,7 +16,7 @@ Jump to section:
 
 # Get TSschema
 
-To start using `TSschema` in your project, simply install it from NPM by running the following in your terminal:
+To start using `TSschema` in your project, simply install it from [NPM](https://www.npmjs.com/package/@ofzza/tsschema) by running the following in your terminal:
 
 ```sh
 $ npm install @ofzza/tsschema --save

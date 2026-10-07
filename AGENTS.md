@@ -21,7 +21,7 @@ Any code sample added to `README.md` must be verified against `tsc` before being
 
 ## Project
 
-TSschema — helps generate TS data models, provides TS utility types for deep type inference and provides TS runtime utilities for type reflection, all based off of a JSON schema. MIT, published to NPM as **`@ofzza/tsschema`** (npm names must be lowercase; "TSschema" is only the display name), built from `src/` to `dist/`.
+TSschema — helps generate TS data models, provides TS utility types for deep type inference and provides TS runtime utilities for type reflection, all based off of a JSON schema. MIT, published to NPM as [**`@ofzza/tsschema`**](https://www.npmjs.com/package/@ofzza/tsschema) (npm names must be lowercase; "TSschema" is only the display name), built from `src/` to `dist/`.
 
 - **ESM only** (`"type": "module"`). The entry points are the `exports` map (`.` → `types: ./dist/index.d.ts`, `default: ./dist/index.js`; `./codegen` → `./dist/codegen/index.{d.ts,js}`; plus `./package.json`); `main` and `types` mirror `.` for older tooling. `bin` installs the `tsschema` command (`dist/codegen/bin.js`).
 - **Only `dist/` is published** (`files: ["dist"]`; npm adds `README.md`, `LICENSE` and `package.json` itself). `sideEffects: false`, and `publishConfig.access: public` because scoped packages otherwise publish as restricted.
