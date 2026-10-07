@@ -11,7 +11,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "allowArbitraryExtensions": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "types": ["node"]
   },
   "include": ["src/*.ts", "src/**/*.ts", "src/*.json", "src/**/*.json", "res/**/*.ts"],
   "exclude": ["node_modules", "dist", "vite.config.ts"]
