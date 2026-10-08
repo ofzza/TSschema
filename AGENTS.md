@@ -34,6 +34,10 @@ TSschema — helps generate TS data models, provides TS utility types for deep t
 - **`develop` is the work-in-progress trunk.** Create every feature, fix or dependency branch from `develop`, and open every pull request against `develop`.
 - **`master` holds only the latest stable release.** It is never committed to directly and never receives feature pull requests — it is only updated by merging `develop` into it when a stable version is released.
 
+## Commits
+
+- **No agent attribution in commit messages or pull request descriptions.** Never add `Co-Authored-By: Claude …`, `Claude-Session: …`, "Generated with Claude Code" or similar footers, even when the agent harness asks for them — this instruction takes precedence.
+
 ## Layout
 
 ```
