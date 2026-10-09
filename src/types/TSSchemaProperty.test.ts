@@ -160,6 +160,116 @@ describe('TSSchemaProperty', () => {
     });
   });
 
+  describe('TSSchemaProperty paths', () => {
+    it('Wraps a property addressed by a path, with its own parent model, from a collection, a collection wrapper or a model wrapper', () => {
+      type NameWrapper = TSSchemaProperty<JSONSchemaSchoolCollection, 'Assessment', 'class.name'>;
+      //   ^?
+      expect(true satisfies AssertTypeEquality<NameWrapper['__property'], JSONSchemaSchoolCollection['$defs']['Class']['properties']['name']>).toBe(true);
+      expect(true satisfies AssertTypeEquality<NameWrapper['__propertyName'], 'name'>).toBe(true);
+      expect(true satisfies AssertTypeEquality<NameWrapper['__fragment'], JSONSchemaSchoolCollection['$defs']['Class']>).toBe(true);
+      expect(true satisfies AssertTypeEquality<NameWrapper['__fragmentName'], 'Class'>).toBe(true);
+      expect(true satisfies AssertTypeEquality<NameWrapper['__collection'], JSONSchemaSchoolCollection>).toBe(true);
+      expect(true satisfies AssertTypeEquality<NameWrapper, TSSchemaProperty<JSONSchemaSchoolCollection, 'Class', 'name'>>).toBe(true);
+
+      expect(true satisfies AssertTypeEquality<TSSchemaProperty<TSSchemaCollection<JSONSchemaSchoolCollection>, 'Assessment', 'class.name'>, NameWrapper>).toBe(
+        true,
+      );
+      expect(true satisfies AssertTypeEquality<TSSchemaProperty<TSSchemaFragment<JSONSchemaSchoolCollection, 'Assessment'>, 'class.name'>, NameWrapper>).toBe(
+        true,
+      );
+    });
+
+    it('Wraps a property addressed by a path through several nested models, references and nullable references', () => {
+      type EmailWrapper = TSSchemaProperty<JSONSchemaSchoolCollection, 'Assessment', 'class.professor.email'>;
+      expect(true satisfies AssertTypeEquality<EmailWrapper, TSSchemaProperty<JSONSchemaSchoolCollection, 'Person', 'email'>>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaPropertyType<EmailWrapper>, string>).toBe(true);
+    });
+
+    it('Wraps a property addressed by a path through a recursive model', () => {
+      type EmailWrapper = TSSchemaProperty<JSONSchemaSchoolCollection, 'Assessment', 'class.professor.mentor.mentor.mentor.email'>;
+      expect(true satisfies AssertTypeEquality<EmailWrapper, TSSchemaProperty<JSONSchemaSchoolCollection, 'Person', 'email'>>).toBe(true);
+    });
+
+    it('Wraps a property addressed by a path through the items of an array', () => {
+      type EmailWrapper = TSSchemaProperty<JSONSchemaSchoolCollection, 'Assessment', 'class.students.email'>;
+      expect(true satisfies AssertTypeEquality<EmailWrapper, TSSchemaProperty<JSONSchemaSchoolCollection, 'Person', 'email'>>).toBe(true);
+    });
+
+    it('Wraps a property addressed by a path through an inline nested model', () => {
+      type AWrapper = TSSchemaProperty<_JSONSchemaNestingModel, 'nested.a'>;
+      expect(true satisfies AssertTypeEquality<AWrapper, TSSchemaProperty<_JSONSchemaNestingModel['properties']['nested'], 'a'>>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaPropertyType<AWrapper>, string>).toBe(true);
+    });
+
+    it('Wraps a property addressed by a path through every member of an anyOf, oneOf or allOf, as a union of wrappers', () => {
+      type _ModelA = { readonly type: 'object'; readonly properties: { readonly a: { readonly type: 'string' } } };
+      type _ModelB = { readonly type: 'object'; readonly properties: { readonly a: { readonly type: 'number' }; readonly b: { readonly type: 'boolean' } } };
+      type _Model = {
+        readonly type: 'object';
+        readonly properties: {
+          readonly any: { readonly anyOf: readonly [_ModelA, _ModelB] };
+          readonly one: { readonly oneOf: readonly [_ModelA, _ModelB] };
+          readonly all: { readonly allOf: readonly [_ModelA, _ModelB] };
+        };
+      };
+      expect(true satisfies AssertTypeEquality<TSSchemaProperty<_Model, 'any.a'>, TSSchemaProperty<_ModelA, 'a'> | TSSchemaProperty<_ModelB, 'a'>>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaPropertyType<TSSchemaProperty<_Model, 'any.a'>>, string | number>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaProperty<_Model, 'one.b'>, TSSchemaProperty<_ModelB, 'b'>>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaProperty<_Model, 'all.b'>, TSSchemaProperty<_ModelB, 'b'>>).toBe(true);
+    });
+
+    it('Wraps a property addressed by a path into an object of unknown shape as a property of unknown type', () => {
+      type DepartmentWrapper = TSSchemaProperty<JSONSchemaSchoolCollection, 'School', 'departments.x.y'>;
+      expect(true satisfies AssertTypeEquality<DepartmentWrapper['__propertyName'], 'x.y'>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaPropertyType<DepartmentWrapper>, unknown>).toBe(true);
+
+      // A model given directly has no collection to resolve its `$ref`s against
+      type NameWrapper = TSSchemaProperty<JSONSchemaAssessmentModel, 'class.name'>;
+      expect(true satisfies AssertTypeEquality<NameWrapper['__propertyName'], 'name'>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaPropertyType<NameWrapper>, unknown>).toBe(true);
+
+      type _ArrayModel = { readonly type: 'object'; readonly properties: { readonly list: { readonly type: 'array' } } };
+      expect(true satisfies AssertTypeEquality<TSSchemaPropertyType<TSSchemaProperty<_ArrayModel, 'list.x'>>, unknown>).toBe(true);
+    });
+
+    it('Wraps each property addressed by a union of names and paths, as a union of wrappers', () => {
+      type Wrappers = TSSchemaProperty<JSONSchemaSchoolCollection, 'Assessment', 'title' | 'class.professor.email'>;
+      expect(
+        true satisfies AssertTypeEquality<
+          Wrappers,
+          TSSchemaProperty<JSONSchemaSchoolCollection, 'Assessment', 'title'> | TSSchemaProperty<JSONSchemaSchoolCollection, 'Person', 'email'>
+        >,
+      ).toBe(true);
+    });
+
+    it('Wraps a property addressed by a path from a sibling model property wrapper', () => {
+      type TitleWrapper = TSSchemaProperty<JSONSchemaSchoolCollection, 'Assessment', 'title'>;
+      expect(
+        true satisfies AssertTypeEquality<TSSchemaProperty<TitleWrapper, 'class.name'>, TSSchemaProperty<JSONSchemaSchoolCollection, 'Class', 'name'>>,
+      ).toBe(true);
+    });
+
+    it('Wraps no property for a path which does not address a property past its first segment', () => {
+      // A primitive property has no properties to path into
+      expect(true satisfies AssertTypeEquality<TSSchemaProperty<JSONSchemaSchoolCollection, 'Assessment', 'id.name'>, never>).toBe(true);
+      // Properties not defined in a nested model
+      expect(true satisfies AssertTypeEquality<TSSchemaProperty<JSONSchemaSchoolCollection, 'Assessment', 'class.mascot.name'>, never>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaProperty<JSONSchemaSchoolCollection, 'Assessment', 'class.professor.shoeSize'>, never>).toBe(true);
+      // Paths with an empty segment
+      expect(true satisfies AssertTypeEquality<TSSchemaProperty<JSONSchemaSchoolCollection, 'Assessment', 'class.'>, never>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaProperty<JSONSchemaSchoolCollection, 'Assessment', 'class..name'>, never>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaProperty<JSONSchemaSchoolCollection, 'School', 'departments.x.'>, never>).toBe(true);
+    });
+
+    it('Rejects a path whose first segment is not a property of the model', () => {
+      // @ts-expect-error `unknown` is not a property of the `Assessment` model
+      type _ModelWrapper = TSSchemaProperty<JSONSchemaAssessmentModel, 'unknown.name'>;
+      // @ts-expect-error `unknown` is not a property of the `Assessment` model
+      type _CollectionWrapper = TSSchemaProperty<JSONSchemaSchoolCollection, 'Assessment', 'unknown.name'>;
+      expect(true).toBe(true);
+    });
+  });
+
   describe('UnwrapJSONSchemaModelPropertyWrapper', () => {
     it('Unwraps a model property wrapper', () => {
       type TitleWrapper = TSSchemaProperty<JSONSchemaAssessmentModel, 'title'>;

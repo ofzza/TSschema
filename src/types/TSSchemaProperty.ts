@@ -1,8 +1,8 @@
 /**
  * Typescript utilities for wrapping a single property of a JSON schema model fragment.
  *
- * A property can be wrapped directly, or addressed by name from a model fragment, a fragment wrapper or (together with its model's name) a JSON schema
- * collection. It remembers its parent model, the model's name and parent collection when they are known, so that any `$ref` it contains can be resolved
+ * A property can be wrapped directly, or addressed by name (or by a dot-separated path into nested models) from a model fragment, a fragment wrapper or
+ * (together with its model's name) a JSON schema collection. It remembers its parent model, the model's name and parent collection when they are known, so that any `$ref` it contains can be resolved
  * when inferring its value type.
  */
 
@@ -13,6 +13,7 @@ import type {
   JSONSchemaFragmentType,
   JSONSchemaModelFragment,
   JSONSchemaNotCollectionFragment,
+  JSONSchemaObjectTypeFragment,
 } from './JSONSchema/index.js';
 import type { JSONSchemaCollectionWrapper, TSSchemaFragmentName, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection.js';
 import type { JSONSchemaFragmentWrapper, TSSchemaFragmentPropertyName } from './TSSchemaFragment.js';
@@ -62,12 +63,18 @@ type _TSCollectionPropertyName<T extends JSONSchemaCollection | JSONSchemaCollec
  * named one, both resulting in a union of wrappers. A model fragment given without a name is itself wrapped as a property (e.g. an inline nested model).
  * A fragment that is not a model has no properties, so addressing it infers `never`. As a model property wrapper is structurally also a fragment wrapper of
  * its parent model, passing one in place of a fragment wrapper addresses a sibling property.
+ *
+ * In place of a property name, a dot-separated path (e.g. `'class.professor.email'`) addresses a property of a nested model, which is wrapped together
+ * with that nested model (and its name, when it was reached through a `$ref`). A path passes into a nested model given inline or by `$ref`, through every
+ * member of an `anyOf`, `oneOf` or `allOf`, and through the `items` of an array. A path into an object of unknown shape (an object with no `properties`, a
+ * `$ref` which can not be resolved, or an array with no single schema `items`) addresses a property of unknown type. Only a path's first segment is
+ * checked against the schema at the call site; a path which does not address a property any further down infers `never`.
  */
 export type TSSchemaProperty<
   T extends JSONSchemaNotCollectionFragment | JSONSchemaModelFragment | JSONSchemaFragmentWrapper | JSONSchemaCollection | JSONSchemaCollectionWrapper,
   // Model or fragment wrapper (checked first, as a fragment wrapper is also a collection wrapper): property name
   TName extends (T extends JSONSchemaModelFragment | JSONSchemaFragmentWrapper
-    ? TSSchemaFragmentPropertyName<T>
+    ? TSSchemaFragmentPropertyName<T> | `${TSSchemaFragmentPropertyName<T>}.${string}`
     : // Collection or collection wrapper: model fragment name
       T extends JSONSchemaCollection | JSONSchemaCollectionWrapper
       ? TSSchemaFragmentName<T>
@@ -78,7 +85,7 @@ export type TSSchemaProperty<
     ? never
     : // Collection or collection wrapper: property name of the model fragment(s) addressed by `TName`
       T extends JSONSchemaCollection | JSONSchemaCollectionWrapper
-      ? _TSCollectionPropertyName<T, TName>
+      ? _TSCollectionPropertyName<T, TName> | `${_TSCollectionPropertyName<T, TName>}.${string}`
       : // Model or property fragment: not used
         never) = never,
 > =
@@ -115,8 +122,9 @@ type _TSSchemaCollectionModelProperty<TCollection extends JSONSchemaCollection, 
       : never
     : never;
 /**
- * Wraps each property addressed by a (union of) name(s) from an already unwrapped JSON schema model fragment, together with its context. A name that does
- * not address a property of the model contributes `never`.
+ * Wraps each property addressed by a (union of) name(s) or dot-separated path(s) from an already unwrapped JSON schema model fragment, together with its
+ * context. A name matching a property exactly addresses that property, even if it contains a dot; otherwise the name is split at its first dot, and the
+ * remainder of the path is resolved within the property named by its first segment. A name or path that does not address a property contributes `never`.
  */
 type _TSSchemaProperty<TModel extends JSONSchemaModelFragment, TCollection extends JSONSchemaCollection, TModelName, TName> =
   // Distribute over a union of property names, and narrow each against the model
@@ -124,7 +132,92 @@ type _TSSchemaProperty<TModel extends JSONSchemaModelFragment, TCollection exten
     ? Exclude<TModel['properties'][TName], undefined> extends infer P extends JSONSchemaNotCollectionFragment
       ? JSONSchemaModelPropertyWrapper<P, TModel, TCollection, TModelName & JSONSchemaFragmentName<TCollection>, TName>
       : never
+    : // Path: resolve the remainder of the path within the property named by its first segment
+      TName extends `${infer H}.${infer R}`
+      ? H extends JSONSchemaFragmentPropertyName<TModel>
+        ? Exclude<TModel['properties'][H], undefined> extends infer P extends JSONSchemaNotCollectionFragment
+          ? _TSSchemaPathProperty<P, TCollection, TModelName, R>
+          : never
+        : never
+      : never;
+/**
+ * Wraps each property addressed by a dot-separated path within an already unwrapped JSON schema property fragment, which can be "pathed into" if it is
+ * (or resolves to) a model, or an object of unknown shape:
+ * - a model is pathed into directly,
+ * - a `$ref` is resolved against the collection, and the referenced fragment pathed into,
+ * - each member of an `anyOf`, `oneOf` or `allOf` is pathed into, resulting in a union of wrappers,
+ * - an array is pathed into through its (single schema) `items`.
+ *
+ * The shape of an object with no `properties`, a `$ref` which can not be resolved, or the items of an array with no (single schema) `items` is not known,
+ * so any (well formed) path within them addresses a property of unknown type. Any other fragment (e.g. a primitive type) has no properties, and
+ * contributes `never`. A fragment carrying several of the above keywords contributes the union of each keyword's wrappers.
+ */
+type _TSSchemaPathProperty<TFragment, TCollection extends JSONSchemaCollection, TModelName, TPath extends string> =
+  // Distribute over a union of fragments
+  TFragment extends unknown
+    ? | _TSSchemaPathPropertyOfReference<TFragment, TCollection, TPath>
+      | _TSSchemaPathPropertyOfMembers<TFragment, TCollection, TModelName, TPath>
+      | _TSSchemaPathPropertyOfModel<TFragment, TCollection, TModelName, TPath>
+      | _TSSchemaPathPropertyOfArray<TFragment, TCollection, TModelName, TPath>
     : never;
+/**
+ * Wraps each property addressed by a path within a `$ref` fragment, resolving the reference against the collection. A reference which can not be resolved
+ * (no collection is known, the reference is not `#/$defs/<name>`, or the collection has no such fragment) addresses a property of unknown type.
+ */
+type _TSSchemaPathPropertyOfReference<TFragment, TCollection extends JSONSchemaCollection, TPath extends string> =
+  // Reference: resolve against the collection
+  TFragment extends { $ref: infer P extends string }
+    ? // No collection is known: can not be resolved
+      JSONSchemaCollection extends TCollection
+      ? _TSSchemaPathPropertyOfUnknown<TCollection, TPath>
+      : // Reference to a fragment of the collection: path into the referenced fragment, as named by the reference
+        P extends `#/$defs/${infer N}`
+        ? N extends JSONSchemaFragmentName<TCollection>
+          ? _TSSchemaPathProperty<TCollection['$defs'][N], TCollection, N, TPath>
+          : _TSSchemaPathPropertyOfUnknown<TCollection, TPath>
+        : // Any other reference: can not be resolved
+          _TSSchemaPathPropertyOfUnknown<TCollection, TPath>
+    : never;
+/**
+ * Wraps each property addressed by a path within any of the members of an `anyOf`, `oneOf` or `allOf` fragment.
+ */
+type _TSSchemaPathPropertyOfMembers<TFragment, TCollection extends JSONSchemaCollection, TModelName, TPath extends string> =
+  | (TFragment extends { anyOf: infer U extends ReadonlyArray<unknown> } ? _TSSchemaPathProperty<U[number], TCollection, TModelName, TPath> : never)
+  | (TFragment extends { oneOf: infer U extends ReadonlyArray<unknown> } ? _TSSchemaPathProperty<U[number], TCollection, TModelName, TPath> : never)
+  | (TFragment extends { allOf: infer U extends ReadonlyArray<unknown> } ? _TSSchemaPathProperty<U[number], TCollection, TModelName, TPath> : never);
+/**
+ * Wraps each property addressed by a path within a model fragment, or within an object fragment with no `properties` (of unknown shape).
+ */
+type _TSSchemaPathPropertyOfModel<TFragment, TCollection extends JSONSchemaCollection, TModelName, TPath extends string> =
+  // Model: path into its properties
+  TFragment extends JSONSchemaModelFragment
+    ? _TSSchemaProperty<TFragment, TCollection, TModelName, TPath>
+    : // Object with no properties: of unknown shape
+      TFragment extends JSONSchemaObjectTypeFragment
+      ? _TSSchemaPathPropertyOfUnknown<TCollection, TPath>
+      : never;
+/**
+ * Wraps each property addressed by a path within the items of an array fragment. Items with no (single schema) `items` are of unknown shape.
+ */
+type _TSSchemaPathPropertyOfArray<TFragment, TCollection extends JSONSchemaCollection, TModelName, TPath extends string> =
+  // Array: path into its items
+  TFragment extends { type: 'array' }
+    ? // Single schema items: path into them
+      TFragment extends { items: infer I extends JSONSchemaNotCollectionFragment }
+      ? _TSSchemaPathProperty<I, TCollection, TModelName, TPath>
+      : // No or tuple items: of unknown shape
+        _TSSchemaPathPropertyOfUnknown<TCollection, TPath>
+    : never;
+/**
+ * Wraps a property addressed by a path within a fragment of unknown shape, as the empty (unconstrained) schema with the remainder of the path as its name.
+ * A path with an empty segment can not address a property, and contributes `never`.
+ */
+type _TSSchemaPathPropertyOfUnknown<TCollection extends JSONSchemaCollection, TPath extends string> =
+  // Path with an empty segment: malformed
+  TPath extends '' | `.${string}` | `${string}.` | `${string}..${string}`
+    ? never
+    : // Well formed path: property of unknown type
+      JSONSchemaModelPropertyWrapper<{}, JSONSchemaModelFragment, TCollection, JSONSchemaFragmentName<TCollection>, TPath>;
 
 /**
  * Infers a value type from a JSON schema property fragment or a JSON schema model property wrapper, resolving `$ref`s against a JSON schema collection.

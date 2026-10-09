@@ -48,6 +48,7 @@ const schema = {
         name: { type: 'string' },
         age: { type: 'integer' },
         role: { $ref: '#/$defs/Role' },
+        mentor: { anyOf: [{ $ref: '#/$defs/Person' }, { type: 'null' }] },
       },
     },
     Role: { enum: ['student', 'teacher'] },
@@ -104,6 +105,20 @@ type PersonEmail = TSSchemaProperty<Person, 'email'>; // This will fail at compi
 A fragment which is not a model has no properties to wrap. A model given directly with no name is itself wrapped as a property, e.g. for an inline
 nested model.
 
+In place of a property name, a dot-separated path addresses a property of a nested model. The property is wrapped together with that nested model,
+exactly as if it had been addressed from it directly. A path goes into a nested model given inline or by `$ref`, through every member of an `anyOf`,
+`oneOf` or `allOf` (e.g. a nullable reference), and through the `items` of an array:
+
+```ts
+type MentorName = TSSchemaProperty<Person, 'mentor.name'>; // This will work, same as TSSchemaProperty<Schema, 'Person', 'name'>
+type MentorMentorAge = TSSchemaProperty<Schema, 'Person', 'mentor.mentor.age'>; // This will work
+type MentorEmail = TSSchemaProperty<Person, 'email.address'>; // This will fail at compile time
+```
+
+Only a path's first segment is checked at compile time. A path which does not address a property further down (e.g. `'mentor.email'`, or `'name.length'`
+into a property which is not a model) infers `never`. A path into an object whose shape is not known (an object with no `properties`, a `$ref` with no
+collection to resolve it against, or an array with no single schema `items`) wraps a property of type `unknown`.
+
 ## TSSchemaName
 
 `TSSchemaName<T>` infers the names addressable within what it is given:
@@ -114,8 +129,8 @@ nested model.
 
 ```ts
 type FragmentName = TSSchemaName<Schema>; // 'Person' | 'Role'
-type PropertyName = TSSchemaName<TSSchemaFragment<Schema, 'Person'>>; // 'name' | 'age' | 'role'
-type SiblingPropertyName = TSSchemaName<PersonAge>; // 'name' | 'age' | 'role'
+type PropertyName = TSSchemaName<TSSchemaFragment<Schema, 'Person'>>; // 'name' | 'age' | 'role' | 'mentor'
+type SiblingPropertyName = TSSchemaName<PersonAge>; // 'name' | 'age' | 'role' | 'mentor'
 type RoleName = TSSchemaName<TSSchemaFragment<Schema, 'Role'>>; // never
 ```
 
@@ -131,13 +146,14 @@ fragment given directly, or wrapped with no collection, only resolves `$ref`s ag
 infers `unknown`:
 
 ```ts
-type PersonType = TSSchemaType<Person>; // { name: string; age: number; role: 'student' | 'teacher' }
+type PersonType = TSSchemaType<Person>; // { name: string; age: number; role: 'student' | 'teacher'; mentor: PersonType | null }
 type AgeType = TSSchemaType<PersonAge>; // number
+type MentorAgeType = TSSchemaType<MentorMentorAge>; // number
 type RoleType = TSSchemaType<TSSchemaProperty<Schema, 'Person', 'role'>>; // 'student' | 'teacher'
 type UnresolvedRoleType = TSSchemaType<StandalonePersonRole>; // unknown
 type ResolvedRoleType = TSSchemaType<StandalonePersonRole, Schema>; // 'student' | 'teacher'
 
-const person: PersonType = { name: 'Ada', age: 36, role: 'teacher' }; // This will work
+const person: PersonType = { name: 'Ada', age: 36, role: 'teacher', mentor: null }; // This will work
 const role: RoleType = 'principal'; // This will fail at compile time
 ```
 
@@ -216,7 +232,8 @@ or newer.
 `TSschema` is being built towards the following scope, all driven by a single JSON schema describing your data models:
 
 - **Deep type inference** - utility types inferring model names, property names, property paths and their types directly from the schema, at compile
-  time. Partly available, see [Usage](#usage). Property paths are not yet supported.
+  time. Partly available, see [Usage](#usage). Property paths can address properties (see [TSSchemaProperty](#tsschemaproperty)), but are not yet
+  inferred by `TSSchemaName`.
 - **Model generation** - generating TypeScript data model definitions from the JSON schema. Partly available: `tsschema generate --models` generates a
   named type per fragment, see [Schemas from JSON files](#schemas-from-json-files).
 - **Runtime reflection** - runtime utilities for inspecting the same model, property and path information the utility types infer. Planned.
