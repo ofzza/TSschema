@@ -2,10 +2,10 @@ import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeAssignable } from '@ofzza/tsstd';
 import type { JSONSchemaFragmentIsObjectType, JSONSchemaObjectTypeFragment, JSONSchemaObjectTypeFragmentType } from './index.js';
 
-import type { default as schoolJsonSchema } from '../../../res/school.json';
-type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
+import type { default as jsonSchema } from '../../../res/sidecar/schema.json';
+type JSONSchemaFixtureCollection = typeof jsonSchema;
 //   ^?
-type AssessmentModel = JSONSchemaSchoolCollection['$defs']['Assessment'];
+type AssessmentModel = JSONSchemaFixtureCollection['$defs']['Assessment'];
 
 describe('JSONSchema', () => {
   describe('JSONSchema fragments', () => {

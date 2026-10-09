@@ -11,10 +11,10 @@ import type {
   JSONSchemaNotCollectionFragment,
 } from './index.js';
 
-import type { default as schoolJsonSchema } from '../../../res/school.json';
-type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
+import type { default as jsonSchema } from '../../../res/sidecar/schema.json';
+type JSONSchemaFixtureCollection = typeof jsonSchema;
 //   ^?
-type AssessmentModel = JSONSchemaSchoolCollection['$defs']['Assessment'];
+type AssessmentModel = JSONSchemaFixtureCollection['$defs']['Assessment'];
 
 /**
  * Self-referencing schema collection: a tree of nodes
@@ -35,10 +35,10 @@ describe('JSONSchema', () => {
   describe('JSONSchema fragments', () => {
     describe('Collection fragment', () => {
       it('Detects a collection', () => {
-        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsCollection<JSONSchemaSchoolCollection>, true>).toBe(true);
-        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsNotCollection<JSONSchemaSchoolCollection>, false>).toBe(true);
-        expect(true satisfies AssertTypeAssignable<JSONSchemaSchoolCollection, JSONSchemaCollection>).toBe(true);
-        expect(true satisfies AssertTypeUnassignable<JSONSchemaSchoolCollection, JSONSchemaNotCollectionFragment>).toBe(true);
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsCollection<JSONSchemaFixtureCollection>, true>).toBe(true);
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsNotCollection<JSONSchemaFixtureCollection>, false>).toBe(true);
+        expect(true satisfies AssertTypeAssignable<JSONSchemaFixtureCollection, JSONSchemaCollection>).toBe(true);
+        expect(true satisfies AssertTypeUnassignable<JSONSchemaFixtureCollection, JSONSchemaNotCollectionFragment>).toBe(true);
       });
 
       it('Detects a non-collection', () => {
@@ -48,15 +48,15 @@ describe('JSONSchema', () => {
       });
 
       it('Rejects every fragment kind for a collection', () => {
-        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsModel<JSONSchemaSchoolCollection>, false>).toBe(true);
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsModel<JSONSchemaFixtureCollection>, false>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsReference<{ $defs: {}; $ref: '#/$defs/A' }>, false>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsPrimitiveType<{ $defs: {}; type: 'string' }>, false>).toBe(true);
       });
 
       it('Gets the names of all fragments of a collection', () => {
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentName<_JSONSchemaTreeCollection>, 'Node'>).toBe(true);
-        expect(true satisfies AssertTypeAssignable<'Assessment' | 'Class' | 'Term', JSONSchemaFragmentName<JSONSchemaSchoolCollection>>).toBe(true);
-        expect(true satisfies AssertTypeUnassignable<'Unknown' | number, JSONSchemaFragmentName<JSONSchemaSchoolCollection>>).toBe(true);
+        expect(true satisfies AssertTypeAssignable<'Assessment' | 'Class' | 'Term', JSONSchemaFragmentName<JSONSchemaFixtureCollection>>).toBe(true);
+        expect(true satisfies AssertTypeUnassignable<'Unknown' | number, JSONSchemaFragmentName<JSONSchemaFixtureCollection>>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentName<{ $defs: {} }>, never>).toBe(true);
       });
 

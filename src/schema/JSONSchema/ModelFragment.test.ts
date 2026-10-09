@@ -8,15 +8,15 @@ import type {
   JSONSchemaModelFragmentType,
 } from './index.js';
 
-import type { default as schoolJsonSchema } from '../../../res/school.json';
-type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
+import type { default as jsonSchema } from '../../../res/sidecar/schema.json';
+type JSONSchemaFixtureCollection = typeof jsonSchema;
 //   ^?
-type AssessmentModel = JSONSchemaSchoolCollection['$defs']['Assessment'];
+type AssessmentModel = JSONSchemaFixtureCollection['$defs']['Assessment'];
 
 /**
- * Infers the type of a model definition from the school schema collection, addressed by name
+ * Infers the type of a model definition from the fixture schema collection, addressed by name
  */
-type _SchoolModel<TName extends string> = JSONSchemaFragmentType<{ readonly $ref: `#/$defs/${TName}` }, JSONSchemaSchoolCollection>;
+type _FixtureModel<TName extends string> = JSONSchemaFragmentType<{ readonly $ref: `#/$defs/${TName}` }, JSONSchemaFixtureCollection>;
 
 /**
  * Small model fragment, used as a building block in the tests below
@@ -58,7 +58,7 @@ describe('JSONSchema', () => {
       });
 
       it('Infers a model type', () => {
-        type Assessment = JSONSchemaModelFragmentType<AssessmentModel, JSONSchemaSchoolCollection>;
+        type Assessment = JSONSchemaModelFragmentType<AssessmentModel, JSONSchemaFixtureCollection>;
         //   ^?
         expect(true satisfies AssertTypeAssignable<Assessment, object>).toBe(true);
         expect(true satisfies AssertTypeEquality<Assessment['id'], string>).toBe(true);
@@ -69,17 +69,17 @@ describe('JSONSchema', () => {
         expect(true satisfies AssertTypeEquality<Assessment['isOpenBook'], boolean>).toBe(true);
         // `AssessmentKind` is an integer constrained by a `oneOf`, which is not yet supported
         expect(true satisfies AssertTypeEquality<Assessment['kind'], number>).toBe(true);
-        expect(true satisfies AssertTypeEquality<Assessment['class'], _SchoolModel<'Class'> | null>).toBe(true);
-        expect(true satisfies AssertTypeEquality<Assessment['class'] & {}, _SchoolModel<'Class'>>).toBe(true);
+        expect(true satisfies AssertTypeEquality<Assessment['class'], _FixtureModel<'Class'> | null>).toBe(true);
+        expect(true satisfies AssertTypeEquality<Assessment['class'] & {}, _FixtureModel<'Class'>>).toBe(true);
         expect(true satisfies AssertTypeEquality<Assessment['record']['battery']['isProctored'], boolean>).toBe(true);
         expect(true satisfies AssertTypeEquality<Assessment['record']['register']['answeredByItem'], object>).toBe(true);
       });
 
       it('Infers nested model and array of model properties', () => {
-        type Book = _SchoolModel<'Book'>;
-        expect(true satisfies AssertTypeEquality<Book['authors'], Array<_SchoolModel<'Person'>>>).toBe(true);
-        expect(true satisfies AssertTypeEquality<Book['class'], _SchoolModel<'Class'> | null>).toBe(true);
-        expect(true satisfies AssertTypeEquality<_SchoolModel<'Class'>['code'], string>).toBe(true);
+        type Book = _FixtureModel<'Book'>;
+        expect(true satisfies AssertTypeEquality<Book['authors'], Array<_FixtureModel<'Person'>>>).toBe(true);
+        expect(true satisfies AssertTypeEquality<Book['class'], _FixtureModel<'Class'> | null>).toBe(true);
+        expect(true satisfies AssertTypeEquality<_FixtureModel<'Class'>['code'], string>).toBe(true);
       });
 
       it('Does not carry the readonly modifier of schema properties over to model properties', () => {

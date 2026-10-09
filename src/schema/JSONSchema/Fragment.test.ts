@@ -2,20 +2,20 @@ import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality } from '@ofzza/tsstd';
 import type { JSONSchemaFragmentType } from './index.js';
 
-import type { default as constJsonSchema } from '../../../res/const.json';
+import type { default as constJsonSchema } from '../../../res/sidecar/const.json';
 type JSONSchemaConstCollection = typeof constJsonSchema;
 //   ^?
 type JSONSchemaConst = JSONSchemaConstCollection['$defs']['Const'];
 //   ^?
 
-import type { default as enumJsonSchema } from '../../../res/enum.json';
+import type { default as enumJsonSchema } from '../../../res/sidecar/enum.json';
 type JSONSchemaEnumCollection = typeof enumJsonSchema;
 //   ^?
 type JSONSchemaEnum = JSONSchemaEnumCollection['$defs']['Enum'];
 //   ^?
 
-import type { default as schoolJsonSchema } from '../../../res/school.json';
-type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
+import type { default as jsonSchema } from '../../../res/sidecar/schema.json';
+type JSONSchemaFixtureCollection = typeof jsonSchema;
 //   ^?
 
 /**
@@ -44,7 +44,7 @@ describe('JSONSchema', () => {
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<JSONSchemaEnum>, 'Aaa' | 'Bbb' | 'Ccc'>).toBe(true);
 
         const _refTypeFragment = { $ref: '#/$defs/Assessment' } as const;
-        type Assessment = JSONSchemaFragmentType<typeof _refTypeFragment, JSONSchemaSchoolCollection>;
+        type Assessment = JSONSchemaFragmentType<typeof _refTypeFragment, JSONSchemaFixtureCollection>;
         expect(true satisfies AssertTypeEquality<Assessment['id'], string>).toBe(true);
         expect(true satisfies AssertTypeEquality<Assessment['weight'], number>).toBe(true);
         expect(true satisfies AssertTypeEquality<Assessment['isOpenBook'], boolean>).toBe(true);

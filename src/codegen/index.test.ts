@@ -5,16 +5,16 @@ import { join } from 'node:path';
 import type { AssertTypeEquality } from '@ofzza/tsstd';
 import { generate, generateFiles, type TSSchemaCodegenOptions } from './index.js';
 
-import type { default as schoolJson } from '../../res/school.json';
-import type { default as schoolModule } from '../../res/module/school.schema.js';
-import type { Schema as SchoolTypes } from '../../res/types/school.schema.js';
-import type { Models as SchoolSidecarModels } from '../../res/school.models.js';
-import type { Models as SchoolModuleModels } from '../../res/module/school.schema.js';
-import type { Models as SchoolTypesModels } from '../../res/types/school.schema.js';
-import type { default as edgeJson } from '../../res/edge.json';
+import type { default as schemaJson } from '../../res/sidecar/schema.json';
+import type { default as schemaModule } from '../../res/module/schema.js';
+import type { Schema as SchemaTypes } from '../../res/types/schema.js';
+import type { Models as SchemaSidecarModels } from '../../res/sidecar/schema.models.js';
+import type { Models as SchemaModuleModels } from '../../res/module/schema.js';
+import type { Models as SchemaTypesModels } from '../../res/types/schema.js';
+import type { default as edgeJson } from '../../res/sidecar/edge.json';
 import type { default as edgeModule } from '../../res/module/edge.schema.js';
 import type { Schema as EdgeTypes } from '../../res/types/edge.schema.js';
-import type { Models as EdgeSidecarModels, Plain as EdgeSidecarPlain } from '../../res/edge.models.js';
+import type { Models as EdgeSidecarModels, Plain as EdgeSidecarPlain } from '../../res/sidecar/edge.models.js';
 import type { Models as EdgeModuleModels } from '../../res/module/edge.schema.js';
 import type { Models as EdgeTypesModels } from '../../res/types/edge.schema.js';
 
@@ -25,13 +25,26 @@ import type { Models as EdgeTypesModels } from '../../res/types/edge.schema.js';
 type _ReadOnlyTopLevel<T> = { readonly [K in keyof T]: T[K] };
 
 /**
- * Code generation options the committed `res/` fixtures were generated with (see the `fixtures` npm script)
+ * Code generation options the committed `res/` fixtures were generated with, and the directory of the JSON files they were generated from (see the
+ * `fixtures` npm scripts)
  */
-const _FIXTURE_OPTIONS: TSSchemaCodegenOptions[] = [
-  { mode: 'sidecar', models: true, importFrom: '../src/index.js' },
-  { mode: 'module', models: true, outDir: 'res/module', importFrom: '../../src/index.js' },
-  { mode: 'types', models: true, outDir: 'res/types', importFrom: '../../src/index.js' },
+const _FIXTURE_OPTIONS: (TSSchemaCodegenOptions & { sourceDir: string })[] = [
+  { sourceDir: 'res/sidecar', mode: 'sidecar', models: true, importFrom: '../../src/index.js' },
+  { sourceDir: 'res', mode: 'module', models: true, outDir: 'res/module', importFrom: '../../src/index.js' },
+  { sourceDir: 'res', mode: 'types', models: true, outDir: 'res/types', importFrom: '../../src/index.js' },
 ];
+
+/**
+ * Lists the JSON files in a directory
+ *
+ * @param dir Directory to list
+ * @returns Names of the JSON files, sorted
+ */
+function _listJsonFiles(dir: string): string[] {
+  return readdirSync(dir)
+    .filter((file) => file.endsWith('.json'))
+    .sort();
+}
 
 /**
  * Runs a callback with a fresh temporary directory, removed afterwards
@@ -96,6 +109,16 @@ describe('codegen', () => {
       expect(schema.content).toContain('export default schema satisfies TSSchemaJSONSchema;');
     });
 
+    it('Names a module or types only module without doubling a schema suffix the JSON file name already has', () => {
+      for (const mode of ['module', 'types'] as const) {
+        expect(generateFiles('schema.json', {}, { mode })[0].path).toBe('schema.ts');
+        expect(generateFiles('Schema.json', {}, { mode })[0].path).toBe('Schema.ts');
+        expect(generateFiles('a.schema.json', {}, { mode })[0].path).toBe('a.schema.ts');
+        expect(generateFiles('a-schema.json', {}, { mode })[0].path).toBe('a-schema.schema.ts');
+      }
+      expect(generateFiles('schema.json', {}, { models: true }).map((file) => file.path)).toEqual(['schema.d.json.ts', 'schema.models.ts']);
+    });
+
     it('Generates a types only module, importing nothing unless model types are generated', () => {
       const [file] = generateFiles('a.json', true, { mode: 'types', outDir: 'out' });
       expect(file.path).toBe(join('out', 'a.schema.ts'));
@@ -105,12 +128,17 @@ describe('codegen', () => {
     });
 
     it('Generates files which are up to date with every committed fixture', () => {
-      const sources = readdirSync('res')
-        .filter((file) => file.endsWith('.json'))
-        .map((file) => join('res', file));
-      for (const options of _FIXTURE_OPTIONS) {
+      for (const { sourceDir, ...options } of _FIXTURE_OPTIONS) {
+        const sources = _listJsonFiles(sourceDir).map((file) => join(sourceDir, file));
         const { files } = generate(sources, { ...options, check: true });
         expect(files.filter((file) => file.status !== 'unchanged').map((file) => file.path)).toEqual([]);
+      }
+    });
+
+    it('Keeps the committed sidecar fixtures generated from up to date copies of every JSON fixture', () => {
+      expect(_listJsonFiles('res/sidecar')).toEqual(_listJsonFiles('res'));
+      for (const file of _listJsonFiles('res')) {
+        expect(readFileSync(join('res/sidecar', file), 'utf8')).toBe(readFileSync(join('res', file), 'utf8'));
       }
     });
   });
@@ -147,19 +175,31 @@ describe('codegen', () => {
         expect(readFileSync(join(dir, 'a.schema.ts'), 'utf8')).toBe('export const handWritten = true;\n');
       });
     });
+
+    it('Refuses to generate the same file from more than one JSON file, without writing any file', () => {
+      _withTempDir((dir) => {
+        const sources = [join(dir, 'a.json'), join(dir, 'a.schema.json'), join(dir, 'b.json')];
+        for (const source of sources) {
+          writeFileSync(source, '{}');
+        }
+        expect(() => generate(sources, { mode: 'module' })).toThrow(/Refusing to generate .*a\.schema\.ts from both/);
+        expect(readdirSync(dir).sort()).toEqual(['a.json', 'a.schema.json', 'b.json']);
+        expect(generate([sources[2], sources[2]], { mode: 'module' }).files).toHaveLength(1);
+      });
+    });
   });
 
   describe('Generated fixtures', () => {
     it('Types the schema identically in every output mode', () => {
-      expect(true satisfies AssertTypeEquality<_ReadOnlyTopLevel<typeof schoolJson>, typeof schoolModule>).toBe(true);
-      expect(true satisfies AssertTypeEquality<SchoolTypes, typeof schoolModule>).toBe(true);
+      expect(true satisfies AssertTypeEquality<_ReadOnlyTopLevel<typeof schemaJson>, typeof schemaModule>).toBe(true);
+      expect(true satisfies AssertTypeEquality<SchemaTypes, typeof schemaModule>).toBe(true);
       expect(true satisfies AssertTypeEquality<_ReadOnlyTopLevel<typeof edgeJson>, typeof edgeModule>).toBe(true);
       expect(true satisfies AssertTypeEquality<EdgeTypes, typeof edgeModule>).toBe(true);
     });
 
     it('Infers identical model types in every output mode', () => {
-      expect(true satisfies AssertTypeEquality<SchoolSidecarModels, SchoolModuleModels>).toBe(true);
-      expect(true satisfies AssertTypeEquality<SchoolTypesModels, SchoolModuleModels>).toBe(true);
+      expect(true satisfies AssertTypeEquality<SchemaSidecarModels, SchemaModuleModels>).toBe(true);
+      expect(true satisfies AssertTypeEquality<SchemaTypesModels, SchemaModuleModels>).toBe(true);
       expect(true satisfies AssertTypeEquality<EdgeSidecarModels, EdgeModuleModels>).toBe(true);
       expect(true satisfies AssertTypeEquality<EdgeTypesModels, EdgeModuleModels>).toBe(true);
     });

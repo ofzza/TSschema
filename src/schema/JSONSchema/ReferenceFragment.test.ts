@@ -8,15 +8,15 @@ import type {
   JSONSchemaReferenceFragmentType,
 } from './index.js';
 
-import type { default as schoolJsonSchema } from '../../../res/school.json';
-type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
+import type { default as jsonSchema } from '../../../res/sidecar/schema.json';
+type JSONSchemaFixtureCollection = typeof jsonSchema;
 //   ^?
-type AssessmentModel = JSONSchemaSchoolCollection['$defs']['Assessment'];
+type AssessmentModel = JSONSchemaFixtureCollection['$defs']['Assessment'];
 
 /**
- * Infers the type of a model definition from the school schema collection, addressed by name
+ * Infers the type of a model definition from the fixture schema collection, addressed by name
  */
-type _SchoolModel<TName extends string> = JSONSchemaFragmentType<{ readonly $ref: `#/$defs/${TName}` }, JSONSchemaSchoolCollection>;
+type _FixtureModel<TName extends string> = JSONSchemaFragmentType<{ readonly $ref: `#/$defs/${TName}` }, JSONSchemaFixtureCollection>;
 
 /**
  * Self-referencing schema collection: a tree of nodes
@@ -49,17 +49,17 @@ describe('JSONSchema', () => {
 
       it('Resolves a reference against a collection', () => {
         const _refTypeFragment = { $ref: '#/$defs/Assessment' } as const;
-        type AssessmentType = JSONSchemaReferenceFragmentType<typeof _refTypeFragment, JSONSchemaSchoolCollection>;
+        type AssessmentType = JSONSchemaReferenceFragmentType<typeof _refTypeFragment, JSONSchemaFixtureCollection>;
         //   ^?
-        expect(true satisfies AssertTypeEquality<AssessmentType, JSONSchemaModelFragmentType<AssessmentModel, JSONSchemaSchoolCollection>>).toBe(true);
+        expect(true satisfies AssertTypeEquality<AssessmentType, JSONSchemaModelFragmentType<AssessmentModel, JSONSchemaFixtureCollection>>).toBe(true);
         expect(true satisfies AssertTypeEquality<AssessmentType['id'], string>).toBe(true);
         expect(true satisfies AssertTypeEquality<AssessmentType['kind'], number>).toBe(true);
-        expect(true satisfies AssertTypeEquality<AssessmentType['class'], _SchoolModel<'Class'> | null>).toBe(true);
+        expect(true satisfies AssertTypeEquality<AssessmentType['class'], _FixtureModel<'Class'> | null>).toBe(true);
         expect(true satisfies AssertTypeEquality<AssessmentType['record']['battery']['isProctored'], boolean>).toBe(true);
       });
 
       it('Intersects a reference with its sibling keywords', () => {
-        type Address = JSONSchemaFragmentType<{ readonly $ref: '#/$defs/Address'; readonly type: 'object' }, JSONSchemaSchoolCollection>;
+        type Address = JSONSchemaFragmentType<{ readonly $ref: '#/$defs/Address'; readonly type: 'object' }, JSONSchemaFixtureCollection>;
         expect(true satisfies AssertTypeEquality<Address['city'], string>).toBe(true);
         expect(true satisfies AssertTypeEquality<Address['latitude'], number>).toBe(true);
       });
@@ -71,15 +71,17 @@ describe('JSONSchema', () => {
       });
 
       it('Infers unknown from an unresolvable reference', () => {
-        expect(true satisfies AssertTypeEquality<JSONSchemaReferenceFragmentType<{ $ref: '#/$defs/Missing' }, JSONSchemaSchoolCollection>, unknown>).toBe(true);
-        expect(true satisfies AssertTypeEquality<JSONSchemaReferenceFragmentType<{ $ref: '#/definitions/Address' }, JSONSchemaSchoolCollection>, unknown>).toBe(
+        expect(true satisfies AssertTypeEquality<JSONSchemaReferenceFragmentType<{ $ref: '#/$defs/Missing' }, JSONSchemaFixtureCollection>, unknown>).toBe(
           true,
         );
+        expect(
+          true satisfies AssertTypeEquality<JSONSchemaReferenceFragmentType<{ $ref: '#/definitions/Address' }, JSONSchemaFixtureCollection>, unknown>,
+        ).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaReferenceFragmentType<{ $ref: '#/$defs/Address' }>, unknown>).toBe(true);
       });
 
       it('Infers unknown from a non-reference', () => {
-        expect(true satisfies AssertTypeEquality<JSONSchemaReferenceFragmentType<{ type: 'string' }, JSONSchemaSchoolCollection>, unknown>).toBe(true);
+        expect(true satisfies AssertTypeEquality<JSONSchemaReferenceFragmentType<{ type: 'string' }, JSONSchemaFixtureCollection>, unknown>).toBe(true);
       });
     });
   });

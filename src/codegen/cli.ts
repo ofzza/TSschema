@@ -20,6 +20,7 @@ Options:
                                         (requires "allowArbitraryExtensions" in tsconfig.json)
                               module  - <name>.schema.ts exporting the schema as an "as const" value
                               types   - <name>.schema.ts exporting only the schema's type
+                              (<name>.ts if <name> already is or ends with "schema")
       --models              Also generate a Models map type and a type alias per fragment
                             (into <name>.models.ts in the sidecar mode)
       --out-dir <dir>       Generate module / types mode files into this directory

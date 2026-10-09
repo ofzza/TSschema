@@ -5,20 +5,20 @@ import type { TSSchemaCollection, TSSchemaFragmentName, UnwrapJSONSchemaCollecti
 import type { TSSchemaFragment } from './TSSchemaFragment.js';
 import type { TSSchemaProperty } from './TSSchemaProperty.js';
 
-import type { default as schoolJsonSchema } from '../../res/school.json';
-type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
+import type { default as jsonSchema } from '../../res/sidecar/schema.json';
+type JSONSchemaFixtureCollection = typeof jsonSchema;
 //   ^?
 
 describe('TSSchemaCollection', () => {
   it('Imports the testing schema with literal types', () => {
-    expect(true satisfies AssertTypeInequality<JSONSchemaSchoolCollection, any>).toBe(true);
+    expect(true satisfies AssertTypeInequality<JSONSchemaFixtureCollection, any>).toBe(true);
   });
 
   describe('TSSchemaCollection', () => {
     it('Wraps a collection', () => {
-      type SchoolCollection = TSSchemaCollection<JSONSchemaSchoolCollection>;
+      type FixtureCollection = TSSchemaCollection<JSONSchemaFixtureCollection>;
       //   ^?
-      expect(true satisfies AssertTypeEquality<SchoolCollection['__collection'], JSONSchemaSchoolCollection>).toBe(true);
+      expect(true satisfies AssertTypeEquality<FixtureCollection['__collection'], JSONSchemaFixtureCollection>).toBe(true);
     });
 
     it('Wraps the default collection when none is given', () => {
@@ -28,29 +28,29 @@ describe('TSSchemaCollection', () => {
 
   describe('UnwrapJSONSchemaCollectionWrapper', () => {
     it('Unwraps a collection wrapper', () => {
-      type Unwrapped = UnwrapJSONSchemaCollectionWrapper<TSSchemaCollection<JSONSchemaSchoolCollection>>;
-      expect(true satisfies AssertTypeEquality<Unwrapped, JSONSchemaSchoolCollection>).toBe(true);
+      type Unwrapped = UnwrapJSONSchemaCollectionWrapper<TSSchemaCollection<JSONSchemaFixtureCollection>>;
+      expect(true satisfies AssertTypeEquality<Unwrapped, JSONSchemaFixtureCollection>).toBe(true);
     });
 
     it('Returns a collection that is not wrapped as is', () => {
-      expect(true satisfies AssertTypeEquality<UnwrapJSONSchemaCollectionWrapper<JSONSchemaSchoolCollection>, JSONSchemaSchoolCollection>).toBe(true);
+      expect(true satisfies AssertTypeEquality<UnwrapJSONSchemaCollectionWrapper<JSONSchemaFixtureCollection>, JSONSchemaFixtureCollection>).toBe(true);
     });
 
     it('Unwraps the parent collection of a fragment or model property wrapper', () => {
-      type FragmentWrapper = TSSchemaFragment<JSONSchemaSchoolCollection, 'Assessment'>;
-      type PropertyWrapper = TSSchemaProperty<JSONSchemaSchoolCollection, 'Assessment', 'title'>;
-      expect(true satisfies AssertTypeEquality<UnwrapJSONSchemaCollectionWrapper<FragmentWrapper>, JSONSchemaSchoolCollection>).toBe(true);
-      expect(true satisfies AssertTypeEquality<UnwrapJSONSchemaCollectionWrapper<PropertyWrapper>, JSONSchemaSchoolCollection>).toBe(true);
+      type FragmentWrapper = TSSchemaFragment<JSONSchemaFixtureCollection, 'Assessment'>;
+      type PropertyWrapper = TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'title'>;
+      expect(true satisfies AssertTypeEquality<UnwrapJSONSchemaCollectionWrapper<FragmentWrapper>, JSONSchemaFixtureCollection>).toBe(true);
+      expect(true satisfies AssertTypeEquality<UnwrapJSONSchemaCollectionWrapper<PropertyWrapper>, JSONSchemaFixtureCollection>).toBe(true);
     });
   });
 
   describe('TSSchemaFragmentName', () => {
     it('Gets the fragment names of a collection or a collection wrapper', () => {
-      type SchoolFragmentName = TSSchemaFragmentName<TSSchemaCollection<JSONSchemaSchoolCollection>>;
+      type SchemaFragmentName = TSSchemaFragmentName<TSSchemaCollection<JSONSchemaFixtureCollection>>;
       //   ^?
       expect(
         true satisfies AssertTypeEquality<
-          SchoolFragmentName,
+          SchemaFragmentName,
           | 'Address'
           | 'Assessment'
           | 'AssessmentKind'
@@ -80,15 +80,15 @@ describe('TSSchemaCollection', () => {
           | 'Term'
         >,
       ).toBe(true);
-      expect(true satisfies AssertTypeEquality<TSSchemaFragmentName<JSONSchemaSchoolCollection>, SchoolFragmentName>).toBe(true);
-      expect(true satisfies AssertTypeEquality<SchoolFragmentName, JSONSchemaFragmentName<JSONSchemaSchoolCollection>>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaFragmentName<JSONSchemaFixtureCollection>, SchemaFragmentName>).toBe(true);
+      expect(true satisfies AssertTypeEquality<SchemaFragmentName, JSONSchemaFragmentName<JSONSchemaFixtureCollection>>).toBe(true);
     });
 
     it('Gets the fragment names of the parent collection of a fragment or model property wrapper', () => {
-      type FragmentWrapper = TSSchemaFragment<JSONSchemaSchoolCollection, 'Assessment'>;
-      type PropertyWrapper = TSSchemaProperty<JSONSchemaSchoolCollection, 'Assessment', 'title'>;
-      expect(true satisfies AssertTypeEquality<TSSchemaFragmentName<FragmentWrapper>, TSSchemaFragmentName<JSONSchemaSchoolCollection>>).toBe(true);
-      expect(true satisfies AssertTypeEquality<TSSchemaFragmentName<PropertyWrapper>, TSSchemaFragmentName<JSONSchemaSchoolCollection>>).toBe(true);
+      type FragmentWrapper = TSSchemaFragment<JSONSchemaFixtureCollection, 'Assessment'>;
+      type PropertyWrapper = TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'title'>;
+      expect(true satisfies AssertTypeEquality<TSSchemaFragmentName<FragmentWrapper>, TSSchemaFragmentName<JSONSchemaFixtureCollection>>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaFragmentName<PropertyWrapper>, TSSchemaFragmentName<JSONSchemaFixtureCollection>>).toBe(true);
     });
 
     it('Gets string | number fragment names from the default collection', () => {
