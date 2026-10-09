@@ -91,11 +91,20 @@ Go through every item before each publish.
    npm publish                      # add --otp=<code> if 2FA asks for it
    ```
    `publishConfig.access: public` is already set, so the scoped package is published publicly without `--access public`.
+
+   A prerelease (e.g. `0.1.0-alpha.2`) is published with `--tag alpha`. While there is no stable version, also move `latest` to it, so a plain
+   `npm install @ofzza/tsschema` gets the newest alpha. This is a separate write to the registry, so it needs a **fresh** 2FA code, as the one used
+   to publish has already been spent:
+   ```sh
+   npm publish --tag alpha --otp=<code>
+   npm dist-tag add @ofzza/tsschema@<version> latest --otp=<new-code>
+   ```
 6. **Verify the release:**
    ```sh
-   npm view @ofzza/tsschema version dist-tags
+   curl -s https://registry.npmjs.org/@ofzza%2ftsschema | jq '."dist-tags"'
    ```
-   and check that the package page at https://www.npmjs.com/package/@ofzza/tsschema shows the new version and README.
+   Query the registry directly rather than with `npm view @ofzza/tsschema dist-tags`. Right after publishing, `npm view` can keep showing the previous
+   version and tags for minutes, even with `--prefer-online`. Then check that the package page at https://www.npmjs.com/package/@ofzza/tsschema shows the new version and README.
    Then re-run the [consumer smoke test](#consumer-smoke-test) with `npm install @ofzza/tsschema@<version>` in place of the tarball.
 7. **Create the GitHub release** for the `v<version>` tag, using the release notes from the checklist.
 8. **Continue on `develop`:**
