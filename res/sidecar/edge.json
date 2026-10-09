@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:tsschema:schema:edge",
+  "title": "edge",
+  "x-vendor": {
+    "empty-array": [],
+    "empty-object": {},
+    "values": [true, null, -1.5, "quote\"d"]
+  },
+  "$defs": {
+    "Plain": {
+      "type": "object",
+      "properties": {
+        "kebab-property": { "type": "integer" },
+        "items": { "type": "array", "prefixItems": [{ "type": "string" }] }
+      },
+      "required": ["kebab-property"]
+    },
+    "kebab-name": { "enum": ["a", "b"] },
+    "string": { "type": "string" },
+    "Schema": { "const": "colliding" },
+    "Models": { "type": "boolean" }
+  }
+}

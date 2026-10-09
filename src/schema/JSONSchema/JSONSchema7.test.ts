@@ -2,13 +2,13 @@ import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/tsstd';
 import type { JSONSchemaPrimitiveType, JSONSchemaPrimitiveTypeFromName, JSONSchemaPrimitiveTypeName } from './index.js';
 
-import type { default as schoolJsonSchema } from '../../../res/school.json';
-type JSONSchemaSchoolCollection = typeof schoolJsonSchema;
+import type { default as jsonSchema } from '../../../res/sidecar/schema.json';
+type JSONSchemaFixtureCollection = typeof jsonSchema;
 //   ^?
 
 describe('JSONSchema', () => {
   it('Imports the testing schema with literal types', () => {
-    expect(true satisfies AssertTypeInequality<JSONSchemaSchoolCollection, any>).toBe(true);
+    expect(true satisfies AssertTypeInequality<JSONSchemaFixtureCollection, any>).toBe(true);
   });
 
   describe('Primitive types', () => {

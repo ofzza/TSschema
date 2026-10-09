@@ -198,6 +198,9 @@ It supports three output modes, selected with `--mode`:
   `TSSchemaJSONSchema` types with `satisfies`). It works with any TypeScript configuration, at the cost of copying the schema into your code.
 - **`types`** generates `<name>.schema.ts`, exporting only the schema's type as `Schema`, for when the schema itself is not needed at runtime.
 
+A JSON file whose name already is or ends with `schema` does not get the suffix twice: `schema.json` generates `schema.ts`, and `user.schema.json`
+generates `user.schema.ts`. Two JSON files which would generate the same file (e.g. `user.json` and `user.schema.json` side by side) are refused.
+
 With `--models`, a `Models` map type and a named type alias per fragment are generated too: into `<name>.models.ts` in the `sidecar` mode (as
 `module: nodenext` does not allow named imports from a JSON file), or into the `<name>.schema.ts` module otherwise. A fragment whose name is not a valid
 type alias name (e.g. `kebab-name`) is only available as `Models['kebab-name']`. A schema which is not a collection gets a single `Model` type instead.
@@ -242,9 +245,9 @@ or newer.
 
 - `npm run build` - cleans `dist/` (`npm run clean`), then compiles `src/` into it, emitting declarations. Also run on `prepare`, so a local `npm install` builds too.
 - `npm run dev` - the same, in watch mode.
-- `npm run fixtures` - builds, then regenerates the test fixtures in `res/` from `res/*.json` with the built `tsschema` command: sidecars and model types
-  next to each JSON file, and the `module` / `types` mode outputs into `res/module/` / `res/types/`. Run it after changing a fixture or the code generation;
-  the tests fail while any generated fixture is out of date.
+- `npm run fixtures` - builds, then regenerates the test fixtures from the JSON schemas in `res/` with the built `tsschema` command: copies of the JSON
+  files with their sidecars and model types into `res/sidecar/`, and the `module` / `types` mode outputs into `res/module/` / `res/types/`. Run it after
+  changing a fixture or the code generation; the tests fail while any generated fixture is out of date.
 - `npm test` - runs every `test:*` script.
   - `npm run test:unit` - a single Vitest invocation that executes test files, runs their runtime expectations, and type checks them, reporting type errors as test failures.
 - `npm run ci` - runs every `ci:*` script: build, ESLint, Prettier and the tests. This is what GitHub Actions runs on every pull request targeting `master` or `develop` and on every push to either, against Node 22 and 24. It also runs on `prepublishOnly`, so `npm publish` refuses to publish a failing build.
