@@ -65,12 +65,16 @@ describe('index', () => {
       type AssessmentWrapper = TSSchemaFragment<JSONSchemaFixtureCollection, 'Assessment'>;
       expect(true satisfies AssertTypeEquality<TSSchemaType<AssessmentWrapper>, TSSchemaFragmentType<AssessmentWrapper>>).toBe(true);
       expect(true satisfies AssertTypeEquality<TSSchemaType<AssessmentWrapper>, _FixtureModel<'Assessment'>>).toBe(true);
-      expect(true satisfies AssertTypeEquality<TSSchemaType<TSSchemaFragment<JSONSchemaFixtureCollection, 'AssessmentKind'>>, number>).toBe(true);
+      expect(
+        true satisfies AssertTypeEquality<TSSchemaType<TSSchemaFragment<JSONSchemaFixtureCollection, 'AssessmentKind'>>, 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>,
+      ).toBe(true);
     });
 
     it('Infers the type of the property wrapped by a model property wrapper, not of its parent model', () => {
       expect(true satisfies AssertTypeEquality<TSSchemaType<TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'title'>>, string>).toBe(true);
-      expect(true satisfies AssertTypeEquality<TSSchemaType<TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'kind'>>, number>).toBe(true);
+      expect(
+        true satisfies AssertTypeEquality<TSSchemaType<TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'kind'>>, 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>,
+      ).toBe(true);
       expect(
         true satisfies AssertTypeEquality<TSSchemaType<TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'class'>>, _FixtureModel<'Class'> | null>,
       ).toBe(true);
@@ -80,14 +84,17 @@ describe('index', () => {
       type _OtherCollection = { readonly $defs: { readonly AssessmentKind: { readonly type: 'string' } } };
       type KindWrapper = TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'kind'>;
       expect(true satisfies AssertTypeEquality<TSSchemaType<KindWrapper, _OtherCollection>, string>).toBe(true);
-      expect(true satisfies AssertTypeEquality<TSSchemaType<TSSchemaProperty<JSONSchemaAssessmentModel, 'kind'>, JSONSchemaFixtureCollection>, number>).toBe(
-        true,
-      );
+      expect(
+        true satisfies AssertTypeEquality<
+          TSSchemaType<TSSchemaProperty<JSONSchemaAssessmentModel, 'kind'>, JSONSchemaFixtureCollection>,
+          0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
+        >,
+      ).toBe(true);
     });
 
     it('Infers a union of types from a union of model property wrappers', () => {
       type Wrappers = TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'title' | 'kind' | 'isOpenBook'>;
-      expect(true satisfies AssertTypeEquality<TSSchemaType<Wrappers>, string | number | boolean>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaType<Wrappers>, string | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | boolean>).toBe(true);
     });
   });
 });

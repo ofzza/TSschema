@@ -205,7 +205,7 @@ describe('TSSchemaFragment', () => {
       //   ^?
       expect(true satisfies AssertTypeEquality<Assessment, _FixtureModel<'Assessment'>>).toBe(true);
       expect(true satisfies AssertTypeEquality<Assessment['id'], string>).toBe(true);
-      expect(true satisfies AssertTypeEquality<Assessment['kind'], number>).toBe(true);
+      expect(true satisfies AssertTypeEquality<Assessment['kind'], 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>).toBe(true);
       expect(true satisfies AssertTypeEquality<Pick<Assessment, 'class'>, { class?: _FixtureModel<'Class'> | null }>).toBe(true);
       expect(true satisfies AssertTypeEquality<Assessment['record']['battery']['isProctored'], boolean>).toBe(true);
     });
@@ -218,7 +218,9 @@ describe('TSSchemaFragment', () => {
     });
 
     it('Infers a type from a wrapper of a fragment which is not a model', () => {
-      expect(true satisfies AssertTypeEquality<TSSchemaFragmentType<TSSchemaFragment<JSONSchemaFixtureCollection, 'AssessmentKind'>>, number>).toBe(true);
+      expect(
+        true satisfies AssertTypeEquality<TSSchemaFragmentType<TSSchemaFragment<JSONSchemaFixtureCollection, 'AssessmentKind'>>, 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>,
+      ).toBe(true);
     });
 
     it('Infers the type of the parent model from a model property wrapper', () => {
