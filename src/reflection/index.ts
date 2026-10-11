@@ -35,7 +35,17 @@ export class JSONSchemaCollectionFragmentReflect<TSchema extends JSONSchemaColle
       }),
       {} as { [key in TSSchemaFragmentName<TSchema>]: Array<JSONSchemaFragmentReflect<TSchema, key, _JSONSchemaCollectionFragment<TSchema, key>>> },
     );
+    // Extract the reflections of the collection's own root fragment (everything but its `$defs`)
+    const { $defs: _defs, ...root } = this._schema;
+    this.root = _createFragmentReflections(this, undefined, root as JSONSchemaNotCollectionFragment) as Array<
+      JSONSchemaFragmentReflect<TSchema, undefined, _JSONSchemaCollectionRootFragment<TSchema>>
+    >;
   }
+
+  /**
+   * Reflections of the collection's own root fragment, i.e. of the schema with its `$defs` left out. A root with no keywords besides `$defs` has none.
+   */
+  public readonly root: Array<JSONSchemaFragmentReflect<TSchema, undefined, _JSONSchemaCollectionRootFragment<TSchema>>>;
 
   protected _fragmentNames: Array<TSSchemaFragmentName<TSchema>>;
   protected _fragmentReflections: {
@@ -54,6 +64,12 @@ export class JSONSchemaCollectionFragmentReflect<TSchema extends JSONSchemaColle
 }
 
 /**
+ * Gets the root fragment of a JSON schema collection, i.e. the collection with its `$defs` left out
+ */
+type _JSONSchemaCollectionRootFragment<TSchema extends JSONSchemaCollection> =
+  Omit<TSchema, '$defs'> extends infer F extends JSONSchemaNotCollectionFragment ? F : never;
+
+/**
  * Gets the fragment(s) addressed by name from a JSON schema collection. A fragment which is itself a collection infers `never`.
  */
 type _JSONSchemaCollectionFragment<
@@ -67,12 +83,25 @@ type _JSONSchemaCollectionFragment<
  * @param name Name of the fragment within the collection, or `undefined` for a nested fragment
  * @param fragment JSON fragment to reflect on
  * @returns Reflections of all fragment types the fragment matches, or an empty array if it matches none
+ *
+ * A `type` array naming `object` and / or `array` is split into groups of type names (`object`, `array`, and all primitive types together). A single
+ * group is reflected as if `type` named it directly. Several groups are alternatives (a value is of one of them), so they are reflected as an implicit
+ * `anyOf`: the type independent keywords (`const`, `enum`, `$ref`, `allOf`, `anyOf`, `oneOf`, `not`) are reflected on the fragment itself, and one more
+ * any-of-types reflection holds a branch per group, each branch being the fragment with `type` narrowed to the group and the type independent keywords
+ * left out.
  */
 function _createFragmentReflections<
   TSchema extends JSONSchemaCollection,
   TName extends TSSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaNotCollectionFragment,
 >(schema: JSONSchemaCollectionFragmentReflect<TSchema>, name: TName, fragment: TFragment): Array<JSONSchemaFragmentReflect<TSchema, TName, TFragment>> {
+  // Split a type array naming non primitive types into groups of type names
+  const typeGroups = _getFragmentTypeGroups(fragment);
+  if (typeGroups !== undefined && typeGroups.length === 1)
+    return _createFragmentReflections(schema, name, { ...fragment, type: typeGroups[0] } as JSONSchemaNotCollectionFragment) as Array<
+      JSONSchemaFragmentReflect<TSchema, TName, TFragment>
+    >;
+
   const reflections: Array<JSONSchemaFragmentReflect<TSchema, TName, TFragment>> = [];
   if (JSONSchemaModelFragmentReflect.check(fragment))
     reflections.push(
@@ -110,6 +139,15 @@ function _createFragmentReflections<
         fragment as TFragment & JSONSchemaObjectTypeFragment,
       ),
     );
+  if (typeGroups !== undefined && typeGroups.length > 1) {
+    const branchFragment = Object.fromEntries(
+      Object.entries(fragment).filter(([keyword]) => !(_JSONSchemaTypeIndependentKeywords as ReadonlyArray<string>).includes(keyword)),
+    );
+    const anyOfFragment: JSONSchemaAnyOfTypeFragment = { anyOf: typeGroups.map((type) => ({ ...branchFragment, type }) as JSONSchemaNotCollectionFragment) };
+    reflections.push(
+      new JSONSchemaAnyOfTypeFragmentReflect<TSchema, TName>(schema, name, anyOfFragment) as unknown as JSONSchemaFragmentReflect<TSchema, TName, TFragment>,
+    );
+  }
   if (JSONSchemaAllOfTypeFragmentReflect.check(fragment))
     reflections.push(
       new JSONSchemaAllOfTypeFragmentReflect<TSchema, TName, TFragment & JSONSchemaAllOfTypeFragment>(
@@ -151,6 +189,27 @@ function _createFragmentReflections<
       ),
     );
   return reflections;
+}
+
+/**
+ * Keywords which constrain a value regardless of its type, and are reflected by their own fragment reflection types
+ */
+const _JSONSchemaTypeIndependentKeywords = ['const', 'enum', '$ref', 'allOf', 'anyOf', 'oneOf', 'not'] as const;
+
+/**
+ * Splits a fragment's `type` array into groups of type names: `object`, `array`, and all primitive types together
+ * @param fragment JSON fragment whose `type` to split
+ * @returns Type of each group (a primitive group as an array of type names), or `undefined` if `type` is not an array naming `object` or `array`
+ */
+function _getFragmentTypeGroups(fragment: JSONSchemaNotCollectionFragment): Array<'object' | 'array' | Array<JSONSchemaPrimitiveTypeName>> | undefined {
+  const type = fragment?.type;
+  if (!(type instanceof Array) || !(type.includes('object') || type.includes('array'))) return undefined;
+  const primitives = type.filter((name) => _JSONSchemaPrimitiveTypeNames.includes(name as JSONSchemaPrimitiveTypeName)) as Array<JSONSchemaPrimitiveTypeName>;
+  return [
+    ...(type.includes('object') ? ['object' as const] : []),
+    ...(type.includes('array') ? ['array' as const] : []),
+    ...(primitives.length ? [primitives] : []),
+  ];
 }
 
 /**
@@ -200,6 +259,8 @@ export abstract class JSONSchemaFragmentReflect<
     protected _fragmentName: TName,
     protected _fragment: TFragment,
   ) {}
+
+  // TODO: Not implemented yet (as in the type layer): `readOnly`, `writeOnly`
 }
 
 export class JSONSchemaModelFragmentReflect<
@@ -221,14 +282,36 @@ export class JSONSchemaModelFragmentReflect<
    */
   public readonly properties: _JSONSchemaModelFragmentPropertiesReflect<TSchema, TFragment>;
 
+  /**
+   * Names of the model's required properties, as listed by its `required` keyword (names of properties the model does not define are left out). Note
+   * that the type layer does not support `required` yet, and still infers every property of a model as required.
+   */
+  public readonly required: Array<_JSONSchemaModelFragmentRequiredName<TFragment>>;
+
   public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
     this.names = Object.keys(_fragment['properties']) as Array<JSONSchemaFragmentPropertyName<TFragment>>;
     this.properties = Object.fromEntries(
       Object.entries(_fragment['properties']).map(([name, property]) => [name, _createNestedFragmentReflections(_schema, property)]),
     ) as _JSONSchemaModelFragmentPropertiesReflect<TSchema, TFragment>;
+    const required = _fragment['required'];
+    this.required = (
+      required instanceof Array ? required.filter((name) => typeof name === 'string' && (this.names as Array<string>).includes(name)) : []
+    ) as Array<_JSONSchemaModelFragmentRequiredName<TFragment>>;
   }
+
+  // TODO: Not implemented yet (as in the type layer): `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`
 }
+
+/**
+ * Infers the names of a model fragment's required properties, as listed by its `required` keyword and defined by the model. A model with no `required`
+ * infers `never`.
+ */
+type _JSONSchemaModelFragmentRequiredName<TFragment extends JSONSchemaModelFragment> = TFragment extends { required?: infer R }
+  ? Exclude<R, undefined> extends infer Q extends ReadonlyArray<unknown>
+    ? Extract<Q[number], JSONSchemaFragmentPropertyName<TFragment>>
+    : never
+  : never;
 
 /**
  * Infers the reflections of each of a model fragment's properties, by property name. Every property is required and mutable, regardless of the modifiers
@@ -319,6 +402,9 @@ export class JSONSchemaArrayTypeFragmentReflect<
       items instanceof Object && !(items instanceof Array) ? _createFragmentReflections(_schema, undefined, items) : undefined
     ) as _JSONSchemaArrayTypeFragmentItemsReflect<TSchema, TFragment>;
   }
+
+  // TODO: Not implemented yet (as in the type layer): tuples, i.e. `prefixItems` (or an `items` array, with `additionalItems`). Planned as a separate
+  //       `prefixItems` property, holding the reflections of each position's fragment, while `items` keeps reflecting the fragment of every other item
 }
 
 /**
@@ -350,6 +436,9 @@ export class JSONSchemaObjectTypeFragmentReflect<
     super(_schema, _fragmentName, _fragment);
     this.type = _fragment['type'];
   }
+
+  // TODO: Not implemented yet (as in the type layer): `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`,
+  //       `required`
 }
 
 export class JSONSchemaAllOfTypeFragmentReflect<
@@ -452,7 +541,8 @@ export class JSONSchemaReferenceFragmentReflect<
 
   /**
    * Name of the referenced fragment, parsed from a `#/$defs/<name>` reference, or `undefined` if the reference is of any other form or names no fragment
-   * of the collection
+   * of the collection. JSON pointers are not supported (yet), as in the type layer: a reference is not unescaped (`~0`, `~1`) or percent-decoded, and
+   * can not point anywhere but directly into `$defs`.
    */
   public readonly refName: _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>;
 
