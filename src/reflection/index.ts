@@ -1,4 +1,5 @@
 import {
+  JSONSchema7,
   JSONSchemaAllOfTypeFragment,
   JSONSchemaAnyOfTypeFragment,
   JSONSchemaArrayTypeFragment,
@@ -18,7 +19,11 @@ import {
 import { TSSchemaFragmentName } from '../schema/TSSchemaCollection.js';
 import { TSSchemaFragmentType } from '../schema/TSSchemaFragment.js';
 
-export class JSONSchemaCollectionReflect<TSchema extends JSONSchemaCollection> {
+export class JSONSchemaCollectionFragmentReflect<TSchema extends JSONSchemaCollection> {
+  public static check(fragment: JSONSchema7) {
+    return fragment?.['$defs'] instanceof Object && !(fragment?.['$defs'] instanceof Array);
+  }
+
   public constructor(protected _schema: TSchema) {
     // Extract fragment names
     this._fragmentNames = Object.keys(this._schema['$defs']) as Array<TSSchemaFragmentName<TSchema>>;
@@ -52,7 +57,7 @@ export class JSONSchemaCollectionReflect<TSchema extends JSONSchemaCollection> {
  * @returns Reflections of all fragment types the fragment matches, or an empty array if it matches none
  */
 function _createFragmentReflections<TSchema extends JSONSchemaCollection, TName extends TSSchemaFragmentName<TSchema> = TSSchemaFragmentName<TSchema>>(
-  schema: JSONSchemaCollectionReflect<TSchema>,
+  schema: JSONSchemaCollectionFragmentReflect<TSchema>,
   name: TName,
   fragment: JSONSchemaNotCollectionFragment,
 ): Array<JSONSchemaFragmentReflect<TSchema, TName>> {
@@ -108,7 +113,7 @@ export abstract class JSONSchemaFragmentReflect<
   }
 
   public constructor(
-    protected _schema: JSONSchemaCollectionReflect<TSchema>,
+    protected _schema: JSONSchemaCollectionFragmentReflect<TSchema>,
     protected _fragmentName: TName,
     protected _fragment: TFragment,
   ) {}
@@ -123,7 +128,7 @@ export class JSONSchemaModelFragmentReflect<
     return fragment?.type === 'object' && fragment?.['properties'] instanceof Object;
   }
 
-  public constructor(_schema: JSONSchemaCollectionReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
+  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
   }
 
@@ -140,7 +145,7 @@ export class JSONSchemaConstFragmentReflect<
     return 'const' in fragment;
   }
 
-  public constructor(_schema: JSONSchemaCollectionReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
+  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
   }
 
@@ -156,7 +161,7 @@ export class JSONSchemaEnumFragmentReflect<
     return fragment?.['enum'] instanceof Array;
   }
 
-  public constructor(_schema: JSONSchemaCollectionReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
+  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
   }
 
@@ -180,7 +185,7 @@ export class JSONSchemaPrimitiveTypeFragmentReflect<
       : _JSONSchemaPrimitiveTypeNames.includes(type as JSONSchemaPrimitiveTypeName);
   }
 
-  public constructor(_schema: JSONSchemaCollectionReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
+  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
   }
 
@@ -196,7 +201,7 @@ export class JSONSchemaArrayTypeFragmentReflect<
     return fragment?.type === 'array';
   }
 
-  public constructor(_schema: JSONSchemaCollectionReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
+  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
   }
 
@@ -212,7 +217,7 @@ export class JSONSchemaObjectTypeFragmentReflect<
     return fragment?.type === 'object' && fragment?.['properties'] === undefined;
   }
 
-  public constructor(_schema: JSONSchemaCollectionReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
+  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
   }
 
@@ -228,7 +233,7 @@ export class JSONSchemaAllOfTypeFragmentReflect<
     return fragment?.['allOf'] instanceof Array;
   }
 
-  public constructor(_schema: JSONSchemaCollectionReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
+  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
   }
 
@@ -244,7 +249,7 @@ export class JSONSchemaAnyOfTypeFragmentReflect<
     return fragment?.['anyOf'] instanceof Array;
   }
 
-  public constructor(_schema: JSONSchemaCollectionReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
+  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
   }
 
@@ -260,7 +265,7 @@ export class JSONSchemaOneOfTypeFragmentReflect<
     return fragment?.['oneOf'] instanceof Array;
   }
 
-  public constructor(_schema: JSONSchemaCollectionReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
+  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
   }
 
@@ -276,7 +281,7 @@ export class JSONSchemaNotTypeFragmentReflect<
     return fragment?.['not'] instanceof Object;
   }
 
-  public constructor(_schema: JSONSchemaCollectionReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
+  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
   }
 
@@ -292,7 +297,7 @@ export class JSONSchemaReferenceFragmentReflect<
     return typeof fragment?.['$ref'] === 'string';
   }
 
-  public constructor(_schema: JSONSchemaCollectionReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
+  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
   }
 
