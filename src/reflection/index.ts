@@ -11,6 +11,7 @@ import {
   JSONSchemaModelFragment,
   JSONSchemaNotCollectionFragment,
   JSONSchemaNotTypeFragment,
+  JSONSchemaNullTypeFragment,
   JSONSchemaObjectTypeFragment,
   JSONSchemaOneOfTypeFragment,
   JSONSchemaPrimitiveTypeFragment,
@@ -84,7 +85,8 @@ type _JSONSchemaCollectionFragment<
  * @param fragment JSON fragment to reflect on
  * @returns Reflections of all fragment types the fragment matches, or an empty array if it matches none
  *
- * A `type` array naming `object` and / or `array` is split into groups of type names (`object`, `array`, and all primitive types together). A single
+ * A `type` array naming `object`, `array` and / or `null` is split into groups of type names (`object`, `array`, `null`, and all primitive types
+ * together), as `null` is not a primitive type here, but has its own null type reflection. A single
  * group is reflected as if `type` named it directly. Several groups are alternatives (a value is of one of them), so they are reflected as an implicit
  * `anyOf`: the type independent keywords (`const`, `enum`, `$ref`, `allOf`, `anyOf`, `oneOf`, `not`) are reflected on the fragment itself, and one more
  * any-of-types reflection holds a branch per group, each branch being the fragment with `type` narrowed to the group and the type independent keywords
@@ -121,6 +123,14 @@ function _createFragmentReflections<
         schema,
         name,
         fragment as TFragment & JSONSchemaPrimitiveTypeFragment,
+      ),
+    );
+  if (JSONSchemaNullTypeFragmentReflect.check(fragment))
+    reflections.push(
+      new JSONSchemaNullTypeFragmentReflect<TSchema, TName, TFragment & JSONSchemaNullTypeFragment>(
+        schema,
+        name,
+        fragment as TFragment & JSONSchemaNullTypeFragment,
       ),
     );
   if (JSONSchemaArrayTypeFragmentReflect.check(fragment))
@@ -197,17 +207,20 @@ function _createFragmentReflections<
 const _JSONSchemaTypeIndependentKeywords = ['const', 'enum', '$ref', 'allOf', 'anyOf', 'oneOf', 'not'] as const;
 
 /**
- * Splits a fragment's `type` array into groups of type names: `object`, `array`, and all primitive types together
+ * Splits a fragment's `type` array into groups of type names: `object`, `array`, `null`, and all primitive types together
  * @param fragment JSON fragment whose `type` to split
- * @returns Type of each group (a primitive group as an array of type names), or `undefined` if `type` is not an array naming `object` or `array`
+ * @returns Type of each group (a primitive group as an array of type names), or `undefined` if `type` is not an array naming `object`, `array` or `null`
  */
-function _getFragmentTypeGroups(fragment: JSONSchemaNotCollectionFragment): Array<'object' | 'array' | Array<JSONSchemaPrimitiveTypeName>> | undefined {
+function _getFragmentTypeGroups(
+  fragment: JSONSchemaNotCollectionFragment,
+): Array<'object' | 'array' | 'null' | Array<JSONSchemaPrimitiveTypeName>> | undefined {
   const type = fragment?.type;
-  if (!(type instanceof Array) || !(type.includes('object') || type.includes('array'))) return undefined;
+  if (!(type instanceof Array) || !(type.includes('object') || type.includes('array') || type.includes('null'))) return undefined;
   const primitives = type.filter((name) => _JSONSchemaPrimitiveTypeNames.includes(name as JSONSchemaPrimitiveTypeName)) as Array<JSONSchemaPrimitiveTypeName>;
   return [
     ...(type.includes('object') ? ['object' as const] : []),
     ...(type.includes('array') ? ['array' as const] : []),
+    ...(type.includes('null') ? ['null' as const] : []),
     ...(primitives.length ? [primitives] : []),
   ];
 }
@@ -356,9 +369,9 @@ export class JSONSchemaEnumFragmentReflect<
 }
 
 /**
- * Names of all primitive types
+ * Names of all primitive types (`null` is not one, see the null type reflection)
  */
-const _JSONSchemaPrimitiveTypeNames: ReadonlyArray<JSONSchemaPrimitiveTypeName | 'null'> = ['string', 'number', 'integer', 'boolean', 'null'];
+const _JSONSchemaPrimitiveTypeNames: ReadonlyArray<JSONSchemaPrimitiveTypeName> = ['string', 'number', 'integer', 'boolean'];
 
 export class JSONSchemaPrimitiveTypeFragmentReflect<
   TSchema extends JSONSchemaCollection,
@@ -370,6 +383,23 @@ export class JSONSchemaPrimitiveTypeFragmentReflect<
     return type instanceof Array
       ? type.every((name) => _JSONSchemaPrimitiveTypeNames.includes(name as JSONSchemaPrimitiveTypeName))
       : _JSONSchemaPrimitiveTypeNames.includes(type as JSONSchemaPrimitiveTypeName);
+  }
+
+  public readonly type: TFragment['type'];
+
+  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
+    super(_schema, _fragmentName, _fragment);
+    this.type = _fragment['type'];
+  }
+}
+
+export class JSONSchemaNullTypeFragmentReflect<
+  TSchema extends JSONSchemaCollection,
+  TName extends TSSchemaFragmentName<TSchema> | undefined = TSSchemaFragmentName<TSchema>,
+  TFragment extends JSONSchemaNullTypeFragment = JSONSchemaNullTypeFragment,
+> extends JSONSchemaFragmentReflect<TSchema, TName, TFragment> {
+  public static check(fragment: JSONSchemaNotCollectionFragment) {
+    return fragment?.type === 'null';
   }
 
   public readonly type: TFragment['type'];
