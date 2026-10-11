@@ -5,6 +5,8 @@ updates:
   # devDependencies, so ungrouped updates would be mostly noise
   - package-ecosystem: npm
     directory: /
+    # `develop` is the work-in-progress trunk; `master` only receives releases
+    target-branch: develop
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
@@ -19,5 +21,6 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    target-branch: develop
     schedule:
       interval: weekly

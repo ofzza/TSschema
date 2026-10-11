@@ -228,11 +228,9 @@ Enforced by `ci:prettier` and `ci:eslint`, both of which only look at `src` — 
 
 `.github/workflows/ci.yml` runs `npm ci && npm run ci` on every pull request targeting `master` or `develop` and on every push to either, across a Node matrix of `[22, 24]` with `fail-fast: false`. In-progress runs are cancelled only for pull requests, never for `master`.
 
-**Dependabot does not yet match the [branching model](#branching).** `.github/dependabot.yml` sets no `target-branch`, so Dependabot opens its pull requests against the default branch rather than `develop`.
-
 **A workflow alone does not block merges.** Making it mandatory requires branch protection on `master` in GitHub repo settings, marking `CI / Node 22` and `CI / Node 24` as required status checks. That is a repo setting, not a file in this repository.
 
-`.github/` also holds `pull_request_template.md` (adapted from the author's template in the `kickstart` repo) and `dependabot.yml` (weekly npm and github-actions updates, with devDependencies grouped into one pull request, and `@types/node` majors ignored).
+`.github/` also holds `pull_request_template.md` (adapted from the author's template in the `kickstart` repo) and `dependabot.yml` (weekly npm and github-actions updates, with devDependencies grouped into one pull request, and `@types/node` majors ignored). Both update entries set `target-branch: develop`, so Dependabot follows the [branching model](#branching) instead of targeting the default branch.
 
 ## Exports
 
