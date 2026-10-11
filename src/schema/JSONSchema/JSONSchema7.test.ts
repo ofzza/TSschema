@@ -13,11 +13,11 @@ describe('JSONSchema', () => {
 
   describe('Primitive types', () => {
     it('Lists all primitive type names', () => {
-      expect(true satisfies AssertTypeEquality<JSONSchemaPrimitiveTypeName, 'string' | 'boolean' | 'number' | 'integer' | 'null'>).toBe(true);
+      expect(true satisfies AssertTypeEquality<JSONSchemaPrimitiveTypeName, 'string' | 'boolean' | 'number' | 'integer'>).toBe(true);
     });
 
     it('Lists all primitive value types', () => {
-      expect(true satisfies AssertTypeEquality<JSONSchemaPrimitiveType, string | number | boolean | null>).toBe(true);
+      expect(true satisfies AssertTypeEquality<JSONSchemaPrimitiveType, string | number | boolean>).toBe(true);
     });
 
     it('Maps primitive type names to their types', () => {
@@ -25,8 +25,12 @@ describe('JSONSchema', () => {
       expect(true satisfies AssertTypeEquality<JSONSchemaPrimitiveTypeFromName<'number'>, number>).toBe(true);
       expect(true satisfies AssertTypeEquality<JSONSchemaPrimitiveTypeFromName<'integer'>, number>).toBe(true);
       expect(true satisfies AssertTypeEquality<JSONSchemaPrimitiveTypeFromName<'boolean'>, boolean>).toBe(true);
+      expect(true satisfies AssertTypeEquality<JSONSchemaPrimitiveTypeFromName<'string' | 'boolean'>, string | boolean>).toBe(true);
+    });
+
+    it('Does not treat null as a primitive type', () => {
+      // @ts-expect-error `null` is not a primitive type name
       expect(true satisfies AssertTypeEquality<JSONSchemaPrimitiveTypeFromName<'null'>, null>).toBe(true);
-      expect(true satisfies AssertTypeEquality<JSONSchemaPrimitiveTypeFromName<'string' | 'null'>, string | null>).toBe(true);
     });
   });
 });

@@ -18,6 +18,7 @@ export type { JSONSchemaModelFragment, JSONSchemaFragmentIsModel, JSONSchemaFrag
 export type { JSONSchemaConstFragment, JSONSchemaFragmentIsConst, JSONSchemaConstFragmentType } from './ConstFragment.js';
 export type { JSONSchemaEnumFragment, JSONSchemaFragmentIsEnum, JSONSchemaEnumFragmentType } from './EnumFragment.js';
 export type { JSONSchemaPrimitiveTypeFragment, JSONSchemaFragmentIsPrimitiveType, JSONSchemaPrimitiveTypeFragmentType } from './PrimitiveTypeFragment.js';
+export type { JSONSchemaNullTypeFragment, JSONSchemaFragmentIsNullType, JSONSchemaNullTypeFragmentType } from './NullTypeFragment.js';
 export type { JSONSchemaArrayTypeFragment, JSONSchemaFragmentIsArrayType, JSONSchemaArrayTypeFragmentType } from './ArrayTypeFragment.js';
 export type { JSONSchemaObjectTypeFragment, JSONSchemaFragmentIsObjectType, JSONSchemaObjectTypeFragmentType } from './ObjectTypeFragment.js';
 export type { JSONSchemaAllOfTypeFragment, JSONSchemaFragmentIsAllOfType, JSONSchemaAllOfTypeFragmentType } from './AllOfTypeFragment.js';

@@ -117,19 +117,26 @@ describe('JSONSchema', () => {
 
     describe('Type array branches', () => {
       it('Splits a type array naming non primitive types into a branch per group of type names', () => {
-        type Branch = JSONSchemaFragmentTypeBranch<{ readonly type: readonly ['object', 'array', 'string', 'null']; readonly title: 'x' }>;
+        type Branch = JSONSchemaFragmentTypeBranch<{ readonly type: readonly ['object', 'array', 'string', 'boolean', 'null']; readonly title: 'x' }>;
         expect(
           true satisfies AssertTypeEquality<
             Branch,
             | { readonly type: 'object'; readonly title: 'x' }
             | { readonly type: 'array'; readonly title: 'x' }
-            | { readonly type: Array<'string' | 'null'>; readonly title: 'x' }
+            | { readonly type: 'null'; readonly title: 'x' }
+            | { readonly type: Array<'string' | 'boolean'>; readonly title: 'x' }
           >,
         ).toBe(true);
       });
 
+      it('Splits a type array naming null off its primitive types, e.g. a nullable primitive', () => {
+        type Branch = JSONSchemaFragmentTypeBranch<{ readonly type: readonly ['string', 'null'] }>;
+        expect(true satisfies AssertTypeEquality<Branch, { readonly type: Array<'string'> } | { readonly type: 'null' }>).toBe(true);
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentTypeBranch<{ readonly type: readonly ['null'] }>, { readonly type: 'null' }>).toBe(true);
+      });
+
       it('Leaves a fragment with no type array naming non primitive types as is', () => {
-        type Primitives = { readonly type: readonly ['string', 'null'] };
+        type Primitives = { readonly type: readonly ['string', 'boolean'] };
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentTypeBranch<Primitives>, Primitives>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentTypeBranch<_ModelA>, _ModelA>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentTypeBranch<{ readonly const: 1 }>, { readonly const: 1 }>).toBe(true);

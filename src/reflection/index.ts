@@ -358,7 +358,7 @@ export class JSONSchemaEnumFragmentReflect<
 /**
  * Names of all primitive types
  */
-const _JSONSchemaPrimitiveTypeNames: ReadonlyArray<JSONSchemaPrimitiveTypeName> = ['string', 'number', 'integer', 'boolean', 'null'];
+const _JSONSchemaPrimitiveTypeNames: ReadonlyArray<JSONSchemaPrimitiveTypeName | 'null'> = ['string', 'number', 'integer', 'boolean', 'null'];
 
 export class JSONSchemaPrimitiveTypeFragmentReflect<
   TSchema extends JSONSchemaCollection,

@@ -1,5 +1,6 @@
 /**
- * Typescript utilities for JSON schema primitive `type` fragments: detection and value type inference.
+ * Typescript utilities for JSON schema primitive `type` fragments (`string`, `number`, `integer`, `boolean`; `null` has a fragment type of its own):
+ * detection and value type inference.
  */
 
 import type { JSONSchema7, JSONSchemaPrimitiveTypeName, JSONSchemaPrimitiveTypeFromName } from './JSONSchema7.js';
