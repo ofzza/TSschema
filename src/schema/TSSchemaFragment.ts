@@ -86,7 +86,7 @@ type _TSSchemaFragmentPropertyName<T> = T extends JSONSchemaModelFragment ? JSON
  * a wrapper with no parent collection) has none to resolve against, so each of its `$ref`s infers `unknown`. As a model property wrapper is structurally
  * also a fragment wrapper of its parent model, passing one infers the type of the parent model, not of the property (see `TSSchemaPropertyType`).
  */
-export type TSSchemaModelType<
+export type TSSchemaFragmentType<
   T extends JSONSchemaNotCollectionFragment | JSONSchemaFragmentWrapper,
   TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection,
 > =
