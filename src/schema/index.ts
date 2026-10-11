@@ -32,6 +32,8 @@ export type TSSchemaJSONCollection = JSONSchemaCollection;
  * - a model fragment or fragment wrapper infers the names of all the model's properties (a fragment which is not a model has no properties, and infers
  *   `never`),
  * - a model property wrapper, being structurally also a fragment wrapper of its parent model, infers the names of all the parent model's properties.
+ *
+ * Infers direct names only, never dot-separated property paths (which `TSSchemaProperty` accepts), as a recursive schema has infinitely many of them.
  */
 export type TSSchemaName<T extends JSONSchemaCollection | JSONSchemaCollectionWrapper | JSONSchemaModelFragment | JSONSchemaFragmentWrapper> =
   // Model fragment, or fragment / model property wrapper (checked first, as every wrapper is also a collection wrapper): property names

@@ -119,8 +119,9 @@ type MentorMentorAge = TSSchemaProperty<Schema, 'Person', 'mentor.mentor.age'>; 
 type MentorEmail = TSSchemaProperty<Person, 'email.address'>; // This will fail at compile time
 ```
 
-Only a path's first segment is checked at compile time. A path which does not address a property further down (e.g. `'mentor.email'`, or `'name.length'`
-into a property which is not a model) infers `never`. A path into an object whose shape is not known (an object with no `properties`, a `$ref` with no
+Only a path's first segment is checked at compile time: a recursive schema (`Person.mentor` → `Person`) has infinitely many valid paths, so they can not
+all be listed (for the same reason, [TSSchemaName](#tsschemaname) infers no paths). A path which does not address a property further down (e.g.
+`'mentor.email'`, or `'name.length'` into a property which is not a model) infers `never`. A path into an object whose shape is not known (an object with no `properties`, a `$ref` with no
 collection to resolve it against, or an array with no single schema `items`) wraps a property of type `unknown`.
 
 ## TSSchemaName
@@ -130,6 +131,9 @@ collection to resolve it against, or an array with no single schema `items`) wra
 - a collection infers the names of its fragments,
 - a model, a fragment wrapper or a property wrapper infers the names of the (parent) model's properties,
 - a wrapper of a fragment which is not a model infers `never`.
+
+It infers direct names only, never dot-separated paths into nested models: a recursive schema (`Person.mentor` → `Person`) has infinitely many of them.
+Paths can still address properties, see [TSSchemaProperty](#tsschemaproperty).
 
 ```ts
 type FragmentName = TSSchemaName<Schema>; // 'Person' | 'Role'
@@ -239,8 +243,8 @@ or newer.
 `TSschema` is being built towards the following scope, all driven by a single JSON schema describing your data models:
 
 - **Deep type inference** - utility types inferring model names, property names, property paths and their types directly from the schema, at compile
-  time. Partly available, see [Usage](#usage). Property paths can address properties (see [TSSchemaProperty](#tsschemaproperty)), but are not yet
-  inferred by `TSSchemaName`.
+  time. Partly available, see [Usage](#usage). Property paths address properties (see [TSSchemaProperty](#tsschemaproperty)), while
+  [TSSchemaName](#tsschemaname) deliberately infers direct names only, never paths.
 - **Model generation** - generating TypeScript data model definitions from the JSON schema. Partly available: `tsschema generate --models` generates a
   named type per fragment, see [Schemas from JSON files](#schemas-from-json-files).
 - **Runtime reflection** - runtime utilities for inspecting the same model, property and path information the utility types infer. In progress:

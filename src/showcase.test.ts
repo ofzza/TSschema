@@ -129,6 +129,7 @@ describe('Showcase', () => {
 
   describe('TSSchemaName', () => {
     it('Infers the names addressable within a collection, a model or a wrapper', () => {
+      // Direct names only, never dot-separated paths: a recursive schema (Person.mentor -> Person) has infinitely many of them
       type FragmentName = TSSchemaName<Schema>;
       //   ^?
       // FragmentName: 'Person' | 'Role'

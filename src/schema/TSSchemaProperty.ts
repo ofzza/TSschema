@@ -72,7 +72,8 @@ type _TSCollectionPropertyName<T extends JSONSchemaCollection | JSONSchemaCollec
  * with that nested model (and its name, when it was reached through a `$ref`). A path passes into a nested model given inline or by `$ref`, through every
  * member of an `anyOf`, `oneOf` or `allOf`, and through the `items` of an array. A path into an object of unknown shape (an object with no `properties`, a
  * `$ref` which can not be resolved, or an array with no single schema `items`) addresses a property of unknown type. Only a path's first segment is
- * checked against the schema at the call site; a path which does not address a property any further down infers `never`.
+ * checked against the schema at the call site, as a recursive schema has infinitely many valid paths, which no constraint can list (for the same reason,
+ * `TSSchemaName` infers no paths); a path which does not address a property any further down infers `never`.
  */
 export type TSSchemaProperty<
   T extends JSONSchemaNotCollectionFragment | JSONSchemaModelFragment | JSONSchemaFragmentWrapper | JSONSchemaCollection | JSONSchemaCollectionWrapper,
