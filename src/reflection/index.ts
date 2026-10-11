@@ -256,6 +256,10 @@ export class JSONSchemaArrayTypeFragmentReflect<
     return fragment?.type === 'array';
   }
 
+  /**
+   * Reflections of the `items` fragment. Built eagerly on construction, unlike a reference fragment's `ref`, as the `items` fragment is nested in, and
+   * owned by, this fragment, so reflecting it can not recurse back into this fragment
+   */
   public readonly items: _JSONSchemaArrayTypeFragmentItemsReflect<TSchema, TFragment>;
 
   public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
@@ -370,10 +374,53 @@ export class JSONSchemaReferenceFragmentReflect<
     return typeof fragment?.['$ref'] === 'string';
   }
 
-  public readonly ref: TFragment['$ref'];
+  /**
+   * Name of the referenced fragment, parsed from a `#/$defs/<name>` reference, or `undefined` if the reference is of any other form or names no fragment
+   * of the collection
+   */
+  public readonly refName: _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>;
+
+  /**
+   * Reflections of the referenced fragment, as held by the collection, or `undefined` if the reference can not be resolved. Resolved lazily on access,
+   * unlike an array type fragment's `items`: the referenced fragment is shared, not owned by this fragment, and (in)directly recursive references would
+   * never finish constructing if resolved eagerly. Besides, the collection's reflections are not available yet while it is still constructing them.
+   */
+  public get ref(): _JSONSchemaReferenceFragmentRefReflect<TSchema, _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>> {
+    return (
+      this.refName === undefined ? undefined : this._schema.fragment(this.refName as TSSchemaFragmentName<TSchema>)
+    ) as _JSONSchemaReferenceFragmentRefReflect<TSchema, _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>>;
+  }
 
   public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
-    this.ref = _fragment['$ref'];
+    const name = /^#\/\$defs\/(.+)$/.exec(_fragment['$ref'])?.[1];
+    this.refName = (name !== undefined && (_schema.names as Array<string>).includes(name) ? name : undefined) as _JSONSchemaReferenceFragmentRefName<
+      TSchema,
+      TFragment
+    >;
   }
 }
+
+/**
+ * Infers the name of the fragment referenced by a reference fragment, parsed from a `#/$defs/<name>` reference. A reference of any other form, or one
+ * naming no fragment of the collection, infers `undefined`; an unspecified (`string`) reference infers any fragment name or `undefined`.
+ */
+type _JSONSchemaReferenceFragmentRefName<TSchema extends JSONSchemaCollection, TFragment extends JSONSchemaReferenceFragment> =
+  // Unspecified reference
+  string extends TFragment['$ref']
+    ? TSSchemaFragmentName<TSchema> | undefined
+    : // Reference to a fragment of the collection
+      TFragment['$ref'] extends `#/$defs/${infer N}`
+      ? N extends TSSchemaFragmentName<TSchema>
+        ? N
+        : undefined
+      : undefined;
+
+/**
+ * Infers the reflections of the fragment(s) referenced by name, distributing over a union of names, or `undefined` for an unresolved reference
+ */
+type _JSONSchemaReferenceFragmentRefReflect<TSchema extends JSONSchemaCollection, TRefName> =
+  // Resolved reference
+  TRefName extends TSSchemaFragmentName<TSchema>
+    ? Array<JSONSchemaFragmentReflect<TSchema, TRefName, _JSONSchemaCollectionFragment<TSchema, TRefName>>>
+    : undefined;
