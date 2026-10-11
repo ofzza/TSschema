@@ -67,8 +67,8 @@ describe('JSONSchema', () => {
         expect(true satisfies AssertTypeEquality<Assessment['maximumMarks'], number>).toBe(true);
         expect(true satisfies AssertTypeEquality<Assessment['dueAt'], string>).toBe(true);
         expect(true satisfies AssertTypeEquality<Assessment['isOpenBook'], boolean>).toBe(true);
-        // `AssessmentKind` is an integer constrained by a `oneOf`, which is not yet supported
-        expect(true satisfies AssertTypeEquality<Assessment['kind'], number>).toBe(true);
+        // `AssessmentKind` is an integer constrained by a `oneOf` of `const`s
+        expect(true satisfies AssertTypeEquality<Assessment['kind'], 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>).toBe(true);
         // `class` is the only property not listed in `required`, so the only optional one
         expect(true satisfies AssertTypeEquality<Pick<Assessment, 'class'>, { class?: _FixtureModel<'Class'> | null }>).toBe(true);
         expect(true satisfies AssertTypeEquality<Assessment['class'] & {}, _FixtureModel<'Class'>>).toBe(true);

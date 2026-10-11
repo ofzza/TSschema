@@ -154,6 +154,9 @@ type RoleName = TSSchemaName<TSSchemaFragment<Schema, 'Role'>>; // never
 fragment given directly, or wrapped with no collection, only resolves `$ref`s against an explicitly passed collection. Otherwise each of its `$ref`s
 infers `unknown`.
 
+Sibling keywords narrow each other (e.g. `type: 'integer'` with an `enum`), `allOf` infers the intersection of its members, and `anyOf` / `oneOf` the
+union of their members (a type can not tell "exactly one" from "at least one", so `oneOf` infers the same as `anyOf`).
+
 A model's properties listed in its `required` keyword are required, and all other properties are optional (`key?:`). So a model with no `required`
 infers every property as optional, as does one whose `required` is not a list of literal names. The type of a property itself never includes
 `undefined`: whether it may be missing is up to its model. Here, `mentor` is not listed in `required`:

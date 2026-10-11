@@ -4,6 +4,7 @@
 
 import type { JSONSchema7 } from './JSONSchema7.js';
 import type { JSONSchemaCollection, JSONSchemaNotCollectionFragment } from './CollectionFragment.js';
+import type { JSONSchemaFragmentType } from './Fragment.js';
 
 /**
  * Represents a JSON schema one-of-types definition, which is any schema fragment containing a `oneOf` property.
@@ -16,11 +17,11 @@ export type JSONSchemaOneOfTypeFragment = JSONSchemaNotCollectionFragment & {
  */
 export type JSONSchemaFragmentIsOneOfType<T extends JSONSchema7> = T extends JSONSchemaOneOfTypeFragment ? true : false;
 /**
- * Infers a value type from a JSON schema one-of-types definition. Not yet supported, so places no constraint and infers `unknown`.
+ * Infers a value type from a JSON schema one-of-types definition, as the union of all the listed fragments' types. A value valid against exactly one of
+ * the fragments can not be told apart from one valid against several of them by a type, so this over-approximates `oneOf` just as `anyOf` is inferred.
+ * An empty `oneOf` can never be satisfied and infers `never`.
  */
 export type JSONSchemaOneOfTypeFragmentType<
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   T extends JSONSchemaNotCollectionFragment,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection,
-> = unknown; // TODO: Implement support for One-Of
+> = T extends { oneOf: infer U extends ReadonlyArray<JSONSchemaNotCollectionFragment> } ? JSONSchemaFragmentType<U[number], TSchemaCollection> : unknown;

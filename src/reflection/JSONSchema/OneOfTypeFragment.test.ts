@@ -33,10 +33,12 @@ describe('Reflection', () => {
         expect(true satisfies AssertTypeEquality<(typeof oneOf.oneOf)[2][0]['const'], 2>).toBe(true);
       });
 
-      it('Infers no constraint from a one-of-types, as it is not supported yet', () => {
+      it('Infers the type of a one-of-types', () => {
         const collection = new JSONSchemaCollectionFragmentReflect({ $defs: { A: { oneOf: [{ type: 'string' }, { type: 'number' }] } } } as const);
         const _a = collection.fragment('A')[0];
-        expect(true satisfies AssertTypeEquality<typeof _a.Type, unknown>).toBe(true);
+        expect(true satisfies AssertTypeEquality<typeof _a.Type, string | number>).toBe(true);
+        const _kind = new JSONSchemaCollectionFragmentReflect(jsonSchema).fragment('AssessmentKind')[1];
+        expect(true satisfies AssertTypeEquality<typeof _kind.Type, 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>).toBe(true);
       });
     });
   });

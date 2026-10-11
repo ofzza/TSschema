@@ -54,7 +54,7 @@ describe('JSONSchema', () => {
         //   ^?
         expect(true satisfies AssertTypeEquality<AssessmentType, JSONSchemaModelFragmentType<AssessmentModel, JSONSchemaFixtureCollection>>).toBe(true);
         expect(true satisfies AssertTypeEquality<AssessmentType['id'], string>).toBe(true);
-        expect(true satisfies AssertTypeEquality<AssessmentType['kind'], number>).toBe(true);
+        expect(true satisfies AssertTypeEquality<AssessmentType['kind'], 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>).toBe(true);
         expect(true satisfies AssertTypeEquality<Pick<AssessmentType, 'class'>, { class?: _FixtureModel<'Class'> | null }>).toBe(true);
         expect(true satisfies AssertTypeEquality<AssessmentType['record']['battery']['isProctored'], boolean>).toBe(true);
       });
