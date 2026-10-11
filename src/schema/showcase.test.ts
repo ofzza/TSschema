@@ -30,9 +30,10 @@ const schema = {
       type: 'object',
       properties: {
         name: { type: 'string' },
-        address: { type: 'object', properties: { city: { type: 'string' } } },
+        address: { type: 'object', properties: { city: { type: 'string' } }, required: ['city'] },
         mentor: { anyOf: [{ $ref: '#/$defs/Person' }, { type: 'null' }] },
       },
+      required: ['name', 'address'],
     },
     Role: { enum: ['student', 'teacher'] },
   },
@@ -110,11 +111,11 @@ describe('Showcase', () => {
       it('Infers the type of a fragment wrapper against its own collection, or an explicitly passed one', () => {
         type PersonType = TSSchemaFragmentType<TSSchemaFragment<Schema, 'Person'>>;
         //   ^?
-        // PersonType: { name: string; address: { city: string }; mentor: PersonType | null }
-        expect(true satisfies AssertTypeEquality<PersonType['mentor'], PersonType | null>).toBe(true);
+        // PersonType: { name: string; address: { city: string }; mentor?: PersonType | null }
+        expect(true satisfies AssertTypeEquality<Pick<PersonType, 'mentor'>, { mentor?: PersonType | null }>).toBe(true);
         type Standalone = TSSchemaFragmentType<Person>;
         //   ^?
-        // Standalone: { name: string; address: { city: string }; mentor: unknown } (no collection to resolve the $ref against)
+        // Standalone: { name: string; address: { city: string }; mentor?: unknown } (no collection to resolve the $ref against)
         expect(true satisfies AssertTypeEquality<Standalone['mentor'], unknown>).toBe(true);
       });
 

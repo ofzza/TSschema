@@ -32,6 +32,7 @@ const schema = {
         role: { $ref: '#/$defs/Role' },
         mentor: { anyOf: [{ $ref: '#/$defs/Person' }, { type: 'null' }] },
       },
+      required: ['name', 'age', 'role'],
     },
     Role: { enum: ['student', 'teacher'] },
   },
@@ -153,15 +154,19 @@ describe('Showcase', () => {
     it('Infers the value type of a fragment, resolving every $ref against its collection', () => {
       type PersonType = TSSchemaType<TSSchemaFragment<Schema, 'Person'>>;
       //   ^?
-      // PersonType: { name: string; age: number; role: 'student' | 'teacher'; mentor: PersonType | null }
+      // PersonType: { name: string; age: number; role: 'student' | 'teacher'; mentor?: PersonType | null }
       expect(true satisfies AssertTypeEquality<PersonType['name'], string>).toBe(true);
       expect(true satisfies AssertTypeEquality<PersonType['age'], number>).toBe(true);
       expect(true satisfies AssertTypeEquality<PersonType['role'], 'student' | 'teacher'>).toBe(true);
-      expect(true satisfies AssertTypeEquality<PersonType['mentor'], PersonType | null>).toBe(true);
+      // `mentor` is not listed in `required`, so it is optional
+      expect(true satisfies AssertTypeEquality<Pick<PersonType, 'mentor'>, { mentor?: PersonType | null }>).toBe(true);
 
-      const person: PersonType = { name: 'Ada', age: 36, role: 'teacher', mentor: { name: 'Charles', age: 45, role: 'teacher', mentor: null } };
+      const person: PersonType = { name: 'Ada', age: 36, role: 'teacher', mentor: { name: 'Charles', age: 45, role: 'teacher' } };
       // Breakpoint: inspect `person`, a value checked against the inferred type
       expect(person.mentor?.name).toBe('Charles');
+
+      // @ts-expect-error This will fail at compile time: `name` is listed in `required`
+      const _nameless: PersonType = { age: 36, role: 'teacher' };
     });
 
     it('Infers the value type of a property, also when addressed by path', () => {
@@ -201,7 +206,7 @@ describe('Showcase', () => {
       const checkedPeople = people satisfies TSSchemaJSONCollection;
       // Breakpoint: inspect `checkedPeople`, the very same object as `people`
       expect(checkedPeople).toBe(people);
-      expect(true satisfies AssertTypeEquality<TSSchemaType<TSSchemaFragment<typeof checkedPeople, 'Person'>>, { name: string }>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaType<TSSchemaFragment<typeof checkedPeople, 'Person'>>, { name?: string }>).toBe(true);
 
       const invalid = { $defs: { Person: { type: 'text' } } } as const;
       // @ts-expect-error This will fail at compile time: 'text' is not a JSON schema type

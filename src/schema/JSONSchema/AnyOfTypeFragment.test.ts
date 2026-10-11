@@ -5,7 +5,7 @@ import type { JSONSchemaAnyOfTypeFragment, JSONSchemaAnyOfTypeFragmentType, JSON
 /**
  * Small model fragment, used as a building block in the tests below
  */
-type _ModelA = { readonly type: 'object'; readonly properties: { readonly a: { readonly type: 'number' } } };
+type _ModelA = { readonly type: 'object'; readonly properties: { readonly a: { readonly type: 'number' } }; readonly required: readonly ['a'] };
 
 describe('JSONSchema', () => {
   describe('JSONSchema fragments', () => {

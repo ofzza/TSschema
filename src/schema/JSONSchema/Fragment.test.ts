@@ -21,7 +21,7 @@ type JSONSchemaFixtureCollection = typeof jsonSchema;
 /**
  * Small model fragment, used as a building block in the tests below
  */
-type _ModelA = { readonly type: 'object'; readonly properties: { readonly a: { readonly type: 'number' } } };
+type _ModelA = { readonly type: 'object'; readonly properties: { readonly a: { readonly type: 'number' } }; readonly required: readonly ['a'] };
 
 /**
  * Collection whose fragments carry `type` arrays naming non primitive types (nullable and mixed type models and arrays), used to test splitting them
@@ -35,12 +35,18 @@ type _TypeArrayCollection = {
         readonly value: { readonly type: 'string' };
         readonly next: { readonly $ref: '#/$defs/Node' };
         readonly tags: { readonly type: readonly ['array', 'null']; readonly items: { readonly type: 'string' } };
-        readonly child: { readonly type: readonly ['object', 'null']; readonly properties: { readonly x: { readonly type: 'number' } } };
+        readonly child: {
+          readonly type: readonly ['object', 'null'];
+          readonly properties: { readonly x: { readonly type: 'number' } };
+          readonly required: readonly ['x'];
+        };
       };
+      readonly required: readonly ['value', 'next', 'tags', 'child'];
     };
     readonly Mixed: {
       readonly type: readonly ['object', 'array', 'string', 'null'];
       readonly properties: { readonly a: { readonly type: 'number' } };
+      readonly required: readonly ['a'];
       readonly items: { readonly type: 'boolean' };
     };
   };
@@ -103,7 +109,7 @@ describe('JSONSchema', () => {
         expect(true satisfies AssertTypeEquality<Exclude<Node, null>['child'], { x: number } | null>).toBe(true);
         expect(
           true satisfies AssertTypeEquality<
-            JSONSchemaFragmentType<{ readonly type: readonly ['object']; readonly properties: _ModelA['properties'] }>,
+            JSONSchemaFragmentType<{ readonly type: readonly ['object']; readonly properties: _ModelA['properties']; readonly required: _ModelA['required'] }>,
             { a: number }
           >,
         ).toBe(true);
