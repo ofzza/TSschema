@@ -20,6 +20,29 @@ type JSONSchemaAssessmentKindFragment = JSONSchemaFixtureCollection['$defs']['As
  */
 type _FixtureModel<TName extends string> = JSONSchemaFragmentType<{ readonly $ref: `#/$defs/${TName}` }, JSONSchemaFixtureCollection>;
 
+/**
+ * Collection whose fragments carry `type` arrays naming non primitive types (nullable and mixed type models and arrays), used to test splitting them
+ * into branches
+ */
+type _TypeArrayCollection = {
+  readonly $defs: {
+    readonly Node: {
+      readonly type: readonly ['object', 'null'];
+      readonly properties: {
+        readonly value: { readonly type: 'string' };
+        readonly next: { readonly $ref: '#/$defs/Node' };
+        readonly tags: { readonly type: readonly ['array', 'null']; readonly items: { readonly type: 'string' } };
+        readonly child: { readonly type: readonly ['object', 'null']; readonly properties: { readonly x: { readonly type: 'number' } } };
+      };
+    };
+    readonly Mixed: {
+      readonly type: readonly ['object', 'array', 'string', 'null'];
+      readonly properties: { readonly a: { readonly type: 'number' } };
+      readonly items: { readonly type: 'boolean' };
+    };
+  };
+};
+
 describe('TSSchemaFragment', () => {
   it('Imports the testing schema with literal types', () => {
     expect(true satisfies AssertTypeInequality<JSONSchemaFixtureCollection, any>).toBe(true);
@@ -133,6 +156,12 @@ describe('TSSchemaFragment', () => {
           TSSchemaFragmentPropertyName<JSONSchemaAddressModel> | TSSchemaFragmentPropertyName<JSONSchemaAssessmentModel>
         >,
       ).toBe(true);
+    });
+
+    it('Gets the property names of the object branch of a type array, e.g. of a nullable model', () => {
+      type NodePropertyName = 'value' | 'next' | 'tags' | 'child';
+      expect(true satisfies AssertTypeEquality<TSSchemaFragmentPropertyName<TSSchemaFragment<_TypeArrayCollection, 'Node'>>, NodePropertyName>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaFragmentPropertyName<TSSchemaFragment<_TypeArrayCollection, 'Mixed'>>, 'a'>).toBe(true);
     });
 
     it('Gets no property names from a wrapper of a fragment which is not a model', () => {

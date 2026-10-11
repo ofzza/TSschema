@@ -11,6 +11,7 @@ import type {
   JSONSchemaFragmentName,
   JSONSchemaFragmentPropertyName,
   JSONSchemaFragmentType,
+  JSONSchemaFragmentTypeBranch,
   JSONSchemaModelFragment,
   JSONSchemaNotCollectionFragment,
   JSONSchemaObjectTypeFragment,
@@ -47,8 +48,11 @@ type _TSCollectionPropertyName<T extends JSONSchemaCollection | JSONSchemaCollec
   UnwrapJSONSchemaCollectionWrapper<T> extends infer C extends JSONSchemaCollection
     ? // Distribute over a union of names, and narrow each against the unwrapped collection
       TName extends JSONSchemaFragmentName<C>
-      ? C['$defs'][TName] extends infer M extends JSONSchemaModelFragment
-        ? JSONSchemaFragmentPropertyName<M>
+      ? // Distribute over the branches of a type array, and narrow each to a model
+        JSONSchemaFragmentTypeBranch<C['$defs'][TName]> extends infer M
+        ? M extends JSONSchemaModelFragment
+          ? JSONSchemaFragmentPropertyName<M>
+          : never
         : never
       : never
     : never;
@@ -91,9 +95,12 @@ export type TSSchemaProperty<
 > =
   // Fragment wrapper (checked before collection wrapper, which it also is): wrap the named property(ies) of the wrapped model, with its context
   T extends JSONSchemaFragmentWrapper
-    ? T extends { __collection: infer C extends JSONSchemaCollection; __fragment: infer M; __fragmentName: infer N }
-      ? M extends JSONSchemaModelFragment
-        ? _TSSchemaProperty<M, C, N, [TName] extends [never] ? JSONSchemaFragmentPropertyName<M> : TName>
+    ? T extends { __collection: infer C extends JSONSchemaCollection; __fragment: infer F; __fragmentName: infer N }
+      ? // Distribute over the branches of a type array, and narrow each to a model
+        JSONSchemaFragmentTypeBranch<F> extends infer M
+        ? M extends JSONSchemaModelFragment
+          ? _TSSchemaProperty<M, C, N, [TName] extends [never] ? JSONSchemaFragmentPropertyName<M> : TName>
+          : never
         : never
       : never
     : // Collection or collection wrapper: wrap the named property(ies) of the named model(s)
@@ -117,8 +124,11 @@ export type TSSchemaProperty<
 type _TSSchemaCollectionModelProperty<TCollection extends JSONSchemaCollection, TModelName, TKey> =
   // Distribute over a union of model names, and narrow each against the collection
   TModelName extends JSONSchemaFragmentName<TCollection>
-    ? TCollection['$defs'][TModelName] extends infer M extends JSONSchemaModelFragment
-      ? _TSSchemaProperty<M, TCollection, TModelName, [TKey] extends [never] ? JSONSchemaFragmentPropertyName<M> : TKey>
+    ? // Distribute over the branches of a type array, and narrow each to a model
+      JSONSchemaFragmentTypeBranch<TCollection['$defs'][TModelName]> extends infer M
+      ? M extends JSONSchemaModelFragment
+        ? _TSSchemaProperty<M, TCollection, TModelName, [TKey] extends [never] ? JSONSchemaFragmentPropertyName<M> : TKey>
+        : never
       : never
     : never;
 /**
@@ -153,12 +163,16 @@ type _TSSchemaProperty<TModel extends JSONSchemaModelFragment, TCollection exten
  * contributes `never`. A fragment carrying several of the above keywords contributes the union of each keyword's wrappers.
  */
 type _TSSchemaPathProperty<TFragment, TCollection extends JSONSchemaCollection, TModelName, TPath extends string> =
-  // Distribute over a union of fragments
+  // Distribute over a union of fragments, and over the branches of a type array
   TFragment extends unknown
-    ? | _TSSchemaPathPropertyOfReference<TFragment, TCollection, TPath>
-      | _TSSchemaPathPropertyOfMembers<TFragment, TCollection, TModelName, TPath>
-      | _TSSchemaPathPropertyOfModel<TFragment, TCollection, TModelName, TPath>
-      | _TSSchemaPathPropertyOfArray<TFragment, TCollection, TModelName, TPath>
+    ? JSONSchemaFragmentTypeBranch<TFragment> extends infer B
+      ? B extends unknown
+        ? | _TSSchemaPathPropertyOfReference<B, TCollection, TPath>
+          | _TSSchemaPathPropertyOfMembers<B, TCollection, TModelName, TPath>
+          | _TSSchemaPathPropertyOfModel<B, TCollection, TModelName, TPath>
+          | _TSSchemaPathPropertyOfArray<B, TCollection, TModelName, TPath>
+        : never
+      : never
     : never;
 /**
  * Wraps each property addressed by a path within a `$ref` fragment, resolving the reference against the collection. A reference which can not be resolved

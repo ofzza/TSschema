@@ -8,7 +8,6 @@ import type { JSONSchemaFragmentType } from './Fragment.js';
 
 /**
  * Represents a JSON schema array type definition, which is any schema fragment containing a `type="array"` property and an optional `items` property.
- * TODO: Support `type` arrays of primitive types: example `["array", "string"]`
  */
 export type JSONSchemaArrayTypeFragment = JSONSchemaNotCollectionFragment & {
   type: 'array';

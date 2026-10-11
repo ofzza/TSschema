@@ -21,11 +21,19 @@ import type { JSONSchemaReferenceFragment, JSONSchemaReferenceFragmentType } fro
  *
  * Every keyword the fragment carries contributes a type and all of them are intersected, so sibling keywords narrow each other (e.g. `type` + `enum`),
  * conflicting keywords resolve to `never` and a `$ref` is intersected with its siblings (as in JSON schema 2019-09 and later). A keyword that is not
- * (yet) supported contributes `unknown`, i.e. no constraint. A union of fragments infers the union of each fragment's type.
+ * (yet) supported contributes `unknown`, i.e. no constraint. A union of fragments infers the union of each fragment's type. A `type` array naming `object`
+ * and / or `array` infers the union of the types of its branches (see `JSONSchemaFragmentTypeBranch`).
  */
 export type JSONSchemaFragmentType<T extends JSONSchemaNotCollectionFragment, TSchemaCollection extends JSONSchemaCollection = JSONSchemaCollection> =
   // Distribute over a union of fragments up front, so that a branch matching only some union members can not collapse the result to `unknown`
-  T extends unknown ? _JSONSchemaFragmentType<T, TSchemaCollection> : never;
+  T extends unknown
+    ? // Distribute over the branches of a type array (as alternatives, unlike sibling keywords, which are intersected)
+      JSONSchemaFragmentTypeBranch<T> extends infer B
+      ? B extends JSONSchemaNotCollectionFragment
+        ? _JSONSchemaFragmentType<B, TSchemaCollection>
+        : never
+      : never
+    : never;
 /**
  * Infers a value type from a single (non-union) JSON schema fragment, by intersecting the types contributed by each keyword
  */
@@ -52,3 +60,30 @@ type _JSONSchemaFragmentType<T extends JSONSchemaNotCollectionFragment, TSchemaC
     (T extends JSONSchemaNotTypeFragment ? JSONSchemaNotTypeFragmentType<T, TSchemaCollection> : unknown) &
     // Reference type
     (T extends JSONSchemaReferenceFragment ? JSONSchemaReferenceFragmentType<T, TSchemaCollection> : unknown);
+
+/**
+ * Splits a JSON schema fragment whose `type` is an array naming `object` and / or `array` into a union of branches, one per group of type names
+ * (`object`, `array`, and all primitive types together as an array of type names). Each branch is the fragment with `type` narrowed to the group, keeping
+ * every other keyword, so that keywords applying regardless of type (e.g. `enum`) constrain every branch. Any other fragment is returned as is, as a type
+ * array of primitive types only is supported by the primitive type fragment directly.
+ */
+export type JSONSchemaFragmentTypeBranch<T> =
+  // Type array: split if it names a non primitive type
+  T extends { type: infer U extends ReadonlyArray<unknown> }
+    ? [Extract<U[number], 'object' | 'array'>] extends [never]
+      ? T
+      : _JSONSchemaFragmentTypeGroup<U[number]> extends infer G
+        ? // Distribute over the groups, narrowing the fragment's type to each
+          G extends unknown
+          ? { [K in keyof T]: K extends 'type' ? G : T[K] }
+          : never
+        : never
+    : // Any other fragment: as is
+      T;
+/**
+ * Groups a union of type names into `object`, `array`, and all other (primitive) type names together as an array of type names
+ */
+type _JSONSchemaFragmentTypeGroup<TName> =
+  | ('object' extends TName ? 'object' : never)
+  | ('array' extends TName ? 'array' : never)
+  | ([Exclude<TName, 'object' | 'array'>] extends [never] ? never : Array<Exclude<TName, 'object' | 'array'>>);

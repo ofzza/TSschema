@@ -8,7 +8,6 @@ import type { JSONSchemaFragmentType } from './Fragment.js';
 
 /**
  * Represents a JSON schema model definition, which is any object schema fragment containing `properties`.
- * TODO: Support `type` arrays of primitive types: example `["object", "string"]`
  * TODO: Support `boolean schemas (valid JSON schema)`, `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`, `readOnly`. `writeOnly`
  */
 export type JSONSchemaModelFragment = JSONSchemaNotCollectionFragment & { type: 'object'; properties: Record<string, JSONSchema7> };
@@ -23,7 +22,6 @@ export type JSONSchemaFragmentPropertyName<T extends JSONSchemaModelFragment = J
 /**
  * Infers a value type from a JSON schema model definition. Every property is inferred as required and mutable, regardless of any `readonly` or `?`
  * modifiers the schema's own `properties` object was declared with (e.g. the `readonly` that `as const` adds to every key).
- * TODO: Support `type` arrays of primitive types: example `["object", "string"]`
  * TODO: Support `boolean schemas (valid JSON schema)`, `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`, `readOnly`. `writeOnly`
  */
 export type JSONSchemaModelFragmentType<
