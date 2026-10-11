@@ -36,7 +36,7 @@ describe('JSONSchema', () => {
         expect(true satisfies AssertTypeEquality<JSONSchemaArrayTypeFragmentType<typeof _arrayIntegerTypeFragment>, Array<number>>).toBe(true);
         const _arrayNullTypeFragment = { type: 'array', items: { type: 'null' } } as const;
         expect(true satisfies AssertTypeEquality<JSONSchemaArrayTypeFragmentType<typeof _arrayNullTypeFragment>, Array<null>>).toBe(true);
-        const _arrayModelTypeFragment = { type: 'array', items: { type: 'object', properties: { a: { type: 'number' } } } } as const;
+        const _arrayModelTypeFragment = { type: 'array', items: { type: 'object', properties: { a: { type: 'number' } }, required: ['a'] } } as const;
         expect(true satisfies AssertTypeEquality<JSONSchemaArrayTypeFragmentType<typeof _arrayModelTypeFragment>, Array<{ a: number }>>).toBe(true);
       });
 

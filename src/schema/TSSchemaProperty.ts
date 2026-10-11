@@ -239,6 +239,9 @@ type _TSSchemaPathPropertyOfUnknown<TCollection extends JSONSchemaCollection, TP
  *
  * An explicitly passed collection always takes precedence. When none is passed, a wrapper resolves against its own parent collection, while a fragment (or
  * a wrapper with no parent collection) has none to resolve against, so each of its `$ref`s infers `unknown`.
+ *
+ * The type inferred is that of the property's own schema, and never includes `undefined`: whether the property may be missing is decided by its model's
+ * `required` keyword, and shows only in the model's type (see `TSSchemaFragmentType`).
  */
 export type TSSchemaPropertyType<
   T extends JSONSchemaNotCollectionFragment | JSONSchemaModelPropertyWrapper,

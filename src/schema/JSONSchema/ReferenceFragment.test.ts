@@ -29,6 +29,7 @@ type _JSONSchemaTreeCollection = {
         readonly value: { readonly type: 'string' };
         readonly children: { readonly type: 'array'; readonly items: { readonly $ref: '#/$defs/Node' } };
       };
+      readonly required: readonly ['value', 'children'];
     };
   };
 };
@@ -54,7 +55,7 @@ describe('JSONSchema', () => {
         expect(true satisfies AssertTypeEquality<AssessmentType, JSONSchemaModelFragmentType<AssessmentModel, JSONSchemaFixtureCollection>>).toBe(true);
         expect(true satisfies AssertTypeEquality<AssessmentType['id'], string>).toBe(true);
         expect(true satisfies AssertTypeEquality<AssessmentType['kind'], number>).toBe(true);
-        expect(true satisfies AssertTypeEquality<AssessmentType['class'], _FixtureModel<'Class'> | null>).toBe(true);
+        expect(true satisfies AssertTypeEquality<Pick<AssessmentType, 'class'>, { class?: _FixtureModel<'Class'> | null }>).toBe(true);
         expect(true satisfies AssertTypeEquality<AssessmentType['record']['battery']['isProctored'], boolean>).toBe(true);
       });
 

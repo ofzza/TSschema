@@ -42,6 +42,7 @@ const schema = {
         role: { $ref: '#/$defs/Role' },
         tags: { type: 'array', items: { type: 'string' } },
       },
+      required: ['name', 'role', 'tags'],
     },
     Role: { enum: ['student', 'teacher'] },
   },
@@ -119,11 +120,11 @@ describe('Showcase', () => {
         //   ^?
         // PropertyName: 'name' | 'nickname' | 'role' | 'tags'
         expect(true satisfies AssertTypeEquality<PropertyName, 'name' | 'nickname' | 'role' | 'tags'>).toBe(true);
-        // Without a collection, a `$ref` can not be resolved and infers `unknown`
+        // A property not listed in `required` (here, `nickname`) is optional. Without a collection, a `$ref` can not be resolved and infers `unknown`
         type Person = JSONSchemaModelFragmentType<Schema['$defs']['Person']>;
         //   ^?
-        // Person: { name: string; nickname: string | null; role: unknown; tags: string[] }
-        expect(true satisfies AssertTypeEquality<Person, { name: string; nickname: string | null; role: unknown; tags: string[] }>).toBe(true);
+        // Person: { name: string; nickname?: string | null; role: unknown; tags: string[] }
+        expect(true satisfies AssertTypeEquality<Person, { name: string; nickname?: string | null; role: unknown; tags: string[] }>).toBe(true);
       });
     });
 
@@ -156,8 +157,8 @@ describe('Showcase', () => {
       it('Infers a fragment of a collection, resolving every reference', () => {
         type Person = JSONSchemaFragmentType<Schema['$defs']['Person'], Schema>;
         //   ^?
-        // Person: { name: string; nickname: string | null; role: 'student' | 'teacher'; tags: string[] }
-        expect(true satisfies AssertTypeEquality<Person, { name: string; nickname: string | null; role: 'student' | 'teacher'; tags: string[] }>).toBe(true);
+        // Person: { name: string; nickname?: string | null; role: 'student' | 'teacher'; tags: string[] }
+        expect(true satisfies AssertTypeEquality<Person, { name: string; nickname?: string | null; role: 'student' | 'teacher'; tags: string[] }>).toBe(true);
       });
     });
 
@@ -177,7 +178,11 @@ describe('Showcase', () => {
       });
 
       it('Infers the union of the types of the branches, as alternatives', () => {
-        type NullableModel = { readonly type: readonly ['object', 'null']; readonly properties: { readonly a: { readonly type: 'number' } } };
+        type NullableModel = {
+          readonly type: readonly ['object', 'null'];
+          readonly properties: { readonly a: { readonly type: 'number' } };
+          readonly required: readonly ['a'];
+        };
         type Nullable = JSONSchemaFragmentType<NullableModel>;
         //   ^?
         // Nullable: { a: number } | null

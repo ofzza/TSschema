@@ -5,11 +5,11 @@ import type { JSONSchemaAllOfTypeFragment, JSONSchemaAllOfTypeFragmentType, JSON
 /**
  * Small model fragment, used as a building block in the tests below
  */
-type _ModelA = { readonly type: 'object'; readonly properties: { readonly a: { readonly type: 'number' } } };
+type _ModelA = { readonly type: 'object'; readonly properties: { readonly a: { readonly type: 'number' } }; readonly required: readonly ['a'] };
 /**
  * Small model fragment, used as a building block in the tests below
  */
-type _ModelB = { readonly type: 'object'; readonly properties: { readonly b: { readonly type: 'string' } } };
+type _ModelB = { readonly type: 'object'; readonly properties: { readonly b: { readonly type: 'string' } }; readonly required: readonly ['b'] };
 
 describe('JSONSchema', () => {
   describe('JSONSchema fragments', () => {

@@ -8,7 +8,7 @@ import { JSONSchemaCollectionFragmentReflect, JSONSchemaFragmentReflect, JSONSch
  */
 const _schema = {
   $defs: {
-    Person: { type: 'object', properties: { name: { type: 'string' }, mentor: { $ref: '#/$defs/Person' } } },
+    Person: { type: 'object', properties: { name: { type: 'string' }, mentor: { $ref: '#/$defs/Person' } }, required: ['name'] },
   },
 } as const;
 type _Schema = typeof _schema;
@@ -44,7 +44,7 @@ describe('Reflection', () => {
         type Person = typeof person.Type;
         //   ^?
         expect(true satisfies AssertTypeEquality<Person, JSONSchemaFragmentType<_Schema['$defs']['Person'], _Schema>>).toBe(true);
-        expect(true satisfies AssertTypeEquality<Person['mentor'], Person>).toBe(true);
+        expect(true satisfies AssertTypeEquality<Pick<Person, 'mentor'>, { mentor?: Person }>).toBe(true);
         expect(() => person.Type).toThrow();
       });
 

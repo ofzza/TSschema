@@ -15,9 +15,9 @@ import { default as jsonSchema } from '../../../res/sidecar/schema.json';
  */
 const _schema = {
   $defs: {
-    Named: { type: 'object', properties: { name: { type: 'string' } } },
+    Named: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
     MaybeNamed: { anyOf: [{ $ref: '#/$defs/Named' }, { type: 'null' }] },
-    Nullable: { type: ['object', 'null'], properties: { name: { type: 'string' } } },
+    Nullable: { type: ['object', 'null'], properties: { name: { type: 'string' } }, required: ['name'] },
   },
 } as const;
 type _Schema = typeof _schema;
@@ -59,8 +59,8 @@ describe('Reflection', () => {
         expect(nullable.implicit).toBe(true);
         expect(nullable.fragment).toEqual({
           anyOf: [
-            { type: 'object', properties: { name: { type: 'string' } } },
-            { type: 'null', properties: { name: { type: 'string' } } },
+            { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
+            { type: 'null', properties: { name: { type: 'string' } }, required: ['name'] },
           ],
         });
         const [[model], [nothing]] = nullable.anyOf;

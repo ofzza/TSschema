@@ -7,7 +7,7 @@ import type { JSONSchemaCollection, JSONSchemaNotCollectionFragment } from './Co
 
 /**
  * Represents a JSON schema object type definition, which is any schema fragment containing a `type="object"` property and no `properties` property.
- * TODO: Support `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`, `readOnly`. `writeOnly`
+ * TODO: Support `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required` (only supported for models), `readOnly`. `writeOnly`
  */
 export type JSONSchemaObjectTypeFragment = JSONSchemaNotCollectionFragment & {
   type: 'object';
@@ -19,7 +19,7 @@ export type JSONSchemaObjectTypeFragment = JSONSchemaNotCollectionFragment & {
 export type JSONSchemaFragmentIsObjectType<T extends JSONSchema7> = T extends JSONSchemaObjectTypeFragment ? true : false;
 /**
  * Infers a value type from a JSON schema object type definition
- * TODO: Support `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required`, `readOnly`. `writeOnly`
+ * TODO: Support `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`, `required` (only supported for models), `readOnly`. `writeOnly`
  */
 export type JSONSchemaObjectTypeFragmentType<
   T extends JSONSchemaNotCollectionFragment,

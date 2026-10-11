@@ -206,14 +206,14 @@ describe('TSSchemaFragment', () => {
       expect(true satisfies AssertTypeEquality<Assessment, _FixtureModel<'Assessment'>>).toBe(true);
       expect(true satisfies AssertTypeEquality<Assessment['id'], string>).toBe(true);
       expect(true satisfies AssertTypeEquality<Assessment['kind'], number>).toBe(true);
-      expect(true satisfies AssertTypeEquality<Assessment['class'], _FixtureModel<'Class'> | null>).toBe(true);
+      expect(true satisfies AssertTypeEquality<Pick<Assessment, 'class'>, { class?: _FixtureModel<'Class'> | null }>).toBe(true);
       expect(true satisfies AssertTypeEquality<Assessment['record']['battery']['isProctored'], boolean>).toBe(true);
     });
 
     it('Infers a type from a fragment wrapper, resolving $refs against an explicitly passed collection over its parent collection', () => {
       type _OtherCollection = { readonly $defs: { readonly Class: { readonly type: 'string' } } };
       type Assessment = TSSchemaFragmentType<TSSchemaFragment<JSONSchemaFixtureCollection, 'Assessment'>, _OtherCollection>;
-      expect(true satisfies AssertTypeEquality<Assessment['class'], string | null>).toBe(true);
+      expect(true satisfies AssertTypeEquality<Pick<Assessment, 'class'>, { class?: string | null }>).toBe(true);
       expect(true satisfies AssertTypeEquality<Assessment['kind'], unknown>).toBe(true);
     });
 
@@ -228,7 +228,7 @@ describe('TSSchemaFragment', () => {
 
     it('Infers recursively nested types', () => {
       type Assessment = TSSchemaFragmentType<TSSchemaFragment<JSONSchemaFixtureCollection, 'Assessment'>>;
-      type AssessmentClassAssessment = Exclude<Assessment['class'], null>['assessments'] extends Array<infer U> ? U : never;
+      type AssessmentClassAssessment = NonNullable<Assessment['class']>['assessments'] extends Array<infer U> ? U : never;
       expect(true satisfies AssertTypeEquality<Assessment, AssessmentClassAssessment>).toBe(true);
     });
   });

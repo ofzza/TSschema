@@ -13,8 +13,8 @@ import {
  */
 const _schema = {
   $defs: {
-    Named: { type: 'object', properties: { name: { type: 'string' } } },
-    Person: { allOf: [{ $ref: '#/$defs/Named' }, { type: 'object', properties: { age: { type: 'integer' } } }] },
+    Named: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
+    Person: { allOf: [{ $ref: '#/$defs/Named' }, { type: 'object', properties: { age: { type: 'integer' } }, required: ['age'] }] },
   },
 } as const;
 type _Schema = typeof _schema;

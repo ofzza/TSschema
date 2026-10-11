@@ -53,6 +53,7 @@ const schema = {
         role: { $ref: '#/$defs/Role' },
         mentor: { anyOf: [{ $ref: '#/$defs/Person' }, { type: 'null' }] },
       },
+      required: ['name', 'age', 'role'],
     },
     Role: { enum: ['student', 'teacher'] },
   },
@@ -121,8 +122,8 @@ type MentorEmail = TSSchemaProperty<Person, 'email.address'>; // This will fail 
 
 Only a path's first segment is checked at compile time: a recursive schema (`Person.mentor` → `Person`) has infinitely many valid paths, so they can not
 all be listed (for the same reason, [TSSchemaName](#tsschemaname) infers no paths). A path which does not address a property further down (e.g.
-`'mentor.email'`, or `'name.length'` into a property which is not a model) infers `never`. A path into an object whose shape is not known (an object with no `properties`, a `$ref` with no
-collection to resolve it against, or an array with no single schema `items`) wraps a property of type `unknown`.
+`'mentor.email'`, or `'name.length'` into a property which is not a model) infers `never`. A path into an object whose shape is not known (an object
+with no `properties`, a `$ref` with no collection to resolve it against, or an array with no single schema `items`) wraps a property of type `unknown`.
 
 ## TSSchemaName
 
@@ -151,17 +152,22 @@ type RoleName = TSSchemaName<TSSchemaFragment<Schema, 'Role'>>; // never
 
 `$ref`s resolve against the wrapper's own collection, unless a collection is passed explicitly as the second argument, which takes precedence. A
 fragment given directly, or wrapped with no collection, only resolves `$ref`s against an explicitly passed collection. Otherwise each of its `$ref`s
-infers `unknown`:
+infers `unknown`.
+
+A model's properties listed in its `required` keyword are required, and all other properties are optional (`key?:`). So a model with no `required`
+infers every property as optional, as does one whose `required` is not a list of literal names. The type of a property itself never includes
+`undefined`: whether it may be missing is up to its model. Here, `mentor` is not listed in `required`:
 
 ```ts
-type PersonType = TSSchemaType<Person>; // { name: string; age: number; role: 'student' | 'teacher'; mentor: PersonType | null }
+type PersonType = TSSchemaType<Person>; // { name: string; age: number; role: 'student' | 'teacher'; mentor?: PersonType | null }
 type AgeType = TSSchemaType<PersonAge>; // number
 type MentorAgeType = TSSchemaType<MentorMentorAge>; // number
 type RoleType = TSSchemaType<TSSchemaProperty<Schema, 'Person', 'role'>>; // 'student' | 'teacher'
 type UnresolvedRoleType = TSSchemaType<StandalonePersonRole>; // unknown
 type ResolvedRoleType = TSSchemaType<StandalonePersonRole, Schema>; // 'student' | 'teacher'
 
-const person: PersonType = { name: 'Ada', age: 36, role: 'teacher', mentor: null }; // This will work
+const person: PersonType = { name: 'Ada', age: 36, role: 'teacher' }; // This will work
+const nameless: PersonType = { age: 36, role: 'teacher' }; // This will fail at compile time
 const role: RoleType = 'principal'; // This will fail at compile time
 ```
 

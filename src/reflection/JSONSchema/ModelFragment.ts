@@ -50,8 +50,8 @@ export class JSONSchemaModelFragmentReflect<
   public readonly properties: _JSONSchemaModelFragmentPropertiesReflect<TSchema, TFragment>;
 
   /**
-   * Names of the model's required properties, as listed by its `required` keyword (names of properties the model does not define are left out). Note
-   * that the type layer does not support `required` yet, and still infers every property of a model as required.
+   * Names of the model's required properties, as listed by its `required` keyword (names of properties the model does not define are left out). The
+   * value type inferred by the type layer (see `Type`) makes these properties required, and all other properties optional.
    */
   public readonly required: Array<_JSONSchemaModelFragmentRequiredName<TFragment>>;
 

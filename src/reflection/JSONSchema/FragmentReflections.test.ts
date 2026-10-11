@@ -29,6 +29,7 @@ const _schema = {
     Node: {
       type: ['object', 'null'],
       properties: { value: { type: 'string' }, next: { $ref: '#/$defs/Node' } },
+      required: ['value'],
     },
     Mixed: { type: ['object', 'string', 'null'], enum: ['a', null], properties: { a: { type: 'number' } } },
     Single: { type: ['object'], properties: { a: { type: 'number' } } },

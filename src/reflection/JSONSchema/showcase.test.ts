@@ -106,9 +106,10 @@ describe('Showcase', () => {
         const person = new JSONSchemaCollectionFragmentReflect(schema).fragment('Person')[0];
         type PersonType = typeof person.Type;
         //   ^?
-        // PersonType: { name: string; role: 'student' | 'teacher'; nickname: string | null; mentor: PersonType | null }
+        // PersonType: { name: string; role: 'student' | 'teacher'; nickname?: string | null; mentor?: PersonType | null } - properties not listed in
+        // `required` are optional
         expect(true satisfies AssertTypeEquality<PersonType['role'], 'student' | 'teacher'>).toBe(true);
-        expect(true satisfies AssertTypeEquality<PersonType['mentor'], PersonType | null>).toBe(true);
+        expect(true satisfies AssertTypeEquality<Pick<PersonType, 'mentor'>, { mentor?: PersonType | null }>).toBe(true);
         // `Type` holds no value: it throws if accessed at runtime
         expect(() => person.Type).toThrow();
       });

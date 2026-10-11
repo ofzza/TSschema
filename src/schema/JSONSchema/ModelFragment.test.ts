@@ -21,11 +21,11 @@ type _FixtureModel<TName extends string> = JSONSchemaFragmentType<{ readonly $re
 /**
  * Small model fragment, used as a building block in the tests below
  */
-type _ModelA = { readonly type: 'object'; readonly properties: { readonly a: { readonly type: 'number' } } };
+type _ModelA = { readonly type: 'object'; readonly properties: { readonly a: { readonly type: 'number' } }; readonly required: readonly ['a'] };
 /**
  * Small model fragment, used as a building block in the tests below
  */
-type _ModelB = { readonly type: 'object'; readonly properties: { readonly b: { readonly type: 'string' } } };
+type _ModelB = { readonly type: 'object'; readonly properties: { readonly b: { readonly type: 'string' } }; readonly required: readonly ['b'] };
 
 describe('JSONSchema', () => {
   describe('JSONSchema fragments', () => {
@@ -69,7 +69,8 @@ describe('JSONSchema', () => {
         expect(true satisfies AssertTypeEquality<Assessment['isOpenBook'], boolean>).toBe(true);
         // `AssessmentKind` is an integer constrained by a `oneOf`, which is not yet supported
         expect(true satisfies AssertTypeEquality<Assessment['kind'], number>).toBe(true);
-        expect(true satisfies AssertTypeEquality<Assessment['class'], _FixtureModel<'Class'> | null>).toBe(true);
+        // `class` is the only property not listed in `required`, so the only optional one
+        expect(true satisfies AssertTypeEquality<Pick<Assessment, 'class'>, { class?: _FixtureModel<'Class'> | null }>).toBe(true);
         expect(true satisfies AssertTypeEquality<Assessment['class'] & {}, _FixtureModel<'Class'>>).toBe(true);
         expect(true satisfies AssertTypeEquality<Assessment['record']['battery']['isProctored'], boolean>).toBe(true);
         expect(true satisfies AssertTypeEquality<Assessment['record']['register']['answeredByItem'], object>).toBe(true);
@@ -78,7 +79,7 @@ describe('JSONSchema', () => {
       it('Infers nested model and array of model properties', () => {
         type Book = _FixtureModel<'Book'>;
         expect(true satisfies AssertTypeEquality<Book['authors'], Array<_FixtureModel<'Person'>>>).toBe(true);
-        expect(true satisfies AssertTypeEquality<Book['class'], _FixtureModel<'Class'> | null>).toBe(true);
+        expect(true satisfies AssertTypeEquality<Pick<Book, 'class'>, { class?: _FixtureModel<'Class'> | null }>).toBe(true);
         expect(true satisfies AssertTypeEquality<_FixtureModel<'Class'>['code'], string>).toBe(true);
       });
 
@@ -86,16 +87,64 @@ describe('JSONSchema', () => {
         expect(true satisfies AssertTypeEquality<JSONSchemaModelFragmentType<_ModelA>, { a: number }>).toBe(true);
         // @ts-expect-error `as const` schema properties are readonly, but the inferred model properties are not
         expect(true satisfies AssertTypeEquality<JSONSchemaModelFragmentType<_ModelA>, { readonly a: number }>).toBe(true);
-        expect(true satisfies AssertTypeEquality<JSONSchemaModelFragmentType<{ type: 'object'; properties: { a: { type: 'number' } } }>, { a: number }>).toBe(
-          true,
-        );
+        expect(
+          true satisfies AssertTypeEquality<
+            JSONSchemaModelFragmentType<{ type: 'object'; properties: { a: { type: 'number' } }; required: ['a'] }>,
+            { a: number }
+          >,
+        ).toBe(true);
       });
 
       it('Does not carry the optional modifier of schema properties over to model properties', () => {
-        type Model = JSONSchemaModelFragmentType<{ type: 'object'; properties: { a?: { type: 'number' } } }>;
+        type Model = JSONSchemaModelFragmentType<{ type: 'object'; properties: { a?: { type: 'number' } }; required: ['a'] }>;
         expect(true satisfies AssertTypeEquality<Model, { a: number }>).toBe(true);
-        // @ts-expect-error an optional schema property still infers a required model property
+        // @ts-expect-error an optional schema property listed in `required` still infers a required model property
         expect(true satisfies AssertTypeEquality<Model, { a?: number }>).toBe(true);
+      });
+
+      it('Infers properties listed in required as required, and all other properties as optional', () => {
+        type Model = JSONSchemaModelFragmentType<{
+          readonly type: 'object';
+          readonly properties: { readonly a: { readonly type: 'number' }; readonly b: { readonly type: 'string' } };
+          readonly required: readonly ['a'];
+        }>;
+        //   ^?
+        expect(true satisfies AssertTypeEquality<Model, { a: number; b?: string }>).toBe(true);
+        // @ts-expect-error a property not listed in `required` is optional
+        expect(true satisfies AssertTypeEquality<Model, { a: number; b: string }>).toBe(true);
+      });
+
+      it('Infers every property as optional from a model with no or an empty required', () => {
+        type Model = JSONSchemaModelFragmentType<{ type: 'object'; properties: { a: { type: 'number' }; b: { type: 'string' } } }>;
+        expect(true satisfies AssertTypeEquality<Model, { a?: number; b?: string }>).toBe(true);
+        type EmptyRequiredModel = JSONSchemaModelFragmentType<{ type: 'object'; properties: { a: { type: 'number' } }; required: [] }>;
+        expect(true satisfies AssertTypeEquality<EmptyRequiredModel, { a?: number }>).toBe(true);
+      });
+
+      it('Infers every property as optional from a required which is not a list of literal names', () => {
+        type Model = JSONSchemaModelFragmentType<{ type: 'object'; properties: { a: { type: 'number' } }; required: string[] }>;
+        expect(true satisfies AssertTypeEquality<Model, { a?: number }>).toBe(true);
+      });
+
+      it('Ignores required names the model does not define', () => {
+        type Model = JSONSchemaModelFragmentType<{ type: 'object'; properties: { a: { type: 'number' } }; required: ['a', 'b'] }>;
+        expect(true satisfies AssertTypeEquality<Model, { a: number }>).toBe(true);
+      });
+
+      it('Infers a property required by any model of an allOf as required', () => {
+        type Model = JSONSchemaFragmentType<{
+          allOf: [
+            { type: 'object'; properties: { a: { type: 'number' }; b: { type: 'string' } }; required: ['a'] },
+            { type: 'object'; properties: { b: { type: 'string' } }; required: ['b'] },
+          ];
+        }>;
+        expect(true satisfies AssertTypeAssignable<{ a: number; b: string }, Model>).toBe(true);
+        expect(true satisfies AssertTypeAssignable<Model, { a: number; b: string }>).toBe(true);
+      });
+
+      it('Keeps the required properties of the model branch of a nullable model', () => {
+        type Model = JSONSchemaFragmentType<{ type: ['object', 'null']; properties: { a: { type: 'number' }; b: { type: 'string' } }; required: ['a'] }>;
+        expect(true satisfies AssertTypeEquality<Model, { a: number; b?: string } | null>).toBe(true);
       });
 
       it('Infers unknown from a model with boolean schema properties', () => {
