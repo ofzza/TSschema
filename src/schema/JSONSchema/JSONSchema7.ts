@@ -24,28 +24,25 @@ type _DeepOptionallyReadOnly<T> = {
 export type JSONSchema7 = _DeepOptionallyReadOnly<OriginalJSONSchema>;
 
 /**
- * Primitive value type names
+ * Primitive value type names. `null` is not a primitive type here: like `object` and `array`, it has a fragment type of its own.
  */
-export type JSONSchemaPrimitiveTypeName = Exclude<OriginalJSONSchemaTypeName, 'array' | 'object'>;
+export type JSONSchemaPrimitiveTypeName = Exclude<OriginalJSONSchemaTypeName, 'array' | 'object' | 'null'>;
 /**
  * Primitive value types
  */
-export type JSONSchemaPrimitiveType = Exclude<OriginalJSONSchemaType, OriginalJSONSchemaObject | OriginalJSONSchemaArray>;
+export type JSONSchemaPrimitiveType = Exclude<OriginalJSONSchemaType, OriginalJSONSchemaObject | OriginalJSONSchemaArray | null>;
 /**
  * Maps a primitive type name, or a union of primitive type names, to its corresponding TypeScript type
  */
 export type JSONSchemaPrimitiveTypeFromName<TName extends JSONSchemaPrimitiveTypeName> =
-  // null
-  TName extends 'null'
-    ? null
-    : // string
-      TName extends 'string'
-      ? string
-      : // number
-        TName extends 'number' | 'integer'
-        ? number
-        : // boolean
-          TName extends 'boolean'
-          ? boolean
-          : // Fall through to 'never'
-            never;
+  // string
+  TName extends 'string'
+    ? string
+    : // number
+      TName extends 'number' | 'integer'
+      ? number
+      : // boolean
+        TName extends 'boolean'
+        ? boolean
+        : // Fall through to 'never'
+          never;
