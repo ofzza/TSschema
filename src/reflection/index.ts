@@ -6,6 +6,7 @@ import {
   JSONSchemaCollection,
   JSONSchemaConstFragment,
   JSONSchemaEnumFragment,
+  JSONSchemaFragmentPropertyName,
   JSONSchemaFragmentType,
   JSONSchemaModelFragment,
   JSONSchemaNotCollectionFragment,
@@ -152,6 +153,36 @@ function _createFragmentReflections<
   return reflections;
 }
 
+/**
+ * Reflects a fragment nested in, and owned by, another fragment (e.g. a model property or an `allOf` member). Nested fragments have no name.
+ * @param schema Reflection of the JSON schema collection the parent fragment belongs to
+ * @param fragment Nested JSON fragment to reflect on
+ * @returns Reflections of all fragment types the nested fragment matches, or an empty array if it is not a fragment object (e.g. a boolean schema)
+ */
+function _createNestedFragmentReflections<TSchema extends JSONSchemaCollection>(
+  schema: JSONSchemaCollectionFragmentReflect<TSchema>,
+  fragment: unknown,
+): Array<JSONSchemaFragmentReflect<TSchema, undefined>> {
+  return fragment instanceof Object && !(fragment instanceof Array)
+    ? _createFragmentReflections(schema, undefined, fragment as JSONSchemaNotCollectionFragment)
+    : [];
+}
+
+/**
+ * Infers the reflections of a fragment nested in another fragment. A nested type which is not a (non-collection) fragment infers the reflections of an
+ * unspecified fragment.
+ */
+type _JSONSchemaNestedFragmentReflect<TSchema extends JSONSchemaCollection, TFragment> = Array<
+  JSONSchemaFragmentReflect<TSchema, undefined, TFragment extends JSONSchemaNotCollectionFragment ? TFragment : JSONSchemaNotCollectionFragment>
+>;
+
+/**
+ * Infers the reflections of each fragment in an array of nested fragments, element by element for a tuple
+ */
+type _JSONSchemaNestedFragmentsReflect<TSchema extends JSONSchemaCollection, TFragments extends ReadonlyArray<unknown>> = {
+  -readonly [I in keyof TFragments]: _JSONSchemaNestedFragmentReflect<TSchema, TFragments[I]>;
+};
+
 export abstract class JSONSchemaFragmentReflect<
   TSchema extends JSONSchemaCollection,
   TName extends TSSchemaFragmentName<TSchema> | undefined = TSSchemaFragmentName<TSchema>,
@@ -180,13 +211,32 @@ export class JSONSchemaModelFragmentReflect<
     return fragment?.type === 'object' && fragment?.['properties'] instanceof Object;
   }
 
+  /**
+   * Names of all the model's properties
+   */
+  public readonly names: Array<JSONSchemaFragmentPropertyName<TFragment>>;
+
+  /**
+   * Reflections of each property's fragment, by property name
+   */
+  public readonly properties: _JSONSchemaModelFragmentPropertiesReflect<TSchema, TFragment>;
+
   public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
+    this.names = Object.keys(_fragment['properties']) as Array<JSONSchemaFragmentPropertyName<TFragment>>;
+    this.properties = Object.fromEntries(
+      Object.entries(_fragment['properties']).map(([name, property]) => [name, _createNestedFragmentReflections(_schema, property)]),
+    ) as _JSONSchemaModelFragmentPropertiesReflect<TSchema, TFragment>;
   }
-
-  // TODO: Extract property names
-  // TODO: Extract property fragments
 }
+
+/**
+ * Infers the reflections of each of a model fragment's properties, by property name. Every property is required and mutable, regardless of the modifiers
+ * the schema's own `properties` object was declared with.
+ */
+type _JSONSchemaModelFragmentPropertiesReflect<TSchema extends JSONSchemaCollection, TFragment extends JSONSchemaModelFragment> = {
+  -readonly [K in keyof TFragment['properties']]-?: _JSONSchemaNestedFragmentReflect<TSchema, Exclude<TFragment['properties'][K], undefined>>;
+};
 
 export class JSONSchemaConstFragmentReflect<
   TSchema extends JSONSchemaCollection,
@@ -294,11 +344,12 @@ export class JSONSchemaObjectTypeFragmentReflect<
     return fragment?.type === 'object' && fragment?.['properties'] === undefined;
   }
 
+  public readonly type: TFragment['type'];
+
   public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
+    this.type = _fragment['type'];
   }
-
-  // TODO: Extract type(s)
 }
 
 export class JSONSchemaAllOfTypeFragmentReflect<
@@ -310,11 +361,18 @@ export class JSONSchemaAllOfTypeFragmentReflect<
     return fragment?.['allOf'] instanceof Array;
   }
 
+  /**
+   * Reflections of each `allOf` fragment, in order
+   */
+  public readonly allOf: _JSONSchemaNestedFragmentsReflect<TSchema, TFragment['allOf']>;
+
   public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
+    this.allOf = _fragment['allOf'].map((fragment) => _createNestedFragmentReflections(_schema, fragment)) as _JSONSchemaNestedFragmentsReflect<
+      TSchema,
+      TFragment['allOf']
+    >;
   }
-
-  // TODO: Extract fragments(s)
 }
 
 export class JSONSchemaAnyOfTypeFragmentReflect<
@@ -326,11 +384,18 @@ export class JSONSchemaAnyOfTypeFragmentReflect<
     return fragment?.['anyOf'] instanceof Array;
   }
 
+  /**
+   * Reflections of each `anyOf` fragment, in order
+   */
+  public readonly anyOf: _JSONSchemaNestedFragmentsReflect<TSchema, TFragment['anyOf']>;
+
   public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
+    this.anyOf = _fragment['anyOf'].map((fragment) => _createNestedFragmentReflections(_schema, fragment)) as _JSONSchemaNestedFragmentsReflect<
+      TSchema,
+      TFragment['anyOf']
+    >;
   }
-
-  // TODO: Extract fragments(s)
 }
 
 export class JSONSchemaOneOfTypeFragmentReflect<
@@ -342,11 +407,18 @@ export class JSONSchemaOneOfTypeFragmentReflect<
     return fragment?.['oneOf'] instanceof Array;
   }
 
+  /**
+   * Reflections of each `oneOf` fragment, in order
+   */
+  public readonly oneOf: _JSONSchemaNestedFragmentsReflect<TSchema, TFragment['oneOf']>;
+
   public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
+    this.oneOf = _fragment['oneOf'].map((fragment) => _createNestedFragmentReflections(_schema, fragment)) as _JSONSchemaNestedFragmentsReflect<
+      TSchema,
+      TFragment['oneOf']
+    >;
   }
-
-  // TODO: Extract fragments(s)
 }
 
 export class JSONSchemaNotTypeFragmentReflect<
@@ -358,11 +430,15 @@ export class JSONSchemaNotTypeFragmentReflect<
     return fragment?.['not'] instanceof Object;
   }
 
+  /**
+   * Reflections of the `not` fragment
+   */
+  public readonly not: _JSONSchemaNestedFragmentReflect<TSchema, TFragment['not']>;
+
   public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
+    this.not = _createNestedFragmentReflections(_schema, _fragment['not']) as _JSONSchemaNestedFragmentReflect<TSchema, TFragment['not']>;
   }
-
-  // TODO: Extract fragments
 }
 
 export class JSONSchemaReferenceFragmentReflect<
