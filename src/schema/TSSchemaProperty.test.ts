@@ -28,6 +28,29 @@ type _JSONSchemaNestingModel = {
   readonly properties: { readonly nested: { readonly type: 'object'; readonly properties: { readonly a: { readonly type: 'string' } } } };
 };
 
+/**
+ * Collection whose fragments carry `type` arrays naming non primitive types (nullable and mixed type models and arrays), used to test splitting them
+ * into branches
+ */
+type _TypeArrayCollection = {
+  readonly $defs: {
+    readonly Node: {
+      readonly type: readonly ['object', 'null'];
+      readonly properties: {
+        readonly value: { readonly type: 'string' };
+        readonly next: { readonly $ref: '#/$defs/Node' };
+        readonly tags: { readonly type: readonly ['array', 'null']; readonly items: { readonly type: 'string' } };
+        readonly child: { readonly type: readonly ['object', 'null']; readonly properties: { readonly x: { readonly type: 'number' } } };
+      };
+    };
+    readonly Mixed: {
+      readonly type: readonly ['object', 'array', 'string', 'null'];
+      readonly properties: { readonly a: { readonly type: 'number' } };
+      readonly items: { readonly type: 'boolean' };
+    };
+  };
+};
+
 describe('TSSchemaProperty', () => {
   it('Imports the testing schema with literal types', () => {
     expect(true satisfies AssertTypeInequality<JSONSchemaFixtureCollection, any>).toBe(true);
@@ -190,6 +213,18 @@ describe('TSSchemaProperty', () => {
     it('Wraps a property addressed by a path through a recursive model', () => {
       type EmailWrapper = TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'class.professor.mentor.mentor.mentor.email'>;
       expect(true satisfies AssertTypeEquality<EmailWrapper, TSSchemaProperty<JSONSchemaFixtureCollection, 'Person', 'email'>>).toBe(true);
+    });
+
+    it('Wraps a property of, or addressed by a path through, the object branch of a type array, e.g. of a nullable model', () => {
+      type ValueWrapper = TSSchemaProperty<_TypeArrayCollection, 'Node', 'value'>;
+      expect(true satisfies AssertTypeEquality<TSSchemaPropertyType<ValueWrapper>, string>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaProperty<TSSchemaFragment<_TypeArrayCollection, 'Node'>, 'value'>, ValueWrapper>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaPropertyType<TSSchemaProperty<_TypeArrayCollection, 'Node', 'tags'>>, string[] | null>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaPropertyType<TSSchemaProperty<_TypeArrayCollection, 'Mixed', 'a'>>, number>).toBe(true);
+
+      type XWrapper = TSSchemaProperty<_TypeArrayCollection, 'Node', 'next.next.child.x'>;
+      expect(true satisfies AssertTypeEquality<TSSchemaPropertyType<XWrapper>, number>).toBe(true);
+      expect(true satisfies AssertTypeEquality<XWrapper['__propertyName'], 'x'>).toBe(true);
     });
 
     it('Wraps a property addressed by a path through the items of an array', () => {

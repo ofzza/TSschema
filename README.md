@@ -107,7 +107,8 @@ nested model.
 
 In place of a property name, a dot-separated path addresses a property of a nested model. The property is wrapped together with that nested model,
 exactly as if it had been addressed from it directly. A path goes into a nested model given inline or by `$ref`, through every member of an `anyOf`,
-`oneOf` or `allOf` (e.g. a nullable reference), and through the `items` of an array:
+`oneOf` or `allOf` (e.g. a nullable reference), through the `items` of an array, and into the `object` or `array` part of a `type` array (e.g. a
+nullable model, `type: ['object', 'null']`):
 
 ```ts
 type MentorName = TSSchemaProperty<Person, 'mentor.name'>; // This will work, same as TSSchemaProperty<Schema, 'Person', 'name'>

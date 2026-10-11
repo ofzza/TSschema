@@ -13,7 +13,7 @@ export type {
   JSONSchemaFragmentIsNotCollection,
   JSONSchemaNotCollectionFragment,
 } from './CollectionFragment.js';
-export type { JSONSchemaFragmentType } from './Fragment.js';
+export type { JSONSchemaFragmentType, JSONSchemaFragmentTypeBranch } from './Fragment.js';
 export type { JSONSchemaModelFragment, JSONSchemaFragmentIsModel, JSONSchemaFragmentPropertyName, JSONSchemaModelFragmentType } from './ModelFragment.js';
 export type { JSONSchemaConstFragment, JSONSchemaFragmentIsConst, JSONSchemaConstFragmentType } from './ConstFragment.js';
 export type { JSONSchemaEnumFragment, JSONSchemaFragmentIsEnum, JSONSchemaEnumFragmentType } from './EnumFragment.js';

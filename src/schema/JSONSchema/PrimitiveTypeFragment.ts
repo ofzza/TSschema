@@ -8,7 +8,6 @@ import type { JSONSchemaNotCollectionFragment } from './CollectionFragment.js';
 /**
  * Represents a JSON schema primitive type definition, which is any schema fragment containing a `type` property naming a primitive type, or an array of
  * primitive type names.
- * TODO: Support `type` arrays of primitive types: example `["number", "string"]`
  */
 export type JSONSchemaPrimitiveTypeFragment = JSONSchemaNotCollectionFragment & {
   type: JSONSchemaPrimitiveTypeName | ReadonlyArray<JSONSchemaPrimitiveTypeName>;

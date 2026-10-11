@@ -10,6 +10,7 @@ import type {
   JSONSchemaFragmentName,
   JSONSchemaFragmentPropertyName,
   JSONSchemaFragmentType,
+  JSONSchemaFragmentTypeBranch,
   JSONSchemaModelFragment,
   JSONSchemaNotCollectionFragment,
 } from './JSONSchema/index.js';
@@ -69,15 +70,23 @@ type _TSSchemaCollectionFragment<TCollection extends JSONSchemaCollection, TName
 
 /**
  * Gets the names of all properties of a JSON schema model fragment or of the model fragment wrapped by a JSON schema fragment wrapper. A fragment that is
- * not a model has no properties and infers `never`; a union of fragments infers the union of their property names. The default, unspecified model infers
+ * not a model has no properties and infers `never`; a union of fragments infers the union of their property names. A fragment whose `type` array names
+ * `object` among other types (e.g. a nullable model) infers the property names of its `object` branch. The default, unspecified model infers
  * `string | number`.
  */
 export type TSSchemaFragmentPropertyName<T extends JSONSchemaModelFragment | JSONSchemaFragmentWrapper = JSONSchemaModelFragment> =
   _TSSchemaFragmentPropertyName<UnwrapJSONSchemaFragmentWrapper<T>>;
 /**
- * Gets the names of all properties of an already unwrapped JSON schema fragment, distributing over a union of fragments
+ * Gets the names of all properties of an already unwrapped JSON schema fragment, distributing over a union of fragments and over the branches of a type
+ * array
  */
-type _TSSchemaFragmentPropertyName<T> = T extends JSONSchemaModelFragment ? JSONSchemaFragmentPropertyName<T> : never;
+type _TSSchemaFragmentPropertyName<T> = T extends unknown
+  ? JSONSchemaFragmentTypeBranch<T> extends infer B
+    ? B extends JSONSchemaModelFragment
+      ? JSONSchemaFragmentPropertyName<B>
+      : never
+    : never
+  : never;
 
 /**
  * Infers a value type from a JSON schema fragment or a JSON schema fragment wrapper, resolving `$ref`s against a JSON schema collection.

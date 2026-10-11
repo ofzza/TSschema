@@ -45,9 +45,10 @@ describe('JSONSchema', () => {
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<typeof _numberOrBooleanTypeFragment>, number | boolean>).toBe(true);
       });
 
-      it('Infers unknown from an array of type names including non-primitive types', () => {
+      it('Infers unknown from an array of type names including non-primitive types, left to the fragment type to split into branches', () => {
         const _stringOrObjectTypeFragment = { type: ['string', 'object'] } as const;
-        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<typeof _stringOrObjectTypeFragment>, unknown>).toBe(true);
+        expect(true satisfies AssertTypeEquality<JSONSchemaPrimitiveTypeFragmentType<typeof _stringOrObjectTypeFragment>, unknown>).toBe(true);
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<typeof _stringOrObjectTypeFragment>, string | object>).toBe(true);
       });
 
       it('Infers unknown from a non-primitive type', () => {

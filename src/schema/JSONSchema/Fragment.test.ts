@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality } from '@ofzza/tsstd';
-import type { JSONSchemaFragmentType } from './index.js';
+import type { JSONSchemaFragmentType, JSONSchemaFragmentTypeBranch } from './index.js';
 
 import type { default as constJsonSchema } from '../../../res/sidecar/const.json';
 type JSONSchemaConstCollection = typeof constJsonSchema;
@@ -22,6 +22,29 @@ type JSONSchemaFixtureCollection = typeof jsonSchema;
  * Small model fragment, used as a building block in the tests below
  */
 type _ModelA = { readonly type: 'object'; readonly properties: { readonly a: { readonly type: 'number' } } };
+
+/**
+ * Collection whose fragments carry `type` arrays naming non primitive types (nullable and mixed type models and arrays), used to test splitting them
+ * into branches
+ */
+type _TypeArrayCollection = {
+  readonly $defs: {
+    readonly Node: {
+      readonly type: readonly ['object', 'null'];
+      readonly properties: {
+        readonly value: { readonly type: 'string' };
+        readonly next: { readonly $ref: '#/$defs/Node' };
+        readonly tags: { readonly type: readonly ['array', 'null']; readonly items: { readonly type: 'string' } };
+        readonly child: { readonly type: readonly ['object', 'null']; readonly properties: { readonly x: { readonly type: 'number' } } };
+      };
+    };
+    readonly Mixed: {
+      readonly type: readonly ['object', 'array', 'string', 'null'];
+      readonly properties: { readonly a: { readonly type: 'number' } };
+      readonly items: { readonly type: 'boolean' };
+    };
+  };
+};
 
 describe('JSONSchema', () => {
   describe('JSONSchema fragments', () => {
@@ -67,6 +90,49 @@ describe('JSONSchema', () => {
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<{ readonly type: 'string'; readonly enum: readonly ['a', 1] }>, 'a'>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<{ readonly type: 'integer'; readonly const: 1 }>, 1>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<{ readonly type: 'string'; readonly const: 1 }>, never>).toBe(true);
+      });
+
+      it('Infers a union of the types of the branches of a type array naming non primitive types', () => {
+        type Mixed = JSONSchemaFragmentType<_TypeArrayCollection['$defs']['Mixed']>;
+        expect(true satisfies AssertTypeEquality<Mixed, { a: number } | boolean[] | string | null>).toBe(true);
+        type Node = JSONSchemaFragmentType<_TypeArrayCollection['$defs']['Node'], _TypeArrayCollection>;
+        expect(true satisfies AssertTypeEquality<null extends Node ? true : false, true>).toBe(true);
+        expect(true satisfies AssertTypeEquality<Exclude<Node, null>['value'], string>).toBe(true);
+        expect(true satisfies AssertTypeEquality<Exclude<Node, null>['next'], Node>).toBe(true);
+        expect(true satisfies AssertTypeEquality<Exclude<Node, null>['tags'], string[] | null>).toBe(true);
+        expect(true satisfies AssertTypeEquality<Exclude<Node, null>['child'], { x: number } | null>).toBe(true);
+        expect(
+          true satisfies AssertTypeEquality<
+            JSONSchemaFragmentType<{ readonly type: readonly ['object']; readonly properties: _ModelA['properties'] }>,
+            { a: number }
+          >,
+        ).toBe(true);
+      });
+
+      it('Intersects every branch of a type array with the types of keywords applying regardless of type', () => {
+        type Enumerated = { readonly type: readonly ['object', 'string']; readonly enum: readonly ['a', 1, null] };
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<Enumerated>, 'a'>).toBe(true);
+      });
+    });
+
+    describe('Type array branches', () => {
+      it('Splits a type array naming non primitive types into a branch per group of type names', () => {
+        type Branch = JSONSchemaFragmentTypeBranch<{ readonly type: readonly ['object', 'array', 'string', 'null']; readonly title: 'x' }>;
+        expect(
+          true satisfies AssertTypeEquality<
+            Branch,
+            | { readonly type: 'object'; readonly title: 'x' }
+            | { readonly type: 'array'; readonly title: 'x' }
+            | { readonly type: Array<'string' | 'null'>; readonly title: 'x' }
+          >,
+        ).toBe(true);
+      });
+
+      it('Leaves a fragment with no type array naming non primitive types as is', () => {
+        type Primitives = { readonly type: readonly ['string', 'null'] };
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentTypeBranch<Primitives>, Primitives>).toBe(true);
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentTypeBranch<_ModelA>, _ModelA>).toBe(true);
+        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentTypeBranch<{ readonly const: 1 }>, { readonly const: 1 }>).toBe(true);
       });
     });
   });
