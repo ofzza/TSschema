@@ -8,7 +8,7 @@ export default defineConfig({
         test: {
           name: 'debug',
           setupFiles: [],
-          include: ['src/**/*.{debug}.{js,ts}'],
+          include: ['src/**/*.{test,unit.test,spec,unit.spec,debug,debug.test}.{js,ts}'],
           exclude: ['node_modules/**', 'dist/**'],
         },
       },

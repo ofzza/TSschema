@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/tsstd';
 import type { JSONSchemaFragmentType } from './JSONSchema/index.js';
 import type { TSSchemaFragmentName } from './TSSchemaCollection.js';
-import type { TSSchemaModelType } from './TSSchemaFragment.js';
+import type { TSSchemaFragmentType } from './TSSchemaFragment.js';
 import type { TSSchemaCollection, TSSchemaFragment, TSSchemaName, TSSchemaProperty, TSSchemaType } from './index.js';
 
 import type { default as jsonSchema } from '../../res/sidecar/schema.json';
@@ -63,7 +63,7 @@ describe('index', () => {
 
     it('Infers the type of the fragment wrapped by a fragment wrapper', () => {
       type AssessmentWrapper = TSSchemaFragment<JSONSchemaFixtureCollection, 'Assessment'>;
-      expect(true satisfies AssertTypeEquality<TSSchemaType<AssessmentWrapper>, TSSchemaModelType<AssessmentWrapper>>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaType<AssessmentWrapper>, TSSchemaFragmentType<AssessmentWrapper>>).toBe(true);
       expect(true satisfies AssertTypeEquality<TSSchemaType<AssessmentWrapper>, _FixtureModel<'Assessment'>>).toBe(true);
       expect(true satisfies AssertTypeEquality<TSSchemaType<TSSchemaFragment<JSONSchemaFixtureCollection, 'AssessmentKind'>>, number>).toBe(true);
     });

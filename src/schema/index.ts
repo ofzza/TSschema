@@ -8,7 +8,7 @@
 
 import type { JSONSchema7, JSONSchemaCollection, JSONSchemaModelFragment, JSONSchemaNotCollectionFragment } from './JSONSchema/index.js';
 import type { JSONSchemaCollectionWrapper, TSSchemaFragmentName } from './TSSchemaCollection.js';
-import type { JSONSchemaFragmentWrapper, TSSchemaFragmentPropertyName, TSSchemaModelType } from './TSSchemaFragment.js';
+import type { JSONSchemaFragmentWrapper, TSSchemaFragmentPropertyName, TSSchemaFragmentType } from './TSSchemaFragment.js';
 import type { JSONSchemaModelPropertyWrapper, TSSchemaPropertyType } from './TSSchemaProperty.js';
 
 export type { TSSchemaCollection } from './TSSchemaCollection.js';
@@ -45,7 +45,7 @@ export type TSSchemaName<T extends JSONSchemaCollection | JSONSchemaCollectionWr
 /**
  * Infers a value type from a JSON schema fragment, a fragment wrapper or a model property wrapper, resolving `$ref`s against a JSON schema collection:
  * - a model property wrapper infers the type of the wrapped property (see `TSSchemaPropertyType`),
- * - a fragment wrapper or a fragment infers the type of the wrapped fragment (see `TSSchemaModelType`).
+ * - a fragment wrapper or a fragment infers the type of the wrapped fragment (see `TSSchemaFragmentType`).
  *
  * An explicitly passed collection always takes precedence. When none is passed, a wrapper resolves against its own parent collection, while a fragment (or
  * a wrapper with no parent collection) has none to resolve against, so each of its `$ref`s infers `unknown`.
@@ -59,5 +59,5 @@ export type TSSchemaType<
     ? TSSchemaPropertyType<T, TSchemaCollection>
     : // Fragment or fragment wrapper: fragment type
       T extends JSONSchemaNotCollectionFragment | JSONSchemaFragmentWrapper
-      ? TSSchemaModelType<T, TSchemaCollection>
+      ? TSSchemaFragmentType<T, TSchemaCollection>
       : never;
