@@ -19,7 +19,7 @@ Go through every item before each publish.
 - [ ] `version` is the version being released and has never been published (`npm view @ofzza/tsschema versions`). Below `1.0.0`, bump the minor version
       for breaking changes and the patch version for everything else.
 - [ ] `description` and `keywords` describe the library's intended scope. Below `1.0.0` they may name planned but not yet implemented functionality
-      (e.g. runtime reflection, while the README Roadmap still says it is planned) — do not flag or strip that. From `1.0.0` on, they must only claim
+      (e.g. runtime reflection, while the README Roadmap still says it is in progress) — do not flag or strip that. From `1.0.0` on, they must only claim
       what the released version actually does.
 - [ ] `dependencies` only lists packages that published `.d.ts` / `.js` files import (currently just `@types/json-schema`). To check, build declarations
       and grep `dist/` for non-relative imports:
