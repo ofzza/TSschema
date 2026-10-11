@@ -111,7 +111,7 @@ Vitest, with `describe`/`it`/`expect` imported explicitly (`globals` is not enab
 
   `typecheck.spawnTimeout` is pinned to `10000` because Vitest 5.0.1 documents a `10_000` default for it but never applies one, yet consumes it unguarded when spawning the checker, which leaves an intermittent race.
 
-- **`debug`** — `include: ['src/**/*.{debug}.{js,ts}']`, i.e. files ending in `.debug.ts` / `.debug.js`. Driven by the "TS: Debug Current Test File" launch config in `.vscode/launch.json`. Separately, `.gitignore` excludes `*.debug.test.ts` — those match the `unit` glob, so scratch debug tests run locally but are never committed.
+- **`debug`** — `include: ['src/**/*.{test,unit.test,spec,unit.spec,debug,debug.test}.{js,ts}']`, i.e. every file the `unit` project matches plus `.debug.ts` / `.debug.test.ts` (and `.js`) files. It has no `typecheck`, so it only executes them, once each. Driven by the "TS: Debug Current Test File" launch config in `.vscode/launch.json`, which runs `--project debug` on the open file, so any test file can be stepped through in the debugger. No `test:`/`ci:` script runs it. Separately, `.gitignore` excludes `*.debug.test.ts` — those match the `unit` glob, so scratch debug tests run locally but are never committed.
 
 The `src/codegen/` tests are the only ones with real runtime behaviour: they write to `os.tmpdir()` directories, and read `res/` relative to the working directory (Vitest runs from the repo root). The `--watch` test waits on a real `fs.watch` event via `expect.poll`.
 
