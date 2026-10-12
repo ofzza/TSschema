@@ -13,10 +13,13 @@ import {
   JSONSchemaReferenceFragmentReflect,
   createJSONSchemaFragmentReflections,
   createJSONSchemaNestedFragmentReflections,
+  reflectJSONSchema,
+  type JSONSchemaCollectionRootFragment,
   type JSONSchemaFragmentReflection,
   type JSONSchemaNestedFragmentReflections,
   type JSONSchemaNestedFragmentsReflections,
   type JSONSchemaReflectedFragment,
+  type JSONSchemaReflection,
 } from './index.js';
 
 import { default as jsonSchema } from '../../../res/sidecar/schema.json';
@@ -45,15 +48,99 @@ type _Schema = typeof _schema;
  * Names of the classes of the reflections of a fragment of the collection above
  */
 function _reflectionClasses(name: keyof _Schema['$defs']) {
-  return new JSONSchemaCollectionFragmentReflect(_schema).fragment(name).map((reflection) => reflection.constructor);
+  return new JSONSchemaCollectionFragmentReflect(_schema).$defs[name].map((reflection) => reflection.constructor);
 }
 
 describe('Reflection', () => {
   describe('JSONSchema fragment reflections', () => {
+    describe('Schema reflections', () => {
+      it('Reflects a collection as a collection reflection, followed by the reflections of its root fragment', () => {
+        const schema = {
+          type: 'object',
+          properties: { people: { type: 'array', items: { $ref: '#/$defs/Person' } } },
+          $defs: { Person: { type: 'object', properties: { name: { type: 'string' } } } },
+        } as const;
+        type Schema = typeof schema;
+        const reflections = reflectJSONSchema(schema);
+        expect(reflections.map((reflection) => reflection.constructor)).toEqual([JSONSchemaCollectionFragmentReflect, JSONSchemaModelFragmentReflect]);
+        expect(
+          true satisfies AssertTypeEquality<
+            (typeof reflections)[number],
+            JSONSchemaCollectionFragmentReflect<Schema> | JSONSchemaModelFragmentReflect<Schema, undefined, JSONSchemaCollectionRootFragment<Schema>>
+          >,
+        ).toBe(true);
+        const [collection, root] = reflections;
+        expect(collection.fragment).toBe(schema);
+        expect('$defs' in root.fragment).toBe(false);
+        expect(root.name).toBe(undefined);
+      });
+
+      it('Resolves every reference of the schema against its collection reflection', () => {
+        const schema = {
+          type: 'object',
+          properties: { people: { type: 'array', items: { $ref: '#/$defs/Person' } } },
+          $defs: { Person: { type: 'object', properties: { name: { type: 'string' } } } },
+        } as const;
+        const reflections = reflectJSONSchema(schema);
+        const collection = reflections.find((reflection) => reflection instanceof JSONSchemaCollectionFragmentReflect);
+        const root = reflections.find((reflection) => reflection instanceof JSONSchemaModelFragmentReflect);
+        const people = root?.properties.people[0];
+        expect(people).toBeInstanceOf(JSONSchemaArrayTypeFragmentReflect);
+        expect(people?.items?.[0].ref).toBe(collection?.$defs.Person);
+      });
+
+      it('Reflects a collection with nothing but $defs and annotations as a collection reflection alone', () => {
+        const reflections = reflectJSONSchema({ title: 'Titled', $defs: {} } as const);
+        expect(reflections.length).toBe(1);
+        expect(reflections[0]).toBeInstanceOf(JSONSchemaCollectionFragmentReflect);
+        expect(
+          true satisfies AssertTypeEquality<
+            (typeof reflections)[number],
+            JSONSchemaCollectionFragmentReflect<{ readonly title: 'Titled'; readonly $defs: {} }>
+          >,
+        ).toBe(true);
+      });
+
+      it('Reflects a schema with no $defs with no collection reflection, leaving its references unresolved', () => {
+        const schema = { type: 'object', properties: { role: { $ref: '#/$defs/Role' } } } as const;
+        const reflections = reflectJSONSchema(schema);
+        expect(reflections.map((reflection) => reflection.constructor)).toEqual([JSONSchemaModelFragmentReflect]);
+        expect(
+          true satisfies AssertTypeEquality<(typeof reflections)[number], JSONSchemaModelFragmentReflect<JSONSchemaCollection, undefined, typeof schema>>,
+        ).toBe(true);
+        const role = reflections[0].properties.role[0];
+        expect(role).toBeInstanceOf(JSONSchemaReferenceFragmentReflect);
+        expect(role.refName).toBe(undefined);
+        expect(role.ref).toBe(undefined);
+      });
+
+      it('Reflects a schema matching no reflection type with no reflections', () => {
+        const reflections = reflectJSONSchema({ title: 'Annotated' } as const);
+        expect(reflections).toEqual([]);
+        expect(true satisfies AssertTypeEquality<typeof reflections, never[]>).toBe(true);
+      });
+
+      it('Infers the reflections of a schema', () => {
+        type Collection = { readonly $defs: { readonly A: { readonly type: 'string' } }; readonly type: 'null' };
+        expect(
+          true satisfies AssertTypeEquality<
+            JSONSchemaReflection<Collection>,
+            JSONSchemaCollectionFragmentReflect<Collection> | JSONSchemaNullTypeFragmentReflect<Collection, undefined, { readonly type: 'null' }>
+          >,
+        ).toBe(true);
+        expect(
+          true satisfies AssertTypeEquality<
+            JSONSchemaReflection<{ readonly type: 'null' }>,
+            JSONSchemaNullTypeFragmentReflect<JSONSchemaCollection, undefined, { readonly type: 'null' }>
+          >,
+        ).toBe(true);
+      });
+    });
+
     describe('Fragment reflections', () => {
       it('Reflects a fragment by every reflection type matching it', () => {
         expect(_reflectionClasses('Enumerated')).toEqual([JSONSchemaEnumFragmentReflect, JSONSchemaPrimitiveTypeFragmentReflect]);
-        const _enumerated = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Enumerated');
+        const _enumerated = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Enumerated;
         expect(
           true satisfies AssertTypeEquality<
             (typeof _enumerated)[number],
@@ -65,20 +152,20 @@ describe('Reflection', () => {
 
       it('Reflects a fragment matching no reflection type with no reflections', () => {
         const collection = new JSONSchemaCollectionFragmentReflect(_schema);
-        expect(collection.fragment('Empty')).toEqual([]);
-        expect(true satisfies AssertTypeEquality<ReturnType<typeof collection.fragment<'Empty'>>, never[]>).toBe(true);
+        expect(collection.$defs.Empty).toEqual([]);
+        expect(true satisfies AssertTypeEquality<typeof collection.$defs.Empty, never[]>).toBe(true);
         expect(createJSONSchemaFragmentReflections(collection, undefined, { title: 'Annotated' })).toEqual([]);
       });
 
       it('Reflects a type array naming a single group of type names as if type named it directly', () => {
         expect(_reflectionClasses('Single')).toEqual([JSONSchemaModelFragmentReflect]);
-        const single = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Single')[0];
+        const single = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Single[0];
         expect(single.type).toBe('object');
         expect(single.names).toEqual(['a']);
       });
 
       it('Reflects a type array naming several groups of type names as an implicit anyOf of a branch per group', () => {
-        const node = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Node');
+        const node = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Node;
         expect(node.length).toBe(1);
         const anyOf = node[0];
         expect(anyOf).toBeInstanceOf(JSONSchemaAnyOfTypeFragmentReflect);
@@ -97,7 +184,7 @@ describe('Reflection', () => {
       });
 
       it('Reflects the type independent keywords of a type array naming several groups on the fragment itself, and leaves them out of each branch', () => {
-        const mixed = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Mixed');
+        const mixed = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Mixed;
         expect(mixed.map((reflection) => reflection.constructor)).toEqual([JSONSchemaEnumFragmentReflect, JSONSchemaAnyOfTypeFragmentReflect]);
         const anyOf = mixed[1];
         expect(anyOf instanceof JSONSchemaAnyOfTypeFragmentReflect && anyOf.fragment).toEqual({
@@ -111,20 +198,20 @@ describe('Reflection', () => {
 
       it('Resolves (in)directly recursive references lazily', () => {
         const collection = new JSONSchemaCollectionFragmentReflect(_schema);
-        const node = collection.fragment('Node')[0].anyOf[0][0];
+        const node = collection.$defs.Node[0].anyOf[0][0];
         const next = node instanceof JSONSchemaModelFragmentReflect ? node.properties.next[0] : undefined;
         expect(next).toBeInstanceOf(JSONSchemaReferenceFragmentReflect);
-        expect(next?.ref).toBe(collection.fragment('Node'));
-        const ping = collection.fragment('Ping')[0];
+        expect(next?.ref).toBe(collection.$defs.Node);
+        const ping = collection.$defs.Ping[0];
         const pong = ping.items[0].ref[0];
-        expect(pong).toBe(collection.fragment('Pong')[0]);
+        expect(pong).toBe(collection.$defs.Pong[0]);
         expect(pong.properties.ping[0].ref[0]).toBe(ping);
         expect(true satisfies AssertTypeEquality<typeof pong, JSONSchemaModelFragmentReflect<_Schema, 'Pong', _Schema['$defs']['Pong']>>).toBe(true);
       });
 
       it('Reflects every fragment of the fixture collection', () => {
         const collection = new JSONSchemaCollectionFragmentReflect(jsonSchema);
-        expect(collection.names.every((name) => collection.fragment(name).length > 0)).toBe(true);
+        expect(collection.names.every((name) => collection.$defs[name].length > 0)).toBe(true);
       });
     });
 

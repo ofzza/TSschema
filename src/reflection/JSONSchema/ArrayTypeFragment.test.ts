@@ -29,7 +29,7 @@ describe('Reflection', () => {
       });
 
       it('Reflects the items of an array type', () => {
-        const names = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Names')[0];
+        const names = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Names[0];
         expect(names).toBeInstanceOf(JSONSchemaArrayTypeFragmentReflect);
         expect(names.type).toBe('array');
         expect(names.items.length).toBe(1);
@@ -41,24 +41,24 @@ describe('Reflection', () => {
       });
 
       it('Reflects no items of an array type with no items', () => {
-        const anything = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Anything')[0];
+        const anything = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Anything[0];
         expect(anything.items).toBe(undefined);
         expect(true satisfies AssertTypeEquality<typeof anything.items, undefined>).toBe(true);
       });
 
       it('Reflects items which are not a single schema object with no reflections', () => {
         const collection = new JSONSchemaCollectionFragmentReflect(_schema);
-        expect(collection.fragment('Booleans')[0].items).toEqual([]);
-        expect(collection.fragment('Tuple')[0].items).toEqual([]);
-        const _tuple = collection.fragment('Tuple')[0];
+        expect(collection.$defs.Booleans[0].items).toEqual([]);
+        expect(collection.$defs.Tuple[0].items).toEqual([]);
+        const _tuple = collection.$defs.Tuple[0];
         expect(true satisfies AssertTypeEquality<typeof _tuple.items, never[]>).toBe(true);
       });
 
       it('Infers the type of an array type', () => {
         const collection = new JSONSchemaCollectionFragmentReflect(_schema);
-        const _names = collection.fragment('Names')[0];
+        const _names = collection.$defs.Names[0];
         expect(true satisfies AssertTypeEquality<typeof _names.Type, string[]>).toBe(true);
-        const _anything = collection.fragment('Anything')[0];
+        const _anything = collection.$defs.Anything[0];
         expect(true satisfies AssertTypeEquality<typeof _anything.Type, unknown[]>).toBe(true);
       });
     });

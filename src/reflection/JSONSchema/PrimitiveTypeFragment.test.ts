@@ -28,7 +28,7 @@ describe('Reflection', () => {
 
       it('Reflects the type of a primitive type', () => {
         const collection = new JSONSchemaCollectionFragmentReflect(_schema);
-        const text = collection.fragment('Text')[0];
+        const text = collection.$defs.Text[0];
         expect(text).toBeInstanceOf(JSONSchemaPrimitiveTypeFragmentReflect);
         expect(text.type).toBe('string');
         expect(true satisfies AssertTypeEquality<typeof text.type, 'string'>).toBe(true);
@@ -36,16 +36,16 @@ describe('Reflection', () => {
       });
 
       it('Reflects the types of an array of primitive types', () => {
-        const scalar = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Scalar')[0];
+        const scalar = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Scalar[0];
         expect(scalar.type).toEqual(['string', 'number', 'boolean']);
         expect(true satisfies AssertTypeEquality<typeof scalar.type, readonly ['string', 'number', 'boolean']>).toBe(true);
       });
 
       it('Infers the type of a primitive type', () => {
         const collection = new JSONSchemaCollectionFragmentReflect(_schema);
-        const _count = collection.fragment('Count')[0];
+        const _count = collection.$defs.Count[0];
         expect(true satisfies AssertTypeEquality<typeof _count.Type, number>).toBe(true);
-        const _scalar = collection.fragment('Scalar')[0];
+        const _scalar = collection.$defs.Scalar[0];
         expect(true satisfies AssertTypeEquality<typeof _scalar.Type, string | number | boolean>).toBe(true);
       });
     });

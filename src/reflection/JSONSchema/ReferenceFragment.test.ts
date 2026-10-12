@@ -38,7 +38,7 @@ describe('Reflection', () => {
       });
 
       it('Gets the name of the referenced fragment', () => {
-        const hasRole = new JSONSchemaCollectionFragmentReflect(_schema).fragment('HasRole')[0];
+        const hasRole = new JSONSchemaCollectionFragmentReflect(_schema).$defs.HasRole[0];
         expect(hasRole).toBeInstanceOf(JSONSchemaReferenceFragmentReflect);
         expect(hasRole.refName).toBe('Role');
         expect(true satisfies AssertTypeEquality<typeof hasRole.refName, 'Role'>).toBe(true);
@@ -46,20 +46,20 @@ describe('Reflection', () => {
 
       it('Gets no name for a reference which does not name a fragment of the collection', () => {
         const collection = new JSONSchemaCollectionFragmentReflect(_schema);
-        const missing = collection.fragment('Missing')[0];
+        const missing = collection.$defs.Missing[0];
         expect(missing.refName).toBe(undefined);
         expect(true satisfies AssertTypeEquality<typeof missing.refName, undefined>).toBe(true);
-        expect(collection.fragment('External')[0].refName).toBe(undefined);
+        expect(collection.$defs.External[0].refName).toBe(undefined);
         // JSON pointers are not supported (yet): a reference can only point directly into `$defs`
-        const nested = collection.fragment('Nested')[0];
+        const nested = collection.$defs.Nested[0];
         expect(nested.refName).toBe(undefined);
         expect(true satisfies AssertTypeEquality<typeof nested.refName, undefined>).toBe(true);
       });
 
       it('Resolves the reflections of the referenced fragment, as held by the collection', () => {
         const collection = new JSONSchemaCollectionFragmentReflect(_schema);
-        const hasRole = collection.fragment('HasRole')[0];
-        expect(hasRole.ref).toBe(collection.fragment('Role'));
+        const hasRole = collection.$defs.HasRole[0];
+        expect(hasRole.ref).toBe(collection.$defs.Role);
         expect(hasRole.ref[0]).toBeInstanceOf(JSONSchemaEnumFragmentReflect);
         expect(true satisfies AssertTypeEquality<typeof hasRole.ref, Array<JSONSchemaEnumFragmentReflect<_Schema, 'Role', _Schema['$defs']['Role']>>>).toBe(
           true,
@@ -68,7 +68,7 @@ describe('Reflection', () => {
 
       it('Resolves a recursive reference', () => {
         const collection = new JSONSchemaCollectionFragmentReflect(_schema);
-        const node = collection.fragment('Node')[0];
+        const node = collection.$defs.Node[0];
         expect(node.properties.next[0].ref[0]).toBe(node);
         expect(node.properties.next[0].ref[0].properties.next[0].ref[0]).toBe(node);
         expect(
@@ -80,9 +80,15 @@ describe('Reflection', () => {
       });
 
       it('Resolves no reflections for an unresolved reference', () => {
-        const missing = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Missing')[0];
+        const missing = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Missing[0];
         expect(missing.ref).toBe(undefined);
         expect(true satisfies AssertTypeEquality<typeof missing.ref, undefined>).toBe(true);
+      });
+
+      it('Resolves no reflections for a reference with no collection to resolve it against', () => {
+        const reference = new JSONSchemaReferenceFragmentReflect(undefined, undefined, { $ref: '#/$defs/Role' } as const);
+        expect(reference.refName).toBe(undefined);
+        expect(reference.ref).toBe(undefined);
       });
 
       it('Resolves any fragment of the collection for an unspecified reference', () => {
@@ -102,9 +108,9 @@ describe('Reflection', () => {
 
       it('Infers the type of a reference', () => {
         const collection = new JSONSchemaCollectionFragmentReflect(_schema);
-        const _hasRole = collection.fragment('HasRole')[0];
+        const _hasRole = collection.$defs.HasRole[0];
         expect(true satisfies AssertTypeEquality<typeof _hasRole.Type, 'student' | 'teacher'>).toBe(true);
-        const _missing = collection.fragment('Missing')[0];
+        const _missing = collection.$defs.Missing[0];
         expect(true satisfies AssertTypeEquality<typeof _missing.Type, unknown>).toBe(true);
       });
     });

@@ -34,7 +34,7 @@ describe('Reflection', () => {
       });
 
       it('Reflects each fragment of an all-of-types, in order', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Person')[0];
+        const person = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0];
         expect(person).toBeInstanceOf(JSONSchemaAllOfTypeFragmentReflect);
         expect(person.allOf.length).toBe(2);
         expect(person.allOf[0][0]).toBeInstanceOf(JSONSchemaReferenceFragmentReflect);
@@ -55,12 +55,12 @@ describe('Reflection', () => {
         // TODO: `JSONSchemaAllOfTypeFragment` requires every member to be a schema object, so boolean schemas (valid JSON schema) are not yet supported by
         //       the types; at runtime they are reflected with no reflections
         const collection = new JSONSchemaCollectionFragmentReflect({ $defs: { A: { allOf: [{ type: 'string' }, true] } } } as JSONSchemaCollection);
-        const a = collection.fragment('A')[0];
+        const a = collection.$defs.A[0];
         expect(a instanceof JSONSchemaAllOfTypeFragmentReflect && a.allOf.map((member) => member.length)).toEqual([1, 0]);
       });
 
       it('Infers the type of an all-of-types', () => {
-        const _person = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Person')[0];
+        const _person = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0];
         type Person = typeof _person.Type;
         //   ^?
         expect(true satisfies AssertTypeEquality<Person['name'], string>).toBe(true);

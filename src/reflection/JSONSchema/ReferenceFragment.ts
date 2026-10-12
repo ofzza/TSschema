@@ -26,9 +26,9 @@ export class JSONSchemaReferenceFragmentReflect<
   }
 
   /**
-   * Name of the referenced fragment, parsed from a `#/$defs/<name>` reference, or `undefined` if the reference is of any other form or names no fragment
-   * of the collection. JSON pointers are not supported (yet), as in the type layer: a reference is not unescaped (`~0`, `~1`) or percent-decoded, and
-   * can not point anywhere but directly into `$defs`.
+   * Name of the referenced fragment, parsed from a `#/$defs/<name>` reference, or `undefined` if the reference is of any other form, names no fragment
+   * of the collection, or the reflected schema has no `$defs` to resolve it against. JSON pointers are not supported (yet), as in the type layer: a
+   * reference is not unescaped (`~0`, `~1`) or percent-decoded, and can not point anywhere but directly into `$defs`.
    */
   public readonly refName: _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>;
 
@@ -39,23 +39,22 @@ export class JSONSchemaReferenceFragmentReflect<
    */
   public get ref(): _JSONSchemaReferenceFragmentRefReflect<TSchema, _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>> {
     return (
-      this.refName === undefined ? undefined : this._schema.fragment(this.refName as JSONSchemaFragmentName<TSchema>)
+      this.refName === undefined ? undefined : this._schema?.$defs[this.refName as JSONSchemaFragmentName<TSchema>]
     ) as _JSONSchemaReferenceFragmentRefReflect<TSchema, _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>>;
   }
 
   /**
    * Reflects a JSON schema reference definition
-   * @param _schema Reflection of the JSON schema collection the fragment belongs to
+   * @param _schema Reflection of the JSON schema collection the fragment belongs to, or `undefined` if the reflected schema has no `$defs`
    * @param _fragmentName Name of the fragment within the collection, or `undefined` for a nested (or root) fragment
    * @param _fragment JSON fragment to reflect on
    */
-  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
+  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema> | undefined, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
     const name = /^#\/\$defs\/(.+)$/.exec(_fragment['$ref'])?.[1];
-    this.refName = (name !== undefined && (_schema.names as Array<string>).includes(name) ? name : undefined) as _JSONSchemaReferenceFragmentRefName<
-      TSchema,
-      TFragment
-    >;
+    this.refName = (
+      name !== undefined && (_schema?.names as Array<string> | undefined)?.includes(name) ? name : undefined
+    ) as _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>;
   }
 }
 

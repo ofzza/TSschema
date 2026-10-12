@@ -23,7 +23,7 @@ describe('Reflection', () => {
       });
 
       it('Reflects the fragment of a not-type', () => {
-        const something = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Something')[0];
+        const something = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Something[0];
         expect(something).toBeInstanceOf(JSONSchemaNotTypeFragmentReflect);
         expect(something.not[0]).toBeInstanceOf(JSONSchemaNullTypeFragmentReflect);
         expect(
@@ -32,7 +32,7 @@ describe('Reflection', () => {
       });
 
       it('Infers no constraint from a not-type, as it is not supported yet', () => {
-        const _something = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Something')[0];
+        const _something = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Something[0];
         expect(true satisfies AssertTypeEquality<typeof _something.Type, unknown>).toBe(true);
       });
     });

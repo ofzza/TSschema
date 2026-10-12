@@ -23,7 +23,7 @@ describe('Reflection', () => {
       });
 
       it('Reflects a null type', () => {
-        const nothing = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Nothing')[0];
+        const nothing = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Nothing[0];
         expect(nothing).toBeInstanceOf(JSONSchemaNullTypeFragmentReflect);
         expect(nothing.type).toBe('null');
         expect(true satisfies AssertTypeEquality<typeof nothing, JSONSchemaNullTypeFragmentReflect<_Schema, 'Nothing', _Schema['$defs']['Nothing']>>).toBe(
@@ -32,7 +32,7 @@ describe('Reflection', () => {
       });
 
       it('Infers the type of a null type', () => {
-        const _nothing = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Nothing')[0];
+        const _nothing = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Nothing[0];
         expect(true satisfies AssertTypeEquality<typeof _nothing.Type, null>).toBe(true);
       });
     });

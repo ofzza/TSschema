@@ -21,7 +21,7 @@ describe('Reflection', () => {
       });
 
       it('Reflects an object type', () => {
-        const anything = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Anything')[0];
+        const anything = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Anything[0];
         expect(anything).toBeInstanceOf(JSONSchemaObjectTypeFragmentReflect);
         expect(anything.type).toBe('object');
         expect(true satisfies AssertTypeEquality<typeof anything, JSONSchemaObjectTypeFragmentReflect<_Schema, 'Anything', _Schema['$defs']['Anything']>>).toBe(
@@ -30,7 +30,7 @@ describe('Reflection', () => {
       });
 
       it('Infers the type of an object type', () => {
-        const _anything = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Anything')[0];
+        const _anything = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Anything[0];
         expect(true satisfies AssertTypeEquality<typeof _anything.Type, object>).toBe(true);
       });
     });

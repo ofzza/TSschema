@@ -1,14 +1,16 @@
 /**
- * Router reflecting a JSON schema fragment of any kind, by instantiating every per-keyword fragment reflection matching it, and the types inferring which
- * reflections a fragment gets: the runtime counterpart of `JSONSchemaFragmentType`'s dispatch over keywords.
+ * Entry point reflecting a whole JSON schema, the router reflecting a JSON schema fragment of any kind by instantiating every per-keyword fragment
+ * reflection matching it, and the types inferring which reflections a fragment gets: the runtime counterpart of `JSONSchemaFragmentType`'s dispatch over
+ * keywords.
  *
  * This file and the per-keyword reflection files import each other as values, on purpose: the router instantiates every reflection class, and the
  * reflections of fragments with nested fragments (models, arrays, `allOf`, ...) reflect those through the router. That cycle is safe as long as the
- * router only references the reflection classes inside function bodies (never at the top level of the module), and the base class they all extend lives
- * outside of the cycle, in `Fragment.ts`.
+ * router only references the reflection classes (the collection reflection included) inside function bodies (never at the top level of the module), and
+ * the base class they all extend lives outside of the cycle, in `Fragment.ts`.
  */
 
 import type {
+  JSONSchema7,
   JSONSchemaAllOfTypeFragment,
   JSONSchemaAnyOfTypeFragment,
   JSONSchemaArrayTypeFragment,
@@ -26,8 +28,8 @@ import type {
   JSONSchemaPrimitiveTypeFragment,
   JSONSchemaReferenceFragment,
 } from '../../schema/JSONSchema/index.js';
-import type { JSONSchemaCollectionFragmentReflect } from './CollectionFragment.js';
-import { getJSONSchemaFragmentTypeBranches, type JSONSchemaFragmentReflect } from './Fragment.js';
+import { JSONSchemaCollectionFragmentReflect } from './CollectionFragment.js';
+import { getJSONSchemaFragmentTypeBranches, type JSONSchemaCollectionRootFragment, type JSONSchemaFragmentReflect } from './Fragment.js';
 import { isJSONSchemaObject } from './JSONSchema7.js';
 import { JSONSchemaModelFragmentReflect } from './ModelFragment.js';
 import { JSONSchemaConstFragmentReflect } from './ConstFragment.js';
@@ -42,6 +44,32 @@ import { JSONSchemaOneOfTypeFragmentReflect } from './OneOfTypeFragment.js';
 import { JSONSchemaNotTypeFragmentReflect } from './NotTypeFragment.js';
 import { JSONSchemaReferenceFragmentReflect } from './ReferenceFragment.js';
 
+// #region Entry point
+
+/**
+ * Reflects a JSON schema, by every reflection class its root fragment matches. The default way to reflect a schema.
+ *
+ * A collection (a schema with `$defs`) is reflected as a collection reflection, reflecting every `$defs` fragment by name, followed by the reflections of
+ * the root's other keywords (the schema with its `$defs` left out). The collection reflection is the context every `$ref` in the schema is resolved
+ * against. Any other schema is reflected with no such context, so none of its `$ref` can be resolved.
+ * @param fragment JSON schema to reflect on
+ * @returns Reflections of all fragment types the schema's root fragment matches, or an empty array if it matches none
+ */
+export function reflectJSONSchema<TFragment extends JSONSchema7>(fragment: TFragment): Array<JSONSchemaReflection<TFragment>> {
+  // Reflect a collection, and its root fragment against it
+  if (JSONSchemaCollectionFragmentReflect.check(fragment)) {
+    const collection = new JSONSchemaCollectionFragmentReflect(fragment);
+    const { $defs: _defs, ...root } = fragment;
+    return [collection, ...createJSONSchemaFragmentReflections(collection, undefined, root as JSONSchemaNotCollectionFragment)] as Array<
+      JSONSchemaReflection<TFragment>
+    >;
+  }
+  // Reflect any other fragment, with no collection to resolve references against
+  return createJSONSchemaFragmentReflections(undefined, undefined, fragment as JSONSchemaNotCollectionFragment) as Array<JSONSchemaReflection<TFragment>>;
+}
+
+// #endregion
+
 // #region Router
 
 /**
@@ -51,7 +79,7 @@ import { JSONSchemaReferenceFragmentReflect } from './ReferenceFragment.js';
  * reflected as if `type` named its group directly. Several branches are alternatives (a value is of one of them), so they are reflected as an implicit
  * `anyOf`: the type independent keywords (`const`, `enum`, `$ref`, `allOf`, `anyOf`, `oneOf`, `not`) are reflected on the fragment itself, and one more
  * (`implicit`) any-of-types reflection holds the branches, each with the type independent keywords left out.
- * @param schema Reflection of the JSON schema collection the fragment belongs to
+ * @param schema Reflection of the JSON schema collection the fragment belongs to, or `undefined` if the reflected schema has no `$defs`
  * @param name Name of the fragment within the collection, or `undefined` for a nested (or root) fragment
  * @param fragment JSON fragment to reflect on
  * @returns Reflections of all fragment types the fragment matches, or an empty array if it matches none
@@ -60,7 +88,11 @@ export function createJSONSchemaFragmentReflections<
   TSchema extends JSONSchemaCollection,
   TName extends JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaNotCollectionFragment,
->(schema: JSONSchemaCollectionFragmentReflect<TSchema>, name: TName, fragment: TFragment): Array<JSONSchemaFragmentReflection<TSchema, TName, TFragment>> {
+>(
+  schema: JSONSchemaCollectionFragmentReflect<TSchema> | undefined,
+  name: TName,
+  fragment: TFragment,
+): Array<JSONSchemaFragmentReflection<TSchema, TName, TFragment>> {
   // Reflect a single type array branch as is
   const branches = getJSONSchemaFragmentTypeBranches(fragment);
   if (branches.length === 1 && branches[0] !== fragment)
@@ -93,12 +125,12 @@ export function createJSONSchemaFragmentReflections<
 
 /**
  * Reflects a fragment nested in, and owned by, another fragment (e.g. a model property or an `allOf` member). Nested fragments have no name.
- * @param schema Reflection of the JSON schema collection the parent fragment belongs to
+ * @param schema Reflection of the JSON schema collection the parent fragment belongs to, or `undefined` if the reflected schema has no `$defs`
  * @param fragment Nested JSON fragment to reflect on
  * @returns Reflections of all fragment types the nested fragment matches, or an empty array if it is not a schema object (e.g. a boolean schema)
  */
 export function createJSONSchemaNestedFragmentReflections<TSchema extends JSONSchemaCollection, TFragment>(
-  schema: JSONSchemaCollectionFragmentReflect<TSchema>,
+  schema: JSONSchemaCollectionFragmentReflect<TSchema> | undefined,
   fragment: TFragment,
 ): JSONSchemaNestedFragmentReflections<TSchema, TFragment> {
   return (
@@ -114,6 +146,20 @@ const _JSONSchemaTypeIndependentKeywords = ['const', 'enum', '$ref', 'allOf', 'a
 // #endregion
 
 // #region Reflection types
+
+/**
+ * Infers the reflections of a JSON schema, as `reflectJSONSchema` returns them: the type of each element of the returned array. A collection infers the
+ * collection reflection and the reflections of its root fragment (see `JSONSchemaCollectionRootFragment`), any other schema the reflections of the
+ * fragment itself, in the unspecified collection (`JSONSchemaCollection`) as no collection is known.
+ */
+export type JSONSchemaReflection<TFragment extends JSONSchema7> =
+  // Collection
+  TFragment extends JSONSchemaCollection
+    ? JSONSchemaCollectionFragmentReflect<TFragment> | JSONSchemaFragmentReflection<TFragment, undefined, JSONSchemaCollectionRootFragment<TFragment>>
+    : // Any other fragment
+      TFragment extends JSONSchemaNotCollectionFragment
+      ? JSONSchemaFragmentReflection<JSONSchemaCollection, undefined, TFragment>
+      : never;
 
 /**
  * Infers the reflections of a JSON schema fragment, as the union of the reflection types matching it: the type of each element of the array the router
