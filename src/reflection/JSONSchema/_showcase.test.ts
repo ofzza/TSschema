@@ -127,6 +127,8 @@ describe('Showcase', () => {
         // Role: JSONSchemaEnumFragmentFacet<…> | JSONSchemaPrimitiveTypeFragmentFacet<…> - narrow with `instanceof`
         const enumeration = role.find((facet) => facet instanceof JSONSchemaEnumFragmentFacet);
         expect(enumeration?.enum).toEqual(['student', 'teacher']);
+        // An enum also names its values: by its `x-enumNames` vendor keyword if it has one, here by the values themselves
+        expect(enumeration?.names).toEqual(['student', 'teacher']);
         expect(true satisfies AssertTypeEquality<Role extends JSONSchemaFragmentFacet<Schema, 'Role', any> ? true : false, true>).toBe(true);
       });
 

@@ -7,3 +7,4 @@ export type Schema = typeof schema;
 
 export type Models = { [K in keyof Schema['$defs'] & string]: TSSchemaType<TSSchemaFragment<Schema, K>> };
 export type Enum = Models["Enum"];
+export type NamedEnum = Models["NamedEnum"];

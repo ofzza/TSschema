@@ -3,6 +3,7 @@ import type { AssertTypeEquality } from '@ofzza/tsstd';
 import type { JSONSchemaCollection } from '../schema/JSONSchema/index.js';
 import { JSONSchemaAnyOfTypeFragmentFacet, JSONSchemaCollectionFragmentFacet, JSONSchemaModelFragmentFacet } from './JSONSchema/index.js';
 import { TSSchemaDefinitionReflection, TSSchemaFragmentReflection, TSSchemaPropertyReflection, reflect } from './TSSchemaReflection.js';
+import type { TSSchemaPrimitiveTypeDescriptor, TSSchemaUnknownTypeDescriptor } from './TypeDescriptor.js';
 
 import { default as jsonSchema } from '../../res/sidecar/schema.json';
 
@@ -166,6 +167,43 @@ describe('Reflection', () => {
         expect(email.required).toBe(true);
         expect(email.parent.required).toBe(false);
         expect(true satisfies AssertTypeEquality<typeof email.Type, string>).toBe(true);
+      });
+    });
+
+    describe('Type descriptors', () => {
+      it('Describes the type of the root, a definition and a property', () => {
+        const root = reflect(_schema);
+        expect(root.typeDescriptor.kind).toBe('model');
+        expect(true satisfies AssertTypeEquality<typeof root.typeDescriptor.properties.pet.name, 'Pet'>).toBe(true);
+        const cat = root.getDefinition('Cat');
+        expect(cat.typeDescriptor).toEqual({
+          kind: 'model',
+          properties: { name: { kind: 'primitive', type: 'string' }, lives: { kind: 'primitive', type: 'integer' } },
+          required: ['name', 'lives'],
+        });
+        const lives = cat.getProperty('lives');
+        expect(lives.typeDescriptor).toEqual({ kind: 'primitive', type: 'integer' });
+        expect(true satisfies AssertTypeEquality<typeof lives.typeDescriptor, TSSchemaPrimitiveTypeDescriptor<'integer'>>).toBe(true);
+      });
+
+      it('Describes a definition by the same descriptor as every reference to it', () => {
+        const root = reflect(_schema);
+        const pet = root.getProperty('pet').typeDescriptor;
+        expect(pet.target).toBe(root.getDefinition('Pet').typeDescriptor);
+        expect(root.getDefinition('Cat').typeDescriptor).toBe(root.getDefinition('Cat').typeDescriptor);
+      });
+
+      it('Describes a nullable model as an implicit anyOf', () => {
+        const owner = reflect(_schema).getDefinition('Owner').typeDescriptor;
+        expect(owner.kind).toBe('anyOf');
+        expect(owner.implicit).toBe(true);
+        expect(owner.members.map((member) => member.kind)).toEqual(['model', 'null']);
+      });
+
+      it('Describes a property of unknown shape as unknown', () => {
+        const deep = reflect(_schema).getDefinition('Owner').getProperty('notes.a');
+        expect(deep.typeDescriptor).toEqual({ kind: 'unknown' });
+        expect(true satisfies AssertTypeEquality<typeof deep.typeDescriptor, TSSchemaUnknownTypeDescriptor>).toBe(true);
       });
     });
   });

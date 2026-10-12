@@ -5,6 +5,11 @@
   "$defs": {
     "Enum": {
       "enum": ["Aaa", "Bbb", "Ccc"]
+    },
+    "NamedEnum": {
+      "type": "integer",
+      "enum": [1, 2, 3],
+      "x-enumNames": ["One", "Two", "Three"]
     }
   }
 }

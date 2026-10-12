@@ -26,6 +26,24 @@ describe('Reflection', () => {
         expect(true satisfies AssertTypeEquality<(typeof enumeration.enum)[number], 'Aaa' | 'Bbb' | 'Ccc'>).toBe(true);
       });
 
+      it('Names the enumerated values by `x-enumNames`, or else by their own names', () => {
+        const named = new JSONSchemaCollectionFragmentFacet(enumJsonSchema).$defs.NamedEnum.find((facet) => facet instanceof JSONSchemaEnumFragmentFacet)!;
+        expect(named.names).toEqual(['One', 'Two', 'Three']);
+        expect(true satisfies AssertTypeEquality<typeof named.names, ['One', 'Two', 'Three']>).toBe(true);
+
+        const unnamed = new JSONSchemaCollectionFragmentFacet(enumJsonSchema).$defs.Enum[0];
+        expect(unnamed.names).toEqual(['Aaa', 'Bbb', 'Ccc']);
+        expect(true satisfies AssertTypeEquality<typeof unnamed.names, ['Aaa', 'Bbb', 'Ccc']>).toBe(true);
+
+        const values = new JSONSchemaEnumFragmentFacet({ enum: [1, true, null, { a: 1 }] } as const);
+        expect(values.names).toEqual(['1', 'true', 'null', '{"a":1}']);
+        expect(true satisfies AssertTypeEquality<typeof values.names, ['1', 'true', 'null', string]>).toBe(true);
+
+        const misnamed = new JSONSchemaEnumFragmentFacet({ enum: ['a', 'b'], 'x-enumNames': ['A'] } as const);
+        expect(misnamed.names).toEqual(['a', 'b']);
+        expect(true satisfies AssertTypeEquality<typeof misnamed.names, ['a', 'b']>).toBe(true);
+      });
+
       it('Infers the type of an enum', () => {
         const _enumeration = new JSONSchemaCollectionFragmentFacet(enumJsonSchema).$defs.Enum[0];
         expect(true satisfies AssertTypeEquality<typeof _enumeration.Type, 'Aaa' | 'Bbb' | 'Ccc'>).toBe(true);

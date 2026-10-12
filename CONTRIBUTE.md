@@ -31,7 +31,7 @@ TSschema is two layers, each built in two levels:
 |                                                                           | JSON schema base: one unit per JSON schema keyword, internal         | TSSchema level: built on the base, public                                                       |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | **Type layer** - compile time, infers names and value types from a schema | `src/schema/JSONSchema/` - fragment types, `JSONSchemaFragmentIs*` checks, value type inference | `src/schema/TSSchema*.ts` - wrappers, `TSSchemaName`, `TSSchemaType`                            |
-| **Runtime layer** - parses and navigates a schema at runtime              | `src/reflection/JSONSchema/` - facets (parsing a schema)              | `src/reflection/TSSchemaReflection.ts` (with `PropertyPath.ts`) - reflections, `reflect` |
+| **Runtime layer** - parses and navigates a schema at runtime              | `src/reflection/JSONSchema/` - facets (parsing a schema)              | `src/reflection/TSSchemaReflection.ts` (with `PropertyPath.ts`, `TypeDescriptor.ts`) - reflections, `reflect`, type descriptors |
 
 - **The JSON schema base** follows JSON schema closely: a file per keyword (`ModelFragment.ts`, `ReferenceFragment.ts`, ...), the same file names in both
   layers. **The TSSchema level** is what users see: it combines the keywords into answers ("what are this model's properties?", "what is this value's
@@ -91,6 +91,13 @@ Terms are listed in the order they build on each other. Use them as defined here
 - **Reflection** - one object per fragment, holding all of its facets plus where it was reached from: a **fragment reflection** (the base class, and the
   root), a **definition reflection** (named by its definition name) or a **property reflection** (named by its property name, with a **parent** - the
   reflection it was looked up from - and whether it is **required**). The runtime counterpart of a wrapper.
+- **Type descriptor** - a reflection's `typeDescriptor`: a tree of plain objects, told apart by their **kind** (`model`, `enum`, `reference`, `anyOf`,
+  ...), describing a fragment's value type at runtime (`TSSchemaTypeDescriptor`). Built from a fragment's facets (`getTSSchemaTypeDescriptor`,
+  `TypeDescriptor.ts`), and inferred from its fragment at type level (`TSSchemaTypeDescriptorOf`). Type shaped where facets are keyword shaped: several
+  facets of one fragment are one descriptor (an **implicit** `allOf`, or an `enum` / `const` absorbing the `type` next to it). *Not* a facet, nor the
+  value type itself.
+- **Value name** - the name of an `enum` or `const` value where the schema gives none (`getJSONSchemaValueName`): a string is its own name, any other
+  value its string form or JSON. Names given by the schema come from `x-enumNames` (an enum) or `title` (each `const` of a `oneOf` described as an enum).
 - **Shape** *(internal to property lookup, `PropertyPath.ts`)* - something a property can be looked up in: a model, or an **unknown shape** (an object
   with no `properties`, a `$ref` which can not be resolved, an array with no single schema `items`), in which any property name names a property of
   type `unknown`. Not used in public documentation, which says "an object whose properties are not known".
@@ -107,7 +114,8 @@ Terms are listed in the order they build on each other. Use them as defined here
 ### How the terms relate
 
 - A **fragment** is the superterm: a definition, the root fragment and a property's schema are all fragments, and so are `anyOf` members and `items`.
-- A fragment is parsed into zero or more **facets**, one per keyword; a **reflection** holds all facets of one fragment.
+- A fragment is parsed into zero or more **facets**, one per keyword; a **reflection** holds all facets of one fragment, and describes its type by one
+  **type descriptor** built from them.
 - A **definition** and a **property** are fragments with a name, given by their position (`$defs`, `properties`): their reflections are the definition
   and property reflections, and their wrappers the fragment and property wrappers.
 - A **wrapper** (type layer) and a **reflection** (runtime layer) play the same role - a fragment plus where it came from - and agree on every name
@@ -123,7 +131,7 @@ extension), plain comments state the same types for other editors, and `// Break
 - [`src/_showcase.test.ts`](src/_showcase.test.ts) - the public API, as documented in the README.
 - [`src/schema/_showcase.test.ts`](src/schema/_showcase.test.ts) - the wrapper types behind the public API, and how property paths are resolved.
 - [`src/schema/JSONSchema/_showcase.test.ts`](src/schema/JSONSchema/_showcase.test.ts) - the per-keyword JSON schema type utilities everything is built on.
-- [`src/reflection/_showcase.test.ts`](src/reflection/_showcase.test.ts) - the runtime reflection module: the reflections, and the facets they hold.
+- [`src/reflection/_showcase.test.ts`](src/reflection/_showcase.test.ts) - the runtime reflection module: the reflections, the facets they hold, and the type descriptors built from them.
 - [`src/reflection/JSONSchema/_showcase.test.ts`](src/reflection/JSONSchema/_showcase.test.ts) - the runtime JSON schema fragment facets (the parsed form of a schema), mirroring
   the type utilities.
 

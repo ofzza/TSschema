@@ -8,7 +8,13 @@
  * `parseJSONSchemaCollection` parses a collection as that collection facet alone.
  */
 
-export { JSONSchemaPrimitiveTypeNames, isJSONSchemaPrimitiveTypeName, isJSONSchemaObject } from './JSONSchema7.js';
+export {
+  JSONSchemaPrimitiveTypeNames,
+  isJSONSchemaPrimitiveTypeName,
+  isJSONSchemaObject,
+  getJSONSchemaValueName,
+  type JSONSchemaValueName,
+} from './JSONSchema7.js';
 export { JSONSchemaCollectionFragmentFacet, type JSONSchemaCollectionParsedFragment } from './CollectionFragment.js';
 export {
   JSONSchemaFragmentFacet,

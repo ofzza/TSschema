@@ -14,8 +14,22 @@ export type Schema = {
         "Ccc",
       ];
     };
+    readonly NamedEnum: {
+      readonly type: "integer";
+      readonly enum: readonly [
+        1,
+        2,
+        3,
+      ];
+      readonly "x-enumNames": readonly [
+        "One",
+        "Two",
+        "Three",
+      ];
+    };
   };
 };
 
 export type Models = { [K in keyof Schema['$defs'] & string]: TSSchemaType<TSSchemaFragment<Schema, K>> };
 export type Enum = Models["Enum"];
+export type NamedEnum = Models["NamedEnum"];

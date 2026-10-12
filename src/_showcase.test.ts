@@ -22,6 +22,8 @@ import {
   type TSSchemaName,
   type TSSchemaType,
   type TSSchemaJSONCollection,
+  type TSSchemaTypeDescriptor,
+  type TSSchemaPrimitiveTypeDescriptor,
 } from './index.js';
 import { generateFiles } from './codegen/index.js';
 
@@ -122,10 +124,65 @@ describe('Runtime reflection', () => {
     });
   });
 
+  describe('Type descriptors', () => {
+    it('Describes the type of a reflection at runtime, typed by the schema', () => {
+      const root = reflect(schema);
+      const person = root.getDefinition('Person');
+      const personType = person.typeDescriptor;
+      // Breakpoint: inspect `personType`, a model descriptor holding a descriptor per property
+      expect(personType.kind).toBe('model');
+      expect(personType.required).toEqual(['name', 'age', 'role']);
+      const ageType = personType.properties.age;
+      expect(ageType).toEqual({ kind: 'primitive', type: 'integer' });
+      type AgeType = typeof ageType;
+      //   ^?
+      // AgeType: TSSchemaPrimitiveTypeDescriptor<'integer'>
+      expect(true satisfies AssertTypeEquality<AgeType, TSSchemaPrimitiveTypeDescriptor<'integer'>>).toBe(true);
+
+      // A `$ref` is described by name, and lazily by its `target`: the very same descriptor as the definition's own, within one reflected schema
+      const roleType = personType.properties.role;
+      // Breakpoint: inspect `roleType`, and its `target`: an enum descriptor
+      expect([roleType.kind, roleType.name]).toEqual(['reference', 'Role']);
+      expect(roleType.target).toBe(root.getDefinition('Role').typeDescriptor);
+      const roleNames = roleType.target.names;
+      expect(roleNames).toEqual(['student', 'teacher']);
+      type RoleNames = typeof roleNames;
+      //   ^?
+      // RoleNames: readonly ['student', 'teacher']
+      expect(true satisfies AssertTypeEquality<RoleNames, readonly ['student', 'teacher']>).toBe(true);
+
+      const mentorType = personType.properties.mentor;
+      // Breakpoint: inspect `mentorType`, an anyOf of a reference back to Person and null
+      expect(mentorType.members.map((member) => member.kind)).toEqual(['reference', 'null']);
+
+      // @ts-expect-error This will fail at compile time: Person has no 'email' property
+      expect(personType.properties.email).toBe(undefined);
+    });
+
+    it('Narrows any descriptor by its kind', () => {
+      function typeName(descriptor: TSSchemaTypeDescriptor): string {
+        switch (descriptor.kind) {
+          case 'primitive':
+            return descriptor.type;
+          case 'reference':
+            return descriptor.name;
+          case 'array':
+            return `${typeName(descriptor.items)}[]`;
+          default:
+            return descriptor.kind;
+        }
+      }
+      const person = reflect(schema).getDefinition('Person');
+      const names = person.propertyNames.map((name) => typeName(person.getProperty(name).typeDescriptor));
+      // Breakpoint: inspect `names`
+      expect(names).toEqual(['string', 'integer', 'Role', 'anyOf']);
+    });
+  });
+
   describe('Coming next', () => {
-    it.todo('Describes a reflected type at runtime');
     it.todo('Validates values against a reflected schema');
     it.todo('Supports the readOnly and writeOnly keywords');
+    it.todo('Describes tuples and additionalProperties');
   });
 });
 

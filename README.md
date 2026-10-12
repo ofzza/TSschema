@@ -29,8 +29,8 @@ $ npm install @ofzza/tsschema --save
 
 `TSschema` works off of a JSON schema whose literal types are kept, such as a schema declared `as const`, and offers:
 
-- [Runtime reflection](#runtime-reflection): navigating a schema at runtime - its definitions, their properties and paths into nested models - with
-  every result fully typed,
+- [Runtime reflection](#runtime-reflection): navigating a schema at runtime - its definitions, their properties and paths into nested models - and
+  describing their types, with every result fully typed,
 - [Code generation](#code-generation-schemas-from-json-files): getting a schema with its literal types into TypeScript, declared `as const` or
   generated from a `.json` file by the `tsschema` command,
 - [Type inference](#type-inference): the type utilities underneath, inferring names and value types from a schema at compile time, for building your
@@ -118,16 +118,54 @@ dot which a model defines as is wins over a path. Only a path's first segment is
 `Person`) has infinitely many valid paths; a path which does not lead to a property reflects `undefined`. Within an object whose properties are not known (an
 object with no `properties`, a `$ref` which can not be resolved, or an array with no single schema `items`), any name is a property of type `unknown`.
 
+### Type descriptors
+
+Every reflection's `typeDescriptor` describes its type at runtime: what `Type` infers at compile time, as a tree of plain objects told apart by their
+`kind` - `unknown`, `const`, `enum`, `primitive`, `null`, `array`, `record` (an object with no `properties`), `model`, `reference`, `anyOf`, `allOf`,
+`oneOf` and `not`. Like everything else, it is typed by the schema, down to its literal kinds, values and property names:
+
+```ts
+import type { TSSchemaTypeDescriptor } from '@ofzza/tsschema';
+
+const personType = person.typeDescriptor; // { kind: 'model', properties: { name: …, age: …, role: …, mentor: … }, required: ['name', 'age', 'role'] }
+const ageType = personType.properties.age; // { kind: 'primitive', type: 'integer' }
+const roleType = personType.properties.role; // { kind: 'reference', name: 'Role', target: { kind: 'enum', … } }
+const roleNames = roleType.target.names; // ['student', 'teacher']
+const mentorType = personType.properties.mentor; // { kind: 'anyOf', members: [{ kind: 'reference', name: 'Person', … }, { kind: 'null' }], … }
+const emailType = personType.properties.email; // This will fail at compile time
+
+function typeName(descriptor: TSSchemaTypeDescriptor): string {
+  switch (descriptor.kind) {
+    case 'primitive':
+      return descriptor.type; // This will work, `kind` narrows the descriptor
+    case 'reference':
+      return descriptor.name;
+    case 'array':
+      return `${typeName(descriptor.items)}[]`;
+    default:
+      return descriptor.kind;
+  }
+}
+```
+
+A `$ref` is described by the definition's name and, lazily on access, its `target`: the same descriptor as the definition's own (within one reflected
+schema), so a recursive schema (`Person.mentor` → `Person`) is described without recursing forever. An `enum` names its values by an `x-enumNames` keyword next to it, or
+else each value by itself; a `oneOf` of `const` fragments only (e.g. `oneOf: [{ const: 0, title: 'Quiz' }, …]`) is described as an `enum` too, named
+by each fragment's `title`. A fragment with several keywords is described as an implicit `allOf` of them (`implicit: true`), except that an `enum` or
+`const` absorbs the `type` next to it, and a `type` array naming several types (e.g. a nullable `type: ['object', 'null']`) as an implicit `anyOf` of
+them. Tuples are not described yet (an array of `unknown` items), nor `additionalProperties` (a `record` of `unknown` values).
+
 ### Coming next
 
-Reflection currently navigates a schema. Still to come:
+Reflection currently navigates and describes a schema. Still to come:
 
-- a runtime description of a reflected type (what the type utilities infer, available at runtime),
 - validating values against a reflected schema,
-- the `readOnly` and `writeOnly` keywords.
+- the `readOnly` and `writeOnly` keywords,
+- tuples and `additionalProperties`, in the type utilities and type descriptors alike.
 
 The reflection classes (`TSSchemaFragmentReflection`, `TSSchemaDefinitionReflection` and `TSSchemaPropertyReflection`) are exported as types only, for
-annotating your own code: create reflections with `reflect`, and check what a reflection is by its properties rather than with `instanceof`.
+annotating your own code: create reflections with `reflect`, and check what a reflection is by its properties rather than with `instanceof`. The type
+descriptor types (`TSSchemaTypeDescriptor`, and one per kind, e.g. `TSSchemaModelTypeDescriptor`) are exported as types too.
 
 ## Code generation: Schemas from JSON files
 
@@ -350,8 +388,8 @@ const role: RoleType = 'principal'; // This will fail at compile time
 - **Model generation** - generating TypeScript data model definitions from the JSON schema. Partly available: `tsschema generate --models` generates a
   named type per definition, see [Code generation](#code-generation-schemas-from-json-files).
 - **Runtime reflection** - runtime utilities for inspecting the same model, property and path information the utility types infer. Partly
-  available: navigating a schema's definitions, properties and paths, see [Runtime reflection](#runtime-reflection). A runtime description of
-  reflected types and validating values are still to come.
+  available: navigating a schema's definitions, properties and paths, and describing their types, see [Runtime reflection](#runtime-reflection).
+  Validating values is still to come.
 
 # Development
 
