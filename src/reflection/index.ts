@@ -1,12 +1,20 @@
 /**
  * Runtime reflection of JSON schemas. Internal for now: not re-exported from the package's entry points.
  *
- * Re-exports the JSON schema fragment facets in `./JSONSchema/` (the parsed form of a schema), until the TSSchema* reflection classes wrapping them are
- * built here.
+ * Re-exports the JSON schema fragment facets in `./JSONSchema/` (the parsed form of a schema), and builds the TSSchema* reflection classes wrapping
+ * them.
  */
-import { JSONSchema7, JSONSchemaFragmentPropertyName, JSONSchemaModelFragment } from '../schema/JSONSchema/index.js';
-import { JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaNotCollectionFragment } from '../schema/JSONSchema';
-import { JSONSchemaCollectionFragmentFacet, JSONSchemaFragmentFacet, JSONSchemaModelFragmentFacet } from './JSONSchema';
+import {
+  JSONSchema7,
+  JSONSchemaCollection,
+  JSONSchemaFragmentName,
+  JSONSchemaFragmentPropertyName,
+  JSONSchemaModelFragment,
+  JSONSchemaNotCollectionFragment,
+} from '../schema/JSONSchema/index.js';
+import { JSONSchemaCollectionFragmentFacet, JSONSchemaFragmentFacet, JSONSchemaModelFragmentFacet } from './JSONSchema/index.js';
+
+export * from './JSONSchema/index.js';
 
 export class TSSchemaReflection<
   TSchema extends JSONSchemaCollection,
@@ -15,7 +23,7 @@ export class TSSchemaReflection<
   TFragmentFacet extends JSONSchemaFragmentFacet<TSchema, TName, TFragment> = JSONSchemaFragmentFacet<TSchema, TName, TFragment>,
 > {
   /**
-   * JSON schema fragment note to perform reflection on
+   * JSON schema fragment facets to perform reflection on
    */
   protected _facets: Array<TFragmentFacet>;
 
@@ -26,8 +34,8 @@ export class TSSchemaReflection<
 
   /**
    * TSSchema fragment reflection constructor
-   * @param facets JSONSChema fragment facets to perform reflection based off of
-   * @param context (Optional) JSONSChema fragment collection facet, to be used to resolve references
+   * @param facets JSON schema fragment facets to perform reflection on
+   * @param context (Optional) JSON schema collection facet, to be used to resolve references
    */
   protected constructor(facets: Array<TFragmentFacet>, context: JSONSchemaCollectionFragmentFacet<TSchema> | undefined = undefined) {
     this._facets = facets;

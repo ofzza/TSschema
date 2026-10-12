@@ -67,14 +67,14 @@ src/
                            src/reflection/JSONSchema/ each have one for their layer). Never public, not linked from the README - linked from
                            CONTRIBUTE.md as reading before changing the library. Same conventions as src/_showcase.test.ts, importing internals
   reflection/              Runtime reflection of JSON schemas. INTERNAL: not re-exported from src/index.ts, and no `exports` subpath
-    index.ts               Module barrel, re-exporting ./JSONSchema/ until the TSSchema* reflection classes wrapping it are built here
+    index.ts               Module barrel, re-exporting ./JSONSchema/, and the TSSchemaReflection class wrapping its facets (scaffolding, in progress)
     JSONSchema/            Runtime mirror of src/schema/JSONSchema/, parsing a schema into fragment facets: one file per fragment kind, each with a
                            `*.test.ts` beside it. Parsing, not reflection - the TSSchema* reflection classes will wrap these facets
       index.ts             Barrel of the directory; everything outside it imports `./JSONSchema/index.js`, never the individual files
       JSONSchema7.ts       JSONSchemaPrimitiveTypeNames, isJSONSchemaPrimitiveTypeName, isJSONSchemaObject (schema object vs boolean schema / array)
       CollectionFragment.ts  JSONSchemaCollectionFragmentFacet, the facet of a schema root with `$defs`: parses every `$defs` fragment by
                            name (`$defs`, `names`), and doubles as the context every `$ref` of the schema is resolved against
-      Fragment.ts          Abstract JSONSchemaFragmentFacet base class (`name`, `fragment`, type-only `Type`), getJSONSchemaFragmentTypeBranches,
+      Fragment.ts          Abstract JSONSchemaFragmentFacet base class (`name`, `fragment`, `context`, type-only `Type`), getJSONSchemaFragmentTypeBranches,
                            the runtime JSONSchemaFragmentTypeBranch, and JSONSchemaCollectionRootFragment. Kept out of the import cycle (see Gotchas)
       FragmentFacets.ts    Entry points parseJSONSchema (any schema: a collection facet if it has `$defs`, plus its root's facets), JSONSchemaFacet
                            and parseJSONSchemaCollection (a collection facet alone), router createJSONSchemaFragmentFacets (every matching facet,
@@ -175,7 +175,7 @@ Enforced by `ci:prettier` and `ci:eslint`, both of which only look at `src` — 
 - Generic parameters are `T`-prefixed and descriptive (`TSchema`, `TModelName`).
 - `it()` names are capitalised verb phrases: `it('Infers all model names from the schema', ...)`. Each test file has one top-level `describe` named after its module, with a nested `describe` per exported type. The exception is `src/schema/JSONSchema/`: every test file there keeps the `JSONSchema > JSONSchema fragments > <Kind> fragment` tree (`JSONSchema7.test.ts`: `JSONSchema > Primitive types`) that the module had as a single file, so test names are unchanged by the split. `src/reflection/JSONSchema/` mirrors it as `Reflection > JSONSchema fragment facets > <Kind> fragment`, with the same `<Kind>` names, so the two layers' tests line up.
 - **Facets, not nodes.** A fragment is parsed into several facets, one per matching keyword (see the router), so the per-keyword classes are named `*FragmentFacet`; "node" is kept free for something mapping one to one to a JSON schema fragment (e.g. a reflection holding all of its facets).
-- The runtime fragment facets mirror the type layer name for name: `JSONSchema<Kind>Fragment` (type) ↔ `JSONSchema<Kind>FragmentFacet` (class), and `JSONSchemaFragmentIs<Kind>` ↔ the class's static `is(fragment): fragment is JSONSchema<Kind>Fragment`, which must accept exactly what the fragment type does (not `validate`, which is kept free for validating values against a schema). Each class is constructed as `new X(fragment, { context, name })` (`JSONSchemaFragmentFacetOptions`, both optional; the router functions take the same shape), stores them as protected `_fragment` / `_context` / `_name`, and parses its keyword on construction into public `readonly` properties named after the keyword (`type`, `items`, `allOf`, …).
+- The runtime fragment facets mirror the type layer name for name: `JSONSchema<Kind>Fragment` (type) ↔ `JSONSchema<Kind>FragmentFacet` (class), and `JSONSchemaFragmentIs<Kind>` ↔ the class's static `is(fragment): fragment is JSONSchema<Kind>Fragment`, which must accept exactly what the fragment type does (not `validate`, which is kept free for validating values against a schema). Each class is constructed as `new X(fragment, { context, name })` (`JSONSchemaFragmentFacetOptions`, both optional; the router functions take the same shape), stores them as protected `_fragment` / `_context` / `_name` (exposed by the base class's `fragment` / `context` / `name` getters), and parses its keyword on construction into public `readonly` properties named after the keyword (`type`, `items`, `allOf`, …).
 - Rules deliberately off: `@typescript-eslint/no-explicit-any`, `ban-ts-comment`, `no-empty-object-type`. `any` and `@ts-expect-error` are fine to use where they earn their place.
 
 ## Gotchas and known issues

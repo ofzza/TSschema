@@ -50,6 +50,14 @@ export abstract class JSONSchemaFragmentFacet<
   }
 
   /**
+   * Facet of the JSON schema collection the fragment belongs to, against which every `$ref` is resolved, or `undefined` if the parsed schema has
+   * no `$defs`
+   */
+  public get context(): JSONSchemaCollectionFragmentFacet<TSchema> | undefined {
+    return this._context;
+  }
+
+  /**
    * The parsed JSON fragment
    */
   protected _fragment: TFragment;
