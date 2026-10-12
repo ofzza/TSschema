@@ -122,16 +122,17 @@ object with no `properties`, a `$ref` which can not be resolved, or an array wit
 
 Every reflection's `typeDescriptor` describes its type at runtime: what `Type` infers at compile time, as a tree of plain objects told apart by their
 `kind` - `unknown`, `const`, `enum`, `primitive`, `null`, `array`, `record` (an object with no `properties`), `model`, `reference`, `anyOf`, `allOf`,
-`oneOf` and `not`. Like everything else, it is typed by the schema, down to its literal kinds, values and property names:
+`oneOf` and `not`. Every kind also has a `nullable` flag, and a model holds each property as whether it is `required` plus its `type`. Like everything
+else, it is typed by the schema, down to its literal kinds, values, property names and flags:
 
 ```ts
 import type { TSSchemaTypeDescriptor } from '@ofzza/tsschema';
 
-const personType = person.typeDescriptor; // { kind: 'model', properties: { name: …, age: …, role: …, mentor: … }, required: ['name', 'age', 'role'] }
-const ageType = personType.properties.age; // { kind: 'primitive', type: 'integer' }
-const roleType = personType.properties.role; // { kind: 'reference', name: 'Role', target: { kind: 'enum', … } }
+const personType = person.typeDescriptor; // { kind: 'model', properties: { name: …, age: …, role: …, mentor: … }, required: ['name', 'age', 'role'], nullable: false }
+const age = personType.properties.age; // { required: true, type: { kind: 'primitive', type: 'integer', nullable: false } }
+const roleType = personType.properties.role.type; // { kind: 'reference', name: 'Role', target: { kind: 'enum', … }, nullable: false }
 const roleNames = roleType.target.names; // ['student', 'teacher']
-const mentorType = personType.properties.mentor; // { kind: 'anyOf', members: [{ kind: 'reference', name: 'Person', … }, { kind: 'null' }], … }
+const mentorType = personType.properties.mentor.type; // { kind: 'reference', name: 'Person', target: …, nullable: true }
 const emailType = personType.properties.email; // This will fail at compile time
 
 function typeName(descriptor: TSSchemaTypeDescriptor): string {
@@ -148,11 +149,18 @@ function typeName(descriptor: TSSchemaTypeDescriptor): string {
 }
 ```
 
+`null` alongside other types is not described as an alternative but by `nullable`: `type: ['string', 'null']`, `anyOf: [{ type: 'string' }, { type:
+'null' }]` and `enum: ['a', null]` are a nullable string, a nullable string and a nullable enum of `'a'`; `null` alone is the `null` kind (always
+`nullable`). An `anyOf` (or `allOf`) is also nullable if any (every) member is, and a `oneOf` if exactly one is, but `null` is never taken out of a
+`oneOf`, where it would change what the schema accepts. `nullable` only says what is stated where the descriptor is used: a reference is nullable if
+`null` is next to it, whatever the referenced definition says, and `unknown` (which accepts anything) and `not` are not, unless `null` is next to
+them.
+
 A `$ref` is described by the definition's name and, lazily on access, its `target`: the same descriptor as the definition's own (within one reflected
-schema), so a recursive schema (`Person.mentor` → `Person`) is described without recursing forever. An `enum` names its values by an `x-enumNames` keyword next to it, or
-else each value by itself; a `oneOf` of `const` fragments only (e.g. `oneOf: [{ const: 0, title: 'Quiz' }, …]`) is described as an `enum` too, named
-by each fragment's `title`. A fragment with several keywords is described as an implicit `allOf` of them (`implicit: true`), except that an `enum` or
-`const` absorbs the `type` next to it, and a `type` array naming several types (e.g. a nullable `type: ['object', 'null']`) as an implicit `anyOf` of
+schema), so a recursive schema (`Person.mentor` → `Person`) is described without recursing forever. An `enum` names its values by an `x-enumNames`
+keyword next to it, or else each value by itself; a `oneOf` of `const` fragments only (e.g. `oneOf: [{ const: 0, title: 'Quiz' }, …]`) is described as
+an `enum` too, named by each fragment's `title`. A fragment with several keywords is described as an implicit `allOf` of them (`implicit: true`),
+except that an `enum` or `const` absorbs the `type` next to it, and a `type` array naming several types other than `null` as an implicit `anyOf` of
 them. Tuples are not described yet (an array of `unknown` items), nor `additionalProperties` (a `record` of `unknown` values).
 
 ### Coming next
@@ -165,7 +173,8 @@ Reflection currently navigates and describes a schema. Still to come:
 
 The reflection classes (`TSSchemaFragmentReflection`, `TSSchemaDefinitionReflection` and `TSSchemaPropertyReflection`) are exported as types only, for
 annotating your own code: create reflections with `reflect`, and check what a reflection is by its properties rather than with `instanceof`. The type
-descriptor types (`TSSchemaTypeDescriptor`, and one per kind, e.g. `TSSchemaModelTypeDescriptor`) are exported as types too.
+descriptor types (`TSSchemaTypeDescriptor`, one per kind, e.g. `TSSchemaModelTypeDescriptor`, and `TSSchemaModelPropertyDescriptor`) are exported as
+types too.
 
 ## Code generation: Schemas from JSON files
 

@@ -129,18 +129,18 @@ describe('Runtime reflection', () => {
       const root = reflect(schema);
       const person = root.getDefinition('Person');
       const personType = person.typeDescriptor;
-      // Breakpoint: inspect `personType`, a model descriptor holding a descriptor per property
+      // Breakpoint: inspect `personType`, a model descriptor holding each property: whether it is required, and its type
       expect(personType.kind).toBe('model');
       expect(personType.required).toEqual(['name', 'age', 'role']);
-      const ageType = personType.properties.age;
-      expect(ageType).toEqual({ kind: 'primitive', type: 'integer' });
-      type AgeType = typeof ageType;
+      const age = personType.properties.age;
+      expect(age).toEqual({ required: true, type: { kind: 'primitive', type: 'integer', nullable: false } });
+      type AgeType = typeof age.type;
       //   ^?
-      // AgeType: TSSchemaPrimitiveTypeDescriptor<'integer'>
-      expect(true satisfies AssertTypeEquality<AgeType, TSSchemaPrimitiveTypeDescriptor<'integer'>>).toBe(true);
+      // AgeType: TSSchemaPrimitiveTypeDescriptor<'integer', false>
+      expect(true satisfies AssertTypeEquality<AgeType, TSSchemaPrimitiveTypeDescriptor<'integer', false>>).toBe(true);
 
       // A `$ref` is described by name, and lazily by its `target`: the very same descriptor as the definition's own, within one reflected schema
-      const roleType = personType.properties.role;
+      const roleType = personType.properties.role.type;
       // Breakpoint: inspect `roleType`, and its `target`: an enum descriptor
       expect([roleType.kind, roleType.name]).toEqual(['reference', 'Role']);
       expect(roleType.target).toBe(root.getDefinition('Role').typeDescriptor);
@@ -151,9 +151,14 @@ describe('Runtime reflection', () => {
       // RoleNames: readonly ['student', 'teacher']
       expect(true satisfies AssertTypeEquality<RoleNames, readonly ['student', 'teacher']>).toBe(true);
 
-      const mentorType = personType.properties.mentor;
-      // Breakpoint: inspect `mentorType`, an anyOf of a reference back to Person and null
-      expect(mentorType.members.map((member) => member.kind)).toEqual(['reference', 'null']);
+      // `null` next to other types is a flag: `anyOf: [{ $ref: Person }, { type: 'null' }]` is a nullable reference to Person
+      const mentor = personType.properties.mentor;
+      // Breakpoint: inspect `mentor`, an optional property holding a nullable reference
+      expect([mentor.required, mentor.type.kind, mentor.type.name, mentor.type.nullable]).toEqual([false, 'reference', 'Person', true]);
+      type MentorNullable = typeof mentor.type.nullable;
+      //   ^?
+      // MentorNullable: true
+      expect(true satisfies AssertTypeEquality<MentorNullable, true>).toBe(true);
 
       // @ts-expect-error This will fail at compile time: Person has no 'email' property
       expect(personType.properties.email).toBe(undefined);
@@ -161,21 +166,24 @@ describe('Runtime reflection', () => {
 
     it('Narrows any descriptor by its kind', () => {
       function typeName(descriptor: TSSchemaTypeDescriptor): string {
-        switch (descriptor.kind) {
-          case 'primitive':
-            return descriptor.type;
-          case 'reference':
-            return descriptor.name;
-          case 'array':
-            return `${typeName(descriptor.items)}[]`;
-          default:
-            return descriptor.kind;
-        }
+        const name = (() => {
+          switch (descriptor.kind) {
+            case 'primitive':
+              return descriptor.type;
+            case 'reference':
+              return descriptor.name;
+            case 'array':
+              return `${typeName(descriptor.items)}[]`;
+            default:
+              return descriptor.kind;
+          }
+        })();
+        return descriptor.nullable && descriptor.kind !== 'null' ? `${name} | null` : name;
       }
       const person = reflect(schema).getDefinition('Person');
       const names = person.propertyNames.map((name) => typeName(person.getProperty(name).typeDescriptor));
       // Breakpoint: inspect `names`
-      expect(names).toEqual(['string', 'integer', 'Role', 'anyOf']);
+      expect(names).toEqual(['string', 'integer', 'Role', 'Person | null']);
     });
   });
 
