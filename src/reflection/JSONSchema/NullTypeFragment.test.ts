@@ -12,14 +12,14 @@ describe('Reflection', () => {
   describe('JSONSchema fragment reflections', () => {
     describe('Null Type fragment', () => {
       it('Detects a null type', () => {
-        expect(JSONSchemaNullTypeFragmentReflect.check({ type: 'null' })).toBe(true);
+        expect(JSONSchemaNullTypeFragmentReflect.is({ type: 'null' })).toBe(true);
       });
 
       it('Rejects a non-null type', () => {
-        expect(JSONSchemaNullTypeFragmentReflect.check({ type: 'string' })).toBe(false);
-        expect(JSONSchemaNullTypeFragmentReflect.check({ const: null })).toBe(false);
+        expect(JSONSchemaNullTypeFragmentReflect.is({ type: 'string' })).toBe(false);
+        expect(JSONSchemaNullTypeFragmentReflect.is({ const: null })).toBe(false);
         // A type array naming null is split into branches by the router, before any reflection type checks it
-        expect(JSONSchemaNullTypeFragmentReflect.check({ type: ['null'] })).toBe(false);
+        expect(JSONSchemaNullTypeFragmentReflect.is({ type: ['null'] })).toBe(false);
       });
 
       it('Reflects a null type', () => {

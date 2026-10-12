@@ -3,15 +3,14 @@
  */
 
 import type { JSONSchema7, JSONSchemaCollection, JSONSchemaEnumFragment, JSONSchemaFragmentName } from '../../schema/JSONSchema/index.js';
-import type { JSONSchemaCollectionFragmentReflect } from './CollectionFragment.js';
-import { JSONSchemaFragmentReflect } from './Fragment.js';
+import { JSONSchemaFragmentReflect, type JSONSchemaFragmentReflectOptions } from './Fragment.js';
 
 /**
  * Reflects a JSON schema enum definition, which is any schema fragment containing an `enum` property.
  */
 export class JSONSchemaEnumFragmentReflect<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema>,
+  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaEnumFragment = JSONSchemaEnumFragment,
 > extends JSONSchemaFragmentReflect<TSchema, TName, TFragment> {
   /**
@@ -19,7 +18,7 @@ export class JSONSchemaEnumFragmentReflect<
    * @param fragment JSON fragment to check
    * @returns `true` if the fragment is an enum definition
    */
-  public static check(fragment: JSONSchema7): fragment is JSONSchemaEnumFragment {
+  public static is(fragment: JSONSchema7): fragment is JSONSchemaEnumFragment {
     return fragment?.['enum'] instanceof Array;
   }
 
@@ -30,12 +29,11 @@ export class JSONSchemaEnumFragmentReflect<
 
   /**
    * Reflects a JSON schema enum definition
-   * @param _schema Reflection of the JSON schema collection the fragment belongs to, or `undefined` if the reflected schema has no `$defs`
-   * @param _fragmentName Name of the fragment within the collection, or `undefined` for a nested (or root) fragment
-   * @param _fragment JSON fragment to reflect on
+   * @param fragment JSON fragment to reflect on
+   * @param options Context and name of the reflected fragment (see `JSONSchemaFragmentReflectOptions`)
    */
-  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema> | undefined, _fragmentName: TName, _fragment: TFragment) {
-    super(_schema, _fragmentName, _fragment);
-    this.enum = _fragment['enum'];
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentReflectOptions<TSchema, TName> = {}) {
+    super(fragment, options);
+    this.enum = fragment['enum'];
   }
 }

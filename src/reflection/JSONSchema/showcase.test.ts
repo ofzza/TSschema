@@ -26,6 +26,7 @@ import {
   createJSONSchemaFragmentReflections,
   getJSONSchemaFragmentTypeBranches,
   reflectJSONSchema,
+  reflectJSONSchemaCollection,
   type JSONSchemaCollectionRootFragment,
 } from './index.js';
 
@@ -78,9 +79,10 @@ describe('Showcase', () => {
       });
 
       it('Reflects every fragment of a collection on construction', () => {
-        // The collection reflection reflects every `$defs` fragment up front, and is the context every `$ref` in the schema is resolved against. It can
-        // also be constructed directly, as the examples below do for brevity
-        const collection = reflectJSONSchema(schema).find((reflection) => reflection instanceof JSONSchemaCollectionFragmentReflect)!;
+        // `reflectJSONSchemaCollection` is the shortcut for a schema used as a collection of definitions: it reflects the collection alone, leaving out
+        // the root's other keywords. The collection reflection reflects every `$defs` fragment up front, and is the context every `$ref` in the schema
+        // is resolved against
+        const collection = reflectJSONSchemaCollection(schema);
         // Breakpoint: inspect `collection`, holding the reflections of every fragment in `$defs`
         expect(collection.names).toEqual(['Person', 'Role']);
         type Names = typeof collection.names;
@@ -101,7 +103,7 @@ describe('Showcase', () => {
 
     describe('Reflections are typed by the fragment they reflect', () => {
       it('Reflects a model, with each property reflected in turn', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(schema).$defs.Person[0];
+        const person = reflectJSONSchemaCollection(schema).$defs.Person[0];
         // Breakpoint: inspect `person` and its `properties`, `names` and `required`
         type Person = typeof person;
         //   ^?
@@ -117,7 +119,7 @@ describe('Showcase', () => {
       });
 
       it('Reflects a fragment carrying several keywords by a reflection per keyword', () => {
-        const role = new JSONSchemaCollectionFragmentReflect(schema).$defs.Role;
+        const role = reflectJSONSchemaCollection(schema).$defs.Role;
         // Breakpoint: inspect `role`, an array holding an enum reflection and a primitive type reflection of the same fragment
         expect(role.map((reflection) => reflection.constructor)).toEqual([JSONSchemaEnumFragmentReflect, JSONSchemaPrimitiveTypeFragmentReflect]);
         type Role = (typeof role)[number];
@@ -129,7 +131,7 @@ describe('Showcase', () => {
       });
 
       it('Infers the value type of any reflection, through its type-only Type accessor', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(schema).$defs.Person[0];
+        const person = reflectJSONSchemaCollection(schema).$defs.Person[0];
         type PersonType = typeof person.Type;
         //   ^?
         // PersonType: { name: string; role: 'student' | 'teacher'; nickname?: string | null; mentor?: PersonType | null } - properties not listed in
@@ -143,7 +145,7 @@ describe('Showcase', () => {
 
     describe('References', () => {
       it('Resolves references lazily, against the reflections the collection holds', () => {
-        const collection = new JSONSchemaCollectionFragmentReflect(schema);
+        const collection = reflectJSONSchemaCollection(schema);
         const role = collection.$defs.Person[0].properties.role[0];
         // Breakpoint: inspect `role`, a reference reflection: `refName` is parsed on construction, `ref` is only resolved when accessed
         expect(role).toBeInstanceOf(JSONSchemaReferenceFragmentReflect);
@@ -152,7 +154,7 @@ describe('Showcase', () => {
       });
 
       it('Resolves a recursive reference, as it is never resolved eagerly', () => {
-        const collection = new JSONSchemaCollectionFragmentReflect(schema);
+        const collection = reflectJSONSchemaCollection(schema);
         const person = collection.$defs.Person[0];
         const mentor = person.properties.mentor[0].anyOf[0][0].ref[0];
         // Breakpoint: inspect `mentor`, the very same reflection as `person`
@@ -168,7 +170,7 @@ describe('Showcase', () => {
       });
 
       it('Reflects several branches as an implicit anyOf', () => {
-        const nickname = new JSONSchemaCollectionFragmentReflect(schema).$defs.Person[0].properties.nickname[0];
+        const nickname = reflectJSONSchemaCollection(schema).$defs.Person[0].properties.nickname[0];
         // Breakpoint: inspect `nickname`, an any-of-types reflection with `implicit: true`, holding a reflection of each branch
         expect(nickname).toBeInstanceOf(JSONSchemaAnyOfTypeFragmentReflect);
         expect(nickname.implicit).toBe(true);
@@ -182,13 +184,14 @@ describe('Showcase', () => {
 
     describe('The router', () => {
       it('Reflects any fragment, by every reflection class it matches', () => {
-        // Every reflection class has a static `check` type guard, the runtime counterpart of `JSONSchemaFragmentIs*`, which the router tries in turn. The
-        // router is internal to reflecting a schema: it takes the collection reflection to resolve references against (or `undefined` if there is none)
-        const collection = new JSONSchemaCollectionFragmentReflect(schema);
-        const reflections = createJSONSchemaFragmentReflections(collection, undefined, { type: 'array', items: { type: 'integer' } } as const);
+        // Every reflection class has a static `is` type guard, the runtime counterpart of `JSONSchemaFragmentIs*`, which the router tries in turn. The
+        // router is internal to reflecting a schema: like every reflection class, it takes the fragment, then optionally the collection reflection to
+        // resolve references against (`context`) and the fragment's name within it (`name`)
+        const collection = reflectJSONSchemaCollection(schema);
+        const reflections = createJSONSchemaFragmentReflections({ type: 'array', items: { type: 'integer' } } as const, { context: collection });
         // Breakpoint: inspect `reflections`, a single array type reflection, its `items` reflected in turn
         expect(reflections[0]).toBeInstanceOf(JSONSchemaArrayTypeFragmentReflect);
-        expect(JSONSchemaArrayTypeFragmentReflect.check({ type: 'array' })).toBe(true);
+        expect(JSONSchemaArrayTypeFragmentReflect.is({ type: 'array' })).toBe(true);
         type Items = (typeof reflections)[0]['items'];
         //   ^?
         // Items: Array<JSONSchemaPrimitiveTypeFragmentReflect<Schema, undefined, { readonly type: 'integer' }>>
@@ -198,7 +201,7 @@ describe('Showcase', () => {
       });
 
       it('Reflects a fragment matching no reflection class with no reflections', () => {
-        const reflections = createJSONSchemaFragmentReflections(new JSONSchemaCollectionFragmentReflect(schema), undefined, { title: 'Annotation' } as const);
+        const reflections = createJSONSchemaFragmentReflections({ title: 'Annotation' } as const);
         // Breakpoint: inspect `reflections`, empty: annotations alone constrain nothing
         expect(reflections).toEqual([]);
       });

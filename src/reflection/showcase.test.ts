@@ -12,7 +12,7 @@
 
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality } from '@ofzza/tsstd';
-import { JSONSchemaCollectionFragmentReflect, JSONSchemaModelFragmentReflect, reflectJSONSchema } from './index.js';
+import { JSONSchemaModelFragmentReflect, reflectJSONSchemaCollection } from './index.js';
 
 import { default as jsonSchema } from '../../res/sidecar/schema.json';
 
@@ -20,12 +20,11 @@ describe('Showcase', () => {
   describe('Runtime reflection', () => {
     it('Reflects a JSON schema collection through the module entry', () => {
       // A schema kept in a JSON file works as well as one declared `as const`, once a `tsschema` generated sidecar types it
-      const reflections = reflectJSONSchema(jsonSchema);
-      // Breakpoint: inspect `reflections`, holding a collection reflection, which holds the reflections of every fragment of the fixture schema
-      const collection = reflections.find((reflection) => reflection instanceof JSONSchemaCollectionFragmentReflect);
-      expect(collection?.names).toContain('Assessment');
+      const collection = reflectJSONSchemaCollection(jsonSchema);
+      // Breakpoint: inspect `collection`, holding the reflections of every fragment of the fixture schema
+      expect(collection.names).toContain('Assessment');
 
-      const assessment = collection!.$defs.Assessment[0];
+      const assessment = collection.$defs.Assessment[0];
       // Breakpoint: inspect `assessment`, a model reflection, and its `properties`
       expect(assessment).toBeInstanceOf(JSONSchemaModelFragmentReflect);
       type Assessment = typeof assessment.Type;

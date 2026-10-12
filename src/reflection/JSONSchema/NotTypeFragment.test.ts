@@ -12,14 +12,14 @@ describe('Reflection', () => {
   describe('JSONSchema fragment reflections', () => {
     describe('Not Type fragment', () => {
       it('Detects a not-type', () => {
-        expect(JSONSchemaNotTypeFragmentReflect.check({ not: { type: 'null' } })).toBe(true);
-        expect(JSONSchemaNotTypeFragmentReflect.check({ not: {} })).toBe(true);
+        expect(JSONSchemaNotTypeFragmentReflect.is({ not: { type: 'null' } })).toBe(true);
+        expect(JSONSchemaNotTypeFragmentReflect.is({ not: {} })).toBe(true);
       });
 
       it('Rejects a non-not-type, including a boolean schema not', () => {
-        expect(JSONSchemaNotTypeFragmentReflect.check({ type: 'null' })).toBe(false);
-        expect(JSONSchemaNotTypeFragmentReflect.check({ not: true } as any)).toBe(false);
-        expect(JSONSchemaNotTypeFragmentReflect.check({ not: [] } as any)).toBe(false);
+        expect(JSONSchemaNotTypeFragmentReflect.is({ type: 'null' })).toBe(false);
+        expect(JSONSchemaNotTypeFragmentReflect.is({ not: true } as any)).toBe(false);
+        expect(JSONSchemaNotTypeFragmentReflect.is({ not: [] } as any)).toBe(false);
       });
 
       it('Reflects the fragment of a not-type', () => {

@@ -24,7 +24,7 @@ import { isJSONSchemaPrimitiveTypeName } from './JSONSchema7.js';
  */
 export abstract class JSONSchemaFragmentReflect<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema>,
+  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchema7 = JSONSchemaNotCollectionFragment,
 > {
   /**
@@ -39,7 +39,7 @@ export abstract class JSONSchemaFragmentReflect<
    * Name of the fragment within its collection, or `undefined` for a nested (or root) fragment
    */
   public get name(): TName {
-    return this._fragmentName;
+    return this._name;
   }
 
   /**
@@ -50,20 +50,49 @@ export abstract class JSONSchemaFragmentReflect<
   }
 
   /**
-   * Reflects a JSON schema fragment
-   * @param _schema Reflection of the JSON schema collection the fragment belongs to, against which every `$ref` is resolved, or `undefined` if the
-   * reflected schema has no `$defs`
-   * @param _fragmentName Name of the fragment within the collection, or `undefined` for a nested (or root) fragment
-   * @param _fragment JSON fragment to reflect on
+   * The reflected JSON fragment
    */
-  public constructor(
-    protected _schema: JSONSchemaCollectionFragmentReflect<TSchema> | undefined,
-    protected _fragmentName: TName,
-    protected _fragment: TFragment,
-  ) {}
+  protected _fragment: TFragment;
+
+  /**
+   * Reflection of the JSON schema collection the fragment belongs to, against which every `$ref` is resolved, or `undefined` if the reflected schema has
+   * no `$defs`
+   */
+  protected _context: JSONSchemaCollectionFragmentReflect<TSchema> | undefined;
+
+  /**
+   * Name of the fragment within its collection, or `undefined` for a nested (or root) fragment
+   */
+  protected _name: TName;
+
+  /**
+   * Reflects a JSON schema fragment
+   * @param fragment JSON fragment to reflect on
+   * @param options Context and name of the reflected fragment (see `JSONSchemaFragmentReflectOptions`)
+   */
+  public constructor(fragment: TFragment, { context, name }: JSONSchemaFragmentReflectOptions<TSchema, TName> = {}) {
+    this._fragment = fragment;
+    this._context = context;
+    this._name = name as TName;
+  }
 
   // TODO: Not implemented yet (as in the type layer): `readOnly`, `writeOnly`
 }
+
+/**
+ * Options of a JSON schema fragment reflection, naming the context the fragment is reflected in
+ */
+export type JSONSchemaFragmentReflectOptions<TSchema extends JSONSchemaCollection, TName extends JSONSchemaFragmentName<TSchema> | undefined> = {
+  /**
+   * Reflection of the JSON schema collection the fragment belongs to, against which every `$ref` is resolved. Omitted if the reflected schema has no
+   * `$defs`, leaving every `$ref` unresolved.
+   */
+  context?: JSONSchemaCollectionFragmentReflect<TSchema>;
+  /**
+   * Name of the fragment within the collection. Omitted for a nested (or root) fragment.
+   */
+  name?: TName;
+};
 
 /**
  * Splits a fragment whose `type` is an array naming `object`, `array` and / or `null` into branches, one per group of type names (`object`, `array`,

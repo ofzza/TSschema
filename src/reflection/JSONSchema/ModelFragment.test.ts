@@ -31,16 +31,16 @@ describe('Reflection', () => {
   describe('JSONSchema fragment reflections', () => {
     describe('Model fragment', () => {
       it('Detects a model', () => {
-        expect(JSONSchemaModelFragmentReflect.check(_schema.$defs.Person)).toBe(true);
-        expect(JSONSchemaModelFragmentReflect.check(jsonSchema.$defs.Assessment)).toBe(true);
-        expect(JSONSchemaModelFragmentReflect.check({ type: 'object', properties: {} })).toBe(true);
+        expect(JSONSchemaModelFragmentReflect.is(_schema.$defs.Person)).toBe(true);
+        expect(JSONSchemaModelFragmentReflect.is(jsonSchema.$defs.Assessment)).toBe(true);
+        expect(JSONSchemaModelFragmentReflect.is({ type: 'object', properties: {} })).toBe(true);
       });
 
       it('Rejects a non-model', () => {
-        expect(JSONSchemaModelFragmentReflect.check({ type: 'object' })).toBe(false);
-        expect(JSONSchemaModelFragmentReflect.check({ properties: { a: { type: 'string' } } })).toBe(false);
-        expect(JSONSchemaModelFragmentReflect.check({ type: 'string' })).toBe(false);
-        expect(JSONSchemaModelFragmentReflect.check({ type: 'object', properties: [] } as any)).toBe(false);
+        expect(JSONSchemaModelFragmentReflect.is({ type: 'object' })).toBe(false);
+        expect(JSONSchemaModelFragmentReflect.is({ properties: { a: { type: 'string' } } })).toBe(false);
+        expect(JSONSchemaModelFragmentReflect.is({ type: 'string' })).toBe(false);
+        expect(JSONSchemaModelFragmentReflect.is({ type: 'object', properties: [] } as any)).toBe(false);
       });
 
       it('Reflects a model', () => {

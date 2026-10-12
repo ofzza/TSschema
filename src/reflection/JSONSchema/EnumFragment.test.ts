@@ -8,15 +8,15 @@ describe('Reflection', () => {
   describe('JSONSchema fragment reflections', () => {
     describe('Enum fragment', () => {
       it('Detects an enum', () => {
-        expect(JSONSchemaEnumFragmentReflect.check({ enum: ['a', 'b'] })).toBe(true);
-        expect(JSONSchemaEnumFragmentReflect.check(enumJsonSchema.$defs.Enum)).toBe(true);
-        expect(JSONSchemaEnumFragmentReflect.check({ enum: [] })).toBe(true);
+        expect(JSONSchemaEnumFragmentReflect.is({ enum: ['a', 'b'] })).toBe(true);
+        expect(JSONSchemaEnumFragmentReflect.is(enumJsonSchema.$defs.Enum)).toBe(true);
+        expect(JSONSchemaEnumFragmentReflect.is({ enum: [] })).toBe(true);
       });
 
       it('Rejects a non-enum', () => {
-        expect(JSONSchemaEnumFragmentReflect.check({ type: 'string' })).toBe(false);
-        expect(JSONSchemaEnumFragmentReflect.check({ const: 'a' })).toBe(false);
-        expect(JSONSchemaEnumFragmentReflect.check({ enum: 'a' } as any)).toBe(false);
+        expect(JSONSchemaEnumFragmentReflect.is({ type: 'string' })).toBe(false);
+        expect(JSONSchemaEnumFragmentReflect.is({ const: 'a' })).toBe(false);
+        expect(JSONSchemaEnumFragmentReflect.is({ enum: 'a' } as any)).toBe(false);
       });
 
       it('Reflects the enumerated values of an enum', () => {

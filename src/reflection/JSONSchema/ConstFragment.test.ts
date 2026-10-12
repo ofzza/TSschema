@@ -8,16 +8,16 @@ describe('Reflection', () => {
   describe('JSONSchema fragment reflections', () => {
     describe('Const fragment', () => {
       it('Detects a const', () => {
-        expect(JSONSchemaConstFragmentReflect.check({ const: 123 })).toBe(true);
-        expect(JSONSchemaConstFragmentReflect.check(constJsonSchema.$defs.Const)).toBe(true);
+        expect(JSONSchemaConstFragmentReflect.is({ const: 123 })).toBe(true);
+        expect(JSONSchemaConstFragmentReflect.is(constJsonSchema.$defs.Const)).toBe(true);
         // A `const` of any value, `null` and `undefined` included, is a const
-        expect(JSONSchemaConstFragmentReflect.check({ const: null })).toBe(true);
-        expect(JSONSchemaConstFragmentReflect.check({ const: undefined })).toBe(true);
+        expect(JSONSchemaConstFragmentReflect.is({ const: null })).toBe(true);
+        expect(JSONSchemaConstFragmentReflect.is({ const: undefined })).toBe(true);
       });
 
       it('Rejects a non-const', () => {
-        expect(JSONSchemaConstFragmentReflect.check({ type: 'number' })).toBe(false);
-        expect(JSONSchemaConstFragmentReflect.check({ enum: [123] })).toBe(false);
+        expect(JSONSchemaConstFragmentReflect.is({ type: 'number' })).toBe(false);
+        expect(JSONSchemaConstFragmentReflect.is({ enum: [123] })).toBe(false);
       });
 
       it('Reflects the constant value of a const', () => {

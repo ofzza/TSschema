@@ -3,8 +3,7 @@
  */
 
 import type { JSONSchema7, JSONSchemaArrayTypeFragment, JSONSchemaCollection, JSONSchemaFragmentName } from '../../schema/JSONSchema/index.js';
-import type { JSONSchemaCollectionFragmentReflect } from './CollectionFragment.js';
-import { JSONSchemaFragmentReflect } from './Fragment.js';
+import { JSONSchemaFragmentReflect, type JSONSchemaFragmentReflectOptions } from './Fragment.js';
 import { createJSONSchemaNestedFragmentReflections, type JSONSchemaNestedFragmentReflections } from './FragmentReflections.js';
 
 /**
@@ -13,7 +12,7 @@ import { createJSONSchemaNestedFragmentReflections, type JSONSchemaNestedFragmen
  */
 export class JSONSchemaArrayTypeFragmentReflect<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema>,
+  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaArrayTypeFragment = JSONSchemaArrayTypeFragment,
 > extends JSONSchemaFragmentReflect<TSchema, TName, TFragment> {
   /**
@@ -22,7 +21,7 @@ export class JSONSchemaArrayTypeFragmentReflect<
    * @param fragment JSON fragment to check
    * @returns `true` if the fragment is an array type definition
    */
-  public static check(fragment: JSONSchema7): fragment is JSONSchemaArrayTypeFragment {
+  public static is(fragment: JSONSchema7): fragment is JSONSchemaArrayTypeFragment {
     return fragment?.type === 'array';
   }
 
@@ -40,18 +39,16 @@ export class JSONSchemaArrayTypeFragmentReflect<
 
   /**
    * Reflects a JSON schema array type definition
-   * @param _schema Reflection of the JSON schema collection the fragment belongs to, or `undefined` if the reflected schema has no `$defs`
-   * @param _fragmentName Name of the fragment within the collection, or `undefined` for a nested (or root) fragment
-   * @param _fragment JSON fragment to reflect on
+   * @param fragment JSON fragment to reflect on
+   * @param options Context and name of the reflected fragment (see `JSONSchemaFragmentReflectOptions`)
    */
-  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema> | undefined, _fragmentName: TName, _fragment: TFragment) {
-    super(_schema, _fragmentName, _fragment);
-    this.type = _fragment['type'];
-    const items = _fragment['items'];
-    this.items = (items === undefined ? undefined : createJSONSchemaNestedFragmentReflections(_schema, items)) as _JSONSchemaArrayTypeFragmentItemsReflect<
-      TSchema,
-      TFragment
-    >;
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentReflectOptions<TSchema, TName> = {}) {
+    super(fragment, options);
+    this.type = fragment['type'];
+    const items = fragment['items'];
+    this.items = (
+      items === undefined ? undefined : createJSONSchemaNestedFragmentReflections(items, this._context)
+    ) as _JSONSchemaArrayTypeFragmentItemsReflect<TSchema, TFragment>;
   }
 
   // TODO: Not implemented yet (as in the type layer): tuples, i.e. `prefixItems` (or an `items` array, with `additionalItems`). Planned as a separate

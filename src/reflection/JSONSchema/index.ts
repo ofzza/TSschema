@@ -5,13 +5,20 @@
  * Reflection starts from `reflectJSONSchema`, which reflects any schema as an array of reflections, one per fragment kind its root matches. A schema
  * with `$defs` is reflected as a collection (`JSONSchemaCollectionFragmentReflect`) among them, which reflects each of its fragments by name, and against
  * which every `$ref` is resolved.
+ * `reflectJSONSchemaCollection` reflects a collection as that collection reflection alone.
  */
 
 export { JSONSchemaPrimitiveTypeNames, isJSONSchemaPrimitiveTypeName, isJSONSchemaObject } from './JSONSchema7.js';
 export { JSONSchemaCollectionFragmentReflect, type JSONSchemaCollectionReflectedFragment } from './CollectionFragment.js';
-export { JSONSchemaFragmentReflect, getJSONSchemaFragmentTypeBranches, type JSONSchemaCollectionRootFragment } from './Fragment.js';
+export {
+  JSONSchemaFragmentReflect,
+  getJSONSchemaFragmentTypeBranches,
+  type JSONSchemaCollectionRootFragment,
+  type JSONSchemaFragmentReflectOptions,
+} from './Fragment.js';
 export {
   reflectJSONSchema,
+  reflectJSONSchemaCollection,
   type JSONSchemaReflection,
   createJSONSchemaFragmentReflections,
   createJSONSchemaNestedFragmentReflections,

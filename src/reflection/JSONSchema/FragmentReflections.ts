@@ -29,7 +29,12 @@ import type {
   JSONSchemaReferenceFragment,
 } from '../../schema/JSONSchema/index.js';
 import { JSONSchemaCollectionFragmentReflect } from './CollectionFragment.js';
-import { getJSONSchemaFragmentTypeBranches, type JSONSchemaCollectionRootFragment, type JSONSchemaFragmentReflect } from './Fragment.js';
+import {
+  getJSONSchemaFragmentTypeBranches,
+  type JSONSchemaCollectionRootFragment,
+  type JSONSchemaFragmentReflect,
+  type JSONSchemaFragmentReflectOptions,
+} from './Fragment.js';
 import { isJSONSchemaObject } from './JSONSchema7.js';
 import { JSONSchemaModelFragmentReflect } from './ModelFragment.js';
 import { JSONSchemaConstFragmentReflect } from './ConstFragment.js';
@@ -57,15 +62,30 @@ import { JSONSchemaReferenceFragmentReflect } from './ReferenceFragment.js';
  */
 export function reflectJSONSchema<TFragment extends JSONSchema7>(fragment: TFragment): Array<JSONSchemaReflection<TFragment>> {
   // Reflect a collection, and its root fragment against it
-  if (JSONSchemaCollectionFragmentReflect.check(fragment)) {
+  if (JSONSchemaCollectionFragmentReflect.is(fragment)) {
     const collection = new JSONSchemaCollectionFragmentReflect(fragment);
     const { $defs: _defs, ...root } = fragment;
-    return [collection, ...createJSONSchemaFragmentReflections(collection, undefined, root as JSONSchemaNotCollectionFragment)] as Array<
+    return [collection, ...createJSONSchemaFragmentReflections(root as JSONSchemaNotCollectionFragment, { context: collection })] as Array<
       JSONSchemaReflection<TFragment>
     >;
   }
   // Reflect any other fragment, with no collection to resolve references against
-  return createJSONSchemaFragmentReflections(undefined, undefined, fragment as JSONSchemaNotCollectionFragment) as Array<JSONSchemaReflection<TFragment>>;
+  return createJSONSchemaFragmentReflections(fragment as JSONSchemaNotCollectionFragment) as Array<JSONSchemaReflection<TFragment>>;
+}
+
+/**
+ * Reflects a JSON schema collection (a schema with `$defs`) as a collection reflection alone, reflecting every `$defs` fragment by name. The shortcut for
+ * the common case of a schema used as a collection of definitions.
+ *
+ * Unlike `reflectJSONSchema`, it does not reflect the root's other keywords. Each call reflects the schema anew, so the collection reflection it returns is
+ * never the one `reflectJSONSchema` returns for the same schema, and neither are any of the reflections it holds.
+ * @param fragment JSON schema collection to reflect on
+ * @returns Reflection of the collection
+ */
+export function reflectJSONSchemaCollection<TFragment extends JSONSchemaCollection>(fragment: TFragment): JSONSchemaCollectionFragmentReflect<TFragment> {
+  // Reject a non-collection, only possible from untyped code
+  if (!JSONSchemaCollectionFragmentReflect.is(fragment)) throw new TypeError('A JSON schema collection must contain a `$defs` object');
+  return new JSONSchemaCollectionFragmentReflect(fragment);
 }
 
 // #endregion
@@ -79,62 +99,57 @@ export function reflectJSONSchema<TFragment extends JSONSchema7>(fragment: TFrag
  * reflected as if `type` named its group directly. Several branches are alternatives (a value is of one of them), so they are reflected as an implicit
  * `anyOf`: the type independent keywords (`const`, `enum`, `$ref`, `allOf`, `anyOf`, `oneOf`, `not`) are reflected on the fragment itself, and one more
  * (`implicit`) any-of-types reflection holds the branches, each with the type independent keywords left out.
- * @param schema Reflection of the JSON schema collection the fragment belongs to, or `undefined` if the reflected schema has no `$defs`
- * @param name Name of the fragment within the collection, or `undefined` for a nested (or root) fragment
  * @param fragment JSON fragment to reflect on
+ * @param options Context and name of the reflected fragment (see `JSONSchemaFragmentReflectOptions`)
  * @returns Reflections of all fragment types the fragment matches, or an empty array if it matches none
  */
 export function createJSONSchemaFragmentReflections<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaNotCollectionFragment,
->(
-  schema: JSONSchemaCollectionFragmentReflect<TSchema> | undefined,
-  name: TName,
-  fragment: TFragment,
-): Array<JSONSchemaFragmentReflection<TSchema, TName, TFragment>> {
+  TName extends JSONSchemaFragmentName<TSchema> | undefined = undefined,
+>(fragment: TFragment, options: JSONSchemaFragmentReflectOptions<TSchema, TName> = {}): Array<JSONSchemaFragmentReflection<TSchema, TName, TFragment>> {
   // Reflect a single type array branch as is
   const branches = getJSONSchemaFragmentTypeBranches(fragment);
   if (branches.length === 1 && branches[0] !== fragment)
-    return createJSONSchemaFragmentReflections(schema, name, branches[0] as JSONSchemaNotCollectionFragment) as Array<
+    return createJSONSchemaFragmentReflections(branches[0] as JSONSchemaNotCollectionFragment, options) as Array<
       JSONSchemaFragmentReflection<TSchema, TName, TFragment>
     >;
 
   // Reflect every matching keyword, in the order the type layer intersects them in
   const reflections: Array<JSONSchemaFragmentReflect<TSchema, TName, any>> = [];
-  if (JSONSchemaModelFragmentReflect.check(fragment)) reflections.push(new JSONSchemaModelFragmentReflect(schema, name, fragment));
-  if (JSONSchemaConstFragmentReflect.check(fragment)) reflections.push(new JSONSchemaConstFragmentReflect(schema, name, fragment));
-  if (JSONSchemaEnumFragmentReflect.check(fragment)) reflections.push(new JSONSchemaEnumFragmentReflect(schema, name, fragment));
-  if (JSONSchemaPrimitiveTypeFragmentReflect.check(fragment)) reflections.push(new JSONSchemaPrimitiveTypeFragmentReflect(schema, name, fragment));
-  if (JSONSchemaNullTypeFragmentReflect.check(fragment)) reflections.push(new JSONSchemaNullTypeFragmentReflect(schema, name, fragment));
-  if (JSONSchemaArrayTypeFragmentReflect.check(fragment)) reflections.push(new JSONSchemaArrayTypeFragmentReflect(schema, name, fragment));
-  if (JSONSchemaObjectTypeFragmentReflect.check(fragment)) reflections.push(new JSONSchemaObjectTypeFragmentReflect(schema, name, fragment));
+  if (JSONSchemaModelFragmentReflect.is(fragment)) reflections.push(new JSONSchemaModelFragmentReflect(fragment, options));
+  if (JSONSchemaConstFragmentReflect.is(fragment)) reflections.push(new JSONSchemaConstFragmentReflect(fragment, options));
+  if (JSONSchemaEnumFragmentReflect.is(fragment)) reflections.push(new JSONSchemaEnumFragmentReflect(fragment, options));
+  if (JSONSchemaPrimitiveTypeFragmentReflect.is(fragment)) reflections.push(new JSONSchemaPrimitiveTypeFragmentReflect(fragment, options));
+  if (JSONSchemaNullTypeFragmentReflect.is(fragment)) reflections.push(new JSONSchemaNullTypeFragmentReflect(fragment, options));
+  if (JSONSchemaArrayTypeFragmentReflect.is(fragment)) reflections.push(new JSONSchemaArrayTypeFragmentReflect(fragment, options));
+  if (JSONSchemaObjectTypeFragmentReflect.is(fragment)) reflections.push(new JSONSchemaObjectTypeFragmentReflect(fragment, options));
   if (branches.length > 1) {
     const anyOf = branches.map((branch) =>
       Object.fromEntries(Object.entries(branch).filter(([keyword]) => !(_JSONSchemaTypeIndependentKeywords as ReadonlyArray<string>).includes(keyword))),
     ) as ReadonlyArray<JSONSchemaNotCollectionFragment>;
-    reflections.push(new JSONSchemaAnyOfTypeFragmentReflect(schema, name, { anyOf }, true));
+    reflections.push(new JSONSchemaAnyOfTypeFragmentReflect({ anyOf }, { ...options, implicit: true }));
   }
-  if (JSONSchemaAllOfTypeFragmentReflect.check(fragment)) reflections.push(new JSONSchemaAllOfTypeFragmentReflect(schema, name, fragment));
-  if (JSONSchemaAnyOfTypeFragmentReflect.check(fragment)) reflections.push(new JSONSchemaAnyOfTypeFragmentReflect(schema, name, fragment));
-  if (JSONSchemaOneOfTypeFragmentReflect.check(fragment)) reflections.push(new JSONSchemaOneOfTypeFragmentReflect(schema, name, fragment));
-  if (JSONSchemaNotTypeFragmentReflect.check(fragment)) reflections.push(new JSONSchemaNotTypeFragmentReflect(schema, name, fragment));
-  if (JSONSchemaReferenceFragmentReflect.check(fragment)) reflections.push(new JSONSchemaReferenceFragmentReflect(schema, name, fragment));
+  if (JSONSchemaAllOfTypeFragmentReflect.is(fragment)) reflections.push(new JSONSchemaAllOfTypeFragmentReflect(fragment, options));
+  if (JSONSchemaAnyOfTypeFragmentReflect.is(fragment)) reflections.push(new JSONSchemaAnyOfTypeFragmentReflect(fragment, options));
+  if (JSONSchemaOneOfTypeFragmentReflect.is(fragment)) reflections.push(new JSONSchemaOneOfTypeFragmentReflect(fragment, options));
+  if (JSONSchemaNotTypeFragmentReflect.is(fragment)) reflections.push(new JSONSchemaNotTypeFragmentReflect(fragment, options));
+  if (JSONSchemaReferenceFragmentReflect.is(fragment)) reflections.push(new JSONSchemaReferenceFragmentReflect(fragment, options));
   return reflections as Array<JSONSchemaFragmentReflection<TSchema, TName, TFragment>>;
 }
 
 /**
  * Reflects a fragment nested in, and owned by, another fragment (e.g. a model property or an `allOf` member). Nested fragments have no name.
- * @param schema Reflection of the JSON schema collection the parent fragment belongs to, or `undefined` if the reflected schema has no `$defs`
  * @param fragment Nested JSON fragment to reflect on
+ * @param context Reflection of the JSON schema collection the parent fragment belongs to, or `undefined` if the reflected schema has no `$defs`
  * @returns Reflections of all fragment types the nested fragment matches, or an empty array if it is not a schema object (e.g. a boolean schema)
  */
 export function createJSONSchemaNestedFragmentReflections<TSchema extends JSONSchemaCollection, TFragment>(
-  schema: JSONSchemaCollectionFragmentReflect<TSchema> | undefined,
   fragment: TFragment,
+  context: JSONSchemaCollectionFragmentReflect<TSchema> | undefined,
 ): JSONSchemaNestedFragmentReflections<TSchema, TFragment> {
   return (
-    isJSONSchemaObject(fragment) ? createJSONSchemaFragmentReflections(schema, undefined, fragment as JSONSchemaNotCollectionFragment) : []
+    isJSONSchemaObject(fragment) ? createJSONSchemaFragmentReflections(fragment as JSONSchemaNotCollectionFragment, { context }) : []
   ) as JSONSchemaNestedFragmentReflections<TSchema, TFragment>;
 }
 

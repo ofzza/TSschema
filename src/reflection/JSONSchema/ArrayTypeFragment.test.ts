@@ -19,13 +19,13 @@ describe('Reflection', () => {
   describe('JSONSchema fragment reflections', () => {
     describe('Array Type fragment', () => {
       it('Detects an array type', () => {
-        expect(JSONSchemaArrayTypeFragmentReflect.check({ type: 'array' })).toBe(true);
-        expect(JSONSchemaArrayTypeFragmentReflect.check({ type: 'array', items: { type: 'string' } })).toBe(true);
+        expect(JSONSchemaArrayTypeFragmentReflect.is({ type: 'array' })).toBe(true);
+        expect(JSONSchemaArrayTypeFragmentReflect.is({ type: 'array', items: { type: 'string' } })).toBe(true);
       });
 
       it('Rejects a non-array type', () => {
-        expect(JSONSchemaArrayTypeFragmentReflect.check({ type: 'object' })).toBe(false);
-        expect(JSONSchemaArrayTypeFragmentReflect.check({ items: { type: 'string' } })).toBe(false);
+        expect(JSONSchemaArrayTypeFragmentReflect.is({ type: 'object' })).toBe(false);
+        expect(JSONSchemaArrayTypeFragmentReflect.is({ items: { type: 'string' } })).toBe(false);
       });
 
       it('Reflects the items of an array type', () => {
