@@ -174,16 +174,20 @@ describe('Reflection', () => {
       it('Describes the type of the root, a definition and a property', () => {
         const root = reflect(_schema);
         expect(root.typeDescriptor.kind).toBe('model');
-        expect(true satisfies AssertTypeEquality<typeof root.typeDescriptor.properties.pet.name, 'Pet'>).toBe(true);
+        expect(true satisfies AssertTypeEquality<typeof root.typeDescriptor.properties.pet.type.name, 'Pet'>).toBe(true);
         const cat = root.getDefinition('Cat');
         expect(cat.typeDescriptor).toEqual({
           kind: 'model',
-          properties: { name: { kind: 'primitive', type: 'string' }, lives: { kind: 'primitive', type: 'integer' } },
+          properties: {
+            name: { required: true, type: { kind: 'primitive', type: 'string', nullable: false } },
+            lives: { required: true, type: { kind: 'primitive', type: 'integer', nullable: false } },
+          },
           required: ['name', 'lives'],
+          nullable: false,
         });
         const lives = cat.getProperty('lives');
-        expect(lives.typeDescriptor).toEqual({ kind: 'primitive', type: 'integer' });
-        expect(true satisfies AssertTypeEquality<typeof lives.typeDescriptor, TSSchemaPrimitiveTypeDescriptor<'integer'>>).toBe(true);
+        expect(lives.typeDescriptor).toBe(cat.typeDescriptor.properties.lives.type);
+        expect(true satisfies AssertTypeEquality<typeof lives.typeDescriptor, TSSchemaPrimitiveTypeDescriptor<'integer', false>>).toBe(true);
       });
 
       it('Describes a definition by the same descriptor as every reference to it', () => {
@@ -193,17 +197,19 @@ describe('Reflection', () => {
         expect(root.getDefinition('Cat').typeDescriptor).toBe(root.getDefinition('Cat').typeDescriptor);
       });
 
-      it('Describes a nullable model as an implicit anyOf', () => {
+      it('Describes a nullable model as a model, flagged nullable', () => {
         const owner = reflect(_schema).getDefinition('Owner').typeDescriptor;
-        expect(owner.kind).toBe('anyOf');
-        expect(owner.implicit).toBe(true);
-        expect(owner.members.map((member) => member.kind)).toEqual(['model', 'null']);
+        expect([owner.kind, owner.nullable]).toEqual(['model', true]);
+        expect(owner.properties.pets.required).toBe(true);
+        expect(owner.properties.notes.required).toBe(false);
+        expect(true satisfies AssertTypeEquality<typeof owner.nullable, true>).toBe(true);
+        expect(true satisfies AssertTypeEquality<typeof owner.properties.notes.required, false>).toBe(true);
       });
 
       it('Describes a property of unknown shape as unknown', () => {
         const deep = reflect(_schema).getDefinition('Owner').getProperty('notes.a');
-        expect(deep.typeDescriptor).toEqual({ kind: 'unknown' });
-        expect(true satisfies AssertTypeEquality<typeof deep.typeDescriptor, TSSchemaUnknownTypeDescriptor>).toBe(true);
+        expect(deep.typeDescriptor).toEqual({ kind: 'unknown', nullable: false });
+        expect(true satisfies AssertTypeEquality<typeof deep.typeDescriptor, TSSchemaUnknownTypeDescriptor<false>>).toBe(true);
       });
     });
   });

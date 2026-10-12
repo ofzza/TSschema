@@ -15,6 +15,7 @@ export type {
   TSSchemaArrayTypeDescriptor,
   TSSchemaRecordTypeDescriptor,
   TSSchemaModelTypeDescriptor,
+  TSSchemaModelPropertyDescriptor,
   TSSchemaReferenceTypeDescriptor,
   TSSchemaAnyOfTypeDescriptor,
   TSSchemaAllOfTypeDescriptor,

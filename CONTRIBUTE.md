@@ -96,6 +96,11 @@ Terms are listed in the order they build on each other. Use them as defined here
   `TypeDescriptor.ts`), and inferred from its fragment at type level (`TSSchemaTypeDescriptorOf`). Type shaped where facets are keyword shaped: several
   facets of one fragment are one descriptor (an **implicit** `allOf`, or an `enum` / `const` absorbing the `type` next to it). *Not* a facet, nor the
   value type itself.
+- **Nullable** - a descriptor's `nullable` flag: `null` is explicitly accepted where the descriptor is used. `null` next to other types (in an `anyOf`, a
+  type array, an `enum`) is extracted into this flag rather than described as an alternative; `null` alone is the `null` kind. Says nothing about a
+  reference's `target`.
+- **Property descriptor** - an entry of a model descriptor's `properties`: whether the property is `required`, and its `type` descriptor
+  (`TSSchemaModelPropertyDescriptor`). *Not* a type descriptor: being required belongs to the property's place in its model, not to its type.
 - **Value name** - the name of an `enum` or `const` value where the schema gives none (`getJSONSchemaValueName`): a string is its own name, any other
   value its string form or JSON. Names given by the schema come from `x-enumNames` (an enum) or `title` (each `const` of a `oneOf` described as an enum).
 - **Shape** *(internal to property lookup, `PropertyPath.ts`)* - something a property can be looked up in: a model, or an **unknown shape** (an object
