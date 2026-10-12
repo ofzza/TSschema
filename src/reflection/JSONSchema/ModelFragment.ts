@@ -6,7 +6,7 @@
 import type {
   JSONSchema7,
   JSONSchemaCollection,
-  JSONSchemaFragmentName,
+  JSONSchemaDefinitionName,
   JSONSchemaFragmentPropertyName,
   JSONSchemaModelFragment,
 } from '../../schema/JSONSchema/index.js';
@@ -20,7 +20,7 @@ import { isJSONSchemaObject } from './JSONSchema7.js';
  */
 export class JSONSchemaModelFragmentFacet<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
+  TName extends JSONSchemaDefinitionName<TSchema> | undefined = JSONSchemaDefinitionName<TSchema> | undefined,
   TFragment extends JSONSchemaModelFragment = JSONSchemaModelFragment,
 > extends JSONSchemaFragmentFacet<TSchema, TName, TFragment> {
   /**
@@ -57,14 +57,14 @@ export class JSONSchemaModelFragmentFacet<
   /**
    * Parses a JSON schema model definition
    * @param fragment JSON fragment to parse
-   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
+   * @param options Collection and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
    */
   public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     super(fragment, options);
     this.type = fragment['type'];
     this.names = Object.keys(fragment['properties']) as Array<JSONSchemaFragmentPropertyName<TFragment>>;
     this.properties = Object.fromEntries(
-      Object.entries(fragment['properties']).map(([name, property]) => [name, createJSONSchemaNestedFragmentFacets(property, this._context)]),
+      Object.entries(fragment['properties']).map(([name, property]) => [name, createJSONSchemaNestedFragmentFacets(property, this._collection)]),
     ) as _JSONSchemaModelFragmentPropertiesFacets<TSchema, TFragment>;
     const required = fragment['required'];
     this.required = (

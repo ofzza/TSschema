@@ -7,26 +7,26 @@
 
 import type {
   JSONSchemaCollection,
-  JSONSchemaFragmentName,
+  JSONSchemaDefinitionName,
   JSONSchemaFragmentPropertyName,
   JSONSchemaFragmentType,
   JSONSchemaFragmentTypeBranch,
   JSONSchemaModelFragment,
   JSONSchemaNotCollectionFragment,
 } from './JSONSchema/index.js';
-import type { JSONSchemaCollectionWrapper, TSSchemaFragmentName, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection.js';
+import type { JSONSchemaCollectionWrapper, TSSchemaDefinitionName, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection.js';
 
 /**
- * Wrapper type for a JSON schema fragment, holding on to the fragment as `__fragment`, its name as `__fragmentName` and its parent collection as
+ * Wrapper type for a JSON schema fragment, holding on to the fragment as `__fragment`, its name as `__definitionName` and its parent collection as
  * `__collection`. A fragment wrapped directly carries the default, unspecified collection and name.
  */
 export type JSONSchemaFragmentWrapper<
   T extends JSONSchemaNotCollectionFragment = JSONSchemaNotCollectionFragment,
   TCollection extends JSONSchemaCollection = JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TCollection> = JSONSchemaFragmentName<TCollection>,
+  TName extends JSONSchemaDefinitionName<TCollection> = JSONSchemaDefinitionName<TCollection>,
 > = JSONSchemaCollectionWrapper<TCollection> & {
   __fragment: T;
-  __fragmentName: TName;
+  __definitionName: TName;
 };
 /**
  * Unwraps a JSON schema fragment wrapper, or a model property wrapper, to obtain the wrapped JSON schema fragment (for a model property wrapper, its parent
@@ -45,12 +45,12 @@ export type UnwrapJSONSchemaFragmentWrapper<T extends JSONSchemaNotCollectionFra
  */
 export type TSSchemaFragment<
   T extends JSONSchemaNotCollectionFragment | JSONSchemaCollection | JSONSchemaCollectionWrapper,
-  TName extends (T extends JSONSchemaCollection | JSONSchemaCollectionWrapper ? TSSchemaFragmentName<T> : never) = never,
+  TName extends (T extends JSONSchemaCollection | JSONSchemaCollectionWrapper ? TSSchemaDefinitionName<T> : never) = never,
 > =
   // Collection or collection wrapper: wrap the fragment(s) addressed by name, or every fragment if no name was given
   T extends JSONSchemaCollection | JSONSchemaCollectionWrapper
     ? UnwrapJSONSchemaCollectionWrapper<T> extends infer C extends JSONSchemaCollection
-      ? _TSSchemaCollectionFragment<C, [TName] extends [never] ? JSONSchemaFragmentName<C> : TName>
+      ? _TSSchemaCollectionFragment<C, [TName] extends [never] ? JSONSchemaDefinitionName<C> : TName>
       : JSONSchemaFragmentWrapper
     : // Fragment: wrap the fragment as given, with no parent collection
       T extends JSONSchemaNotCollectionFragment
@@ -62,7 +62,7 @@ export type TSSchemaFragment<
  */
 type _TSSchemaCollectionFragment<TCollection extends JSONSchemaCollection, TName> =
   // Distribute over a union of names, and narrow each against the collection
-  TName extends JSONSchemaFragmentName<TCollection>
+  TName extends JSONSchemaDefinitionName<TCollection>
     ? TCollection['$defs'][TName] extends infer F extends JSONSchemaNotCollectionFragment
       ? JSONSchemaFragmentWrapper<F, TCollection, TName>
       : never

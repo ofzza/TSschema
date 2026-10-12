@@ -171,7 +171,7 @@ describe('Reflection', () => {
         const collection = new JSONSchemaCollectionFragmentFacet(_schema);
         expect(collection.$defs.Empty).toEqual([]);
         expect(true satisfies AssertTypeEquality<typeof collection.$defs.Empty, never[]>).toBe(true);
-        expect(createJSONSchemaFragmentFacets({ title: 'Annotated' }, { context: collection })).toEqual([]);
+        expect(createJSONSchemaFragmentFacets({ title: 'Annotated' }, { collection: collection })).toEqual([]);
       });
 
       it('Parses a type array naming a single group of type names as if type named it directly', () => {

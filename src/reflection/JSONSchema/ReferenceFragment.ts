@@ -2,7 +2,7 @@
  * Facets of JSON schema `$ref` fragments: the name of the referenced fragment, and its facets, resolved lazily against the collection.
  */
 
-import type { JSONSchema7, JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaReferenceFragment } from '../../schema/JSONSchema/index.js';
+import type { JSONSchema7, JSONSchemaCollection, JSONSchemaDefinitionName, JSONSchemaReferenceFragment } from '../../schema/JSONSchema/index.js';
 import type { JSONSchemaCollectionParsedFragment } from './CollectionFragment.js';
 import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
 import type { JSONSchemaFragmentFacetOf } from './FragmentFacets.js';
@@ -12,7 +12,7 @@ import type { JSONSchemaFragmentFacetOf } from './FragmentFacets.js';
  */
 export class JSONSchemaReferenceFragmentFacet<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
+  TName extends JSONSchemaDefinitionName<TSchema> | undefined = JSONSchemaDefinitionName<TSchema> | undefined,
   TFragment extends JSONSchemaReferenceFragment = JSONSchemaReferenceFragment,
 > extends JSONSchemaFragmentFacet<TSchema, TName, TFragment> {
   /**
@@ -39,35 +39,35 @@ export class JSONSchemaReferenceFragmentFacet<
    */
   public get ref(): _JSONSchemaReferenceFragmentRefFacets<TSchema, _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>> {
     return (
-      this.refName === undefined ? undefined : this._context?.$defs[this.refName as JSONSchemaFragmentName<TSchema>]
+      this.refName === undefined ? undefined : this._collection?.$defs[this.refName as JSONSchemaDefinitionName<TSchema>]
     ) as _JSONSchemaReferenceFragmentRefFacets<TSchema, _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>>;
   }
 
   /**
    * Parses a JSON schema reference definition
    * @param fragment JSON fragment to parse
-   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
+   * @param options Collection and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
    */
   public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     super(fragment, options);
     const name = /^#\/\$defs\/(.+)$/.exec(fragment['$ref'])?.[1];
     this.refName = (
-      name !== undefined && (this._context?.names as Array<string> | undefined)?.includes(name) ? name : undefined
+      name !== undefined && (this._collection?.names as Array<string> | undefined)?.includes(name) ? name : undefined
     ) as _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>;
   }
 }
 
 /**
  * Infers the name of the fragment referenced by a reference fragment, parsed from a `#/$defs/<name>` reference. A reference of any other form, or one
- * naming no fragment of the collection, infers `undefined`; an unspecified (`string`) reference infers any fragment name or `undefined`.
+ * naming no fragment of the collection, infers `undefined`; an unspecified (`string`) reference infers any definition name or `undefined`.
  */
 type _JSONSchemaReferenceFragmentRefName<TSchema extends JSONSchemaCollection, TFragment extends JSONSchemaReferenceFragment> =
   // Unspecified reference
   string extends TFragment['$ref']
-    ? JSONSchemaFragmentName<TSchema> | undefined
+    ? JSONSchemaDefinitionName<TSchema> | undefined
     : // Reference to a fragment of the collection
       TFragment['$ref'] extends `#/$defs/${infer N}`
-      ? N extends JSONSchemaFragmentName<TSchema>
+      ? N extends JSONSchemaDefinitionName<TSchema>
         ? N
         : undefined
       : // Any other reference
@@ -78,7 +78,7 @@ type _JSONSchemaReferenceFragmentRefName<TSchema extends JSONSchemaCollection, T
  */
 type _JSONSchemaReferenceFragmentRefFacets<TSchema extends JSONSchemaCollection, TRefName> =
   // Resolved reference
-  TRefName extends JSONSchemaFragmentName<TSchema>
+  TRefName extends JSONSchemaDefinitionName<TSchema>
     ? Array<JSONSchemaFragmentFacetOf<TSchema, TRefName, JSONSchemaCollectionParsedFragment<TSchema, TRefName>>>
     : // Unresolved reference
       undefined;

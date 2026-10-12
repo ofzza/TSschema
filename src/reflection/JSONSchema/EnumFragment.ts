@@ -2,7 +2,7 @@
  * Facets of JSON schema `enum` fragments: the enumerated values.
  */
 
-import type { JSONSchema7, JSONSchemaCollection, JSONSchemaEnumFragment, JSONSchemaFragmentName } from '../../schema/JSONSchema/index.js';
+import type { JSONSchema7, JSONSchemaCollection, JSONSchemaEnumFragment, JSONSchemaDefinitionName } from '../../schema/JSONSchema/index.js';
 import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
 
 /**
@@ -10,7 +10,7 @@ import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './
  */
 export class JSONSchemaEnumFragmentFacet<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
+  TName extends JSONSchemaDefinitionName<TSchema> | undefined = JSONSchemaDefinitionName<TSchema> | undefined,
   TFragment extends JSONSchemaEnumFragment = JSONSchemaEnumFragment,
 > extends JSONSchemaFragmentFacet<TSchema, TName, TFragment> {
   /**
@@ -30,7 +30,7 @@ export class JSONSchemaEnumFragmentFacet<
   /**
    * Parses a JSON schema enum definition
    * @param fragment JSON fragment to parse
-   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
+   * @param options Collection and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
    */
   public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     super(fragment, options);

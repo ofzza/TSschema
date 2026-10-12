@@ -11,7 +11,7 @@
 
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeAssignable, AssertTypeEquality } from '@ofzza/tsstd';
-import type { JSONSchemaCollectionWrapper, TSSchemaCollection, TSSchemaFragmentName, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection.js';
+import type { JSONSchemaCollectionWrapper, TSSchemaCollection, TSSchemaDefinitionName, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection.js';
 import type {
   JSONSchemaFragmentWrapper,
   TSSchemaFragment,
@@ -52,7 +52,7 @@ describe('Showcase', () => {
         expect(true satisfies AssertTypeEquality<UnwrapJSONSchemaCollectionWrapper<People>, Schema>).toBe(true);
       });
 
-      it('Wraps a fragment as a collection wrapper plus { __fragment, __fragmentName }', () => {
+      it('Wraps a fragment as a collection wrapper plus { __fragment, __definitionName }', () => {
         type PersonFragment = TSSchemaFragment<Schema, 'Person'>;
         //   ^?
         // PersonFragment: JSONSchemaFragmentWrapper<Person, Schema, 'Person'>
@@ -88,8 +88,8 @@ describe('Showcase', () => {
     });
 
     describe('Name utilities', () => {
-      it('Gets fragment names from a collection, or from any wrapper of it', () => {
-        type FragmentName = TSSchemaFragmentName<TSSchemaProperty<Schema, 'Person', 'name'>>;
+      it('Gets definition names from a collection, or from any wrapper of it', () => {
+        type FragmentName = TSSchemaDefinitionName<TSSchemaProperty<Schema, 'Person', 'name'>>;
         //   ^?
         // FragmentName: 'Person' | 'Role'
         expect(true satisfies AssertTypeEquality<FragmentName, 'Person' | 'Role'>).toBe(true);

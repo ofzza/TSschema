@@ -2,7 +2,7 @@
  * Facets of JSON schema `oneOf` fragments: the facets of each listed fragment.
  */
 
-import type { JSONSchema7, JSONSchemaOneOfTypeFragment, JSONSchemaCollection, JSONSchemaFragmentName } from '../../schema/JSONSchema/index.js';
+import type { JSONSchema7, JSONSchemaOneOfTypeFragment, JSONSchemaCollection, JSONSchemaDefinitionName } from '../../schema/JSONSchema/index.js';
 import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
 import { createJSONSchemaNestedFragmentFacets, type JSONSchemaNestedFragmentsFacets } from './FragmentFacets.js';
 
@@ -11,7 +11,7 @@ import { createJSONSchemaNestedFragmentFacets, type JSONSchemaNestedFragmentsFac
  */
 export class JSONSchemaOneOfTypeFragmentFacet<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
+  TName extends JSONSchemaDefinitionName<TSchema> | undefined = JSONSchemaDefinitionName<TSchema> | undefined,
   TFragment extends JSONSchemaOneOfTypeFragment = JSONSchemaOneOfTypeFragment,
 > extends JSONSchemaFragmentFacet<TSchema, TName, TFragment> {
   /**
@@ -32,11 +32,11 @@ export class JSONSchemaOneOfTypeFragmentFacet<
   /**
    * Parses a JSON schema one-of-types definition
    * @param fragment JSON fragment to parse
-   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
+   * @param options Collection and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
    */
   public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     super(fragment, options);
-    this.oneOf = fragment['oneOf'].map((member) => createJSONSchemaNestedFragmentFacets(member, this._context)) as JSONSchemaNestedFragmentsFacets<
+    this.oneOf = fragment['oneOf'].map((member) => createJSONSchemaNestedFragmentFacets(member, this._collection)) as JSONSchemaNestedFragmentsFacets<
       TSchema,
       TFragment['oneOf']
     >;

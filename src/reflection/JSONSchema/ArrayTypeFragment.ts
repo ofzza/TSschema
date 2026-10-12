@@ -2,7 +2,7 @@
  * Facets of JSON schema `type: "array"` fragments: the facets of their `items` fragment.
  */
 
-import type { JSONSchema7, JSONSchemaArrayTypeFragment, JSONSchemaCollection, JSONSchemaFragmentName } from '../../schema/JSONSchema/index.js';
+import type { JSONSchema7, JSONSchemaArrayTypeFragment, JSONSchemaCollection, JSONSchemaDefinitionName } from '../../schema/JSONSchema/index.js';
 import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
 import { createJSONSchemaNestedFragmentFacets, type JSONSchemaNestedFragmentFacets } from './FragmentFacets.js';
 
@@ -12,7 +12,7 @@ import { createJSONSchemaNestedFragmentFacets, type JSONSchemaNestedFragmentFace
  */
 export class JSONSchemaArrayTypeFragmentFacet<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
+  TName extends JSONSchemaDefinitionName<TSchema> | undefined = JSONSchemaDefinitionName<TSchema> | undefined,
   TFragment extends JSONSchemaArrayTypeFragment = JSONSchemaArrayTypeFragment,
 > extends JSONSchemaFragmentFacet<TSchema, TName, TFragment> {
   /**
@@ -40,13 +40,13 @@ export class JSONSchemaArrayTypeFragmentFacet<
   /**
    * Parses a JSON schema array type definition
    * @param fragment JSON fragment to parse
-   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
+   * @param options Collection and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
    */
   public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     super(fragment, options);
     this.type = fragment['type'];
     const items = fragment['items'];
-    this.items = (items === undefined ? undefined : createJSONSchemaNestedFragmentFacets(items, this._context)) as _JSONSchemaArrayTypeFragmentItemsFacets<
+    this.items = (items === undefined ? undefined : createJSONSchemaNestedFragmentFacets(items, this._collection)) as _JSONSchemaArrayTypeFragmentItemsFacets<
       TSchema,
       TFragment
     >;

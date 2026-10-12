@@ -2,7 +2,7 @@
  * Facets of JSON schema `not` fragments: the facets of the negated fragment.
  */
 
-import type { JSONSchema7, JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaNotTypeFragment } from '../../schema/JSONSchema/index.js';
+import type { JSONSchema7, JSONSchemaCollection, JSONSchemaDefinitionName, JSONSchemaNotTypeFragment } from '../../schema/JSONSchema/index.js';
 import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
 import { createJSONSchemaNestedFragmentFacets, type JSONSchemaNestedFragmentFacets } from './FragmentFacets.js';
 import { isJSONSchemaObject } from './JSONSchema7.js';
@@ -12,7 +12,7 @@ import { isJSONSchemaObject } from './JSONSchema7.js';
  */
 export class JSONSchemaNotTypeFragmentFacet<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
+  TName extends JSONSchemaDefinitionName<TSchema> | undefined = JSONSchemaDefinitionName<TSchema> | undefined,
   TFragment extends JSONSchemaNotTypeFragment = JSONSchemaNotTypeFragment,
 > extends JSONSchemaFragmentFacet<TSchema, TName, TFragment> {
   /**
@@ -33,10 +33,10 @@ export class JSONSchemaNotTypeFragmentFacet<
   /**
    * Parses a JSON schema not-type definition
    * @param fragment JSON fragment to parse
-   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
+   * @param options Collection and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
    */
   public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     super(fragment, options);
-    this.not = createJSONSchemaNestedFragmentFacets(fragment['not'], this._context) as JSONSchemaNestedFragmentFacets<TSchema, TFragment['not']>;
+    this.not = createJSONSchemaNestedFragmentFacets(fragment['not'], this._collection) as JSONSchemaNestedFragmentFacets<TSchema, TFragment['not']>;
   }
 }

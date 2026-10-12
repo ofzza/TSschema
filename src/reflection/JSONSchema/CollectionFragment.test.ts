@@ -44,7 +44,7 @@ describe('Reflection', () => {
         expect(JSONSchemaCollectionFragmentFacet.is({ $defs: true } as any)).toBe(false);
       });
 
-      it('Gets the names of all fragments of the collection', () => {
+      it('Gets the names of all definitions of the collection', () => {
         const collection = new JSONSchemaCollectionFragmentFacet(_schema);
         expect(collection.names).toEqual(['Person', 'Role']);
         expect(true satisfies AssertTypeEquality<typeof collection.names, Array<'Person' | 'Role'>>).toBe(true);

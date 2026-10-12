@@ -2,7 +2,7 @@
  * Facets of JSON schema `anyOf` fragments: the facets of each listed fragment.
  */
 
-import type { JSONSchema7, JSONSchemaAnyOfTypeFragment, JSONSchemaCollection, JSONSchemaFragmentName } from '../../schema/JSONSchema/index.js';
+import type { JSONSchema7, JSONSchemaAnyOfTypeFragment, JSONSchemaCollection, JSONSchemaDefinitionName } from '../../schema/JSONSchema/index.js';
 import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
 import { createJSONSchemaNestedFragmentFacets, type JSONSchemaNestedFragmentsFacets } from './FragmentFacets.js';
 
@@ -11,7 +11,7 @@ import { createJSONSchemaNestedFragmentFacets, type JSONSchemaNestedFragmentsFac
  */
 export class JSONSchemaAnyOfTypeFragmentFacet<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
+  TName extends JSONSchemaDefinitionName<TSchema> | undefined = JSONSchemaDefinitionName<TSchema> | undefined,
   TFragment extends JSONSchemaAnyOfTypeFragment = JSONSchemaAnyOfTypeFragment,
 > extends JSONSchemaFragmentFacet<TSchema, TName, TFragment> {
   /**
@@ -39,12 +39,12 @@ export class JSONSchemaAnyOfTypeFragmentFacet<
   /**
    * Parses a JSON schema any-of-types definition
    * @param fragment JSON fragment to parse
-   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`), and whether it is an `implicit` `anyOf`, generated
+   * @param options Collection and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`), and whether it is an `implicit` `anyOf`, generated
    * from the branches of a `type` array
    */
   public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> & { implicit?: boolean } = {}) {
     super(fragment, options);
-    this.anyOf = fragment['anyOf'].map((member) => createJSONSchemaNestedFragmentFacets(member, this._context)) as JSONSchemaNestedFragmentsFacets<
+    this.anyOf = fragment['anyOf'].map((member) => createJSONSchemaNestedFragmentFacets(member, this._collection)) as JSONSchemaNestedFragmentsFacets<
       TSchema,
       TFragment['anyOf']
     >;
