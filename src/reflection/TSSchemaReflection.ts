@@ -33,6 +33,7 @@ import {
   type JSONSchemaReachablePropertyName,
   type JSONSchemaPropertyShapeIsUnknown,
 } from './PropertyPath.js';
+import { getTSSchemaTypeDescriptor, type TSSchemaTypeDescriptorOf } from './TypeDescriptor.js';
 
 // #region Entry point
 
@@ -129,6 +130,14 @@ export class TSSchemaFragmentReflection<
    */
   public get collection(): JSONSchemaCollectionFragmentFacet<TSchema> | undefined {
     return this._collection;
+  }
+
+  /**
+   * Describes the type of the reflected fragment (see `TSSchemaTypeDescriptor`): a tree of plain objects, told apart by their `kind`, built from the
+   * fragment's facets on first access. Every reference to a definition describes it by the same descriptor, which is also the definition reflection's.
+   */
+  public get typeDescriptor(): TSSchemaTypeDescriptorOf<TSchema, TFragment> {
+    return getTSSchemaTypeDescriptor(this._facets) as TSSchemaTypeDescriptorOf<TSchema, TFragment>;
   }
 
   /**
@@ -250,8 +259,6 @@ export class TSSchemaFragmentReflection<
       required: matches.every((match) => match.required),
     });
   }
-
-  // TODO: Design and implement a type descriptor, describing all relevant information about the fragment's type at runtime
 }
 
 /**

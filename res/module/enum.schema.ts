@@ -13,6 +13,19 @@ const schema = {
         "Bbb",
         "Ccc"
       ]
+    },
+    "NamedEnum": {
+      "type": "integer",
+      "enum": [
+        1,
+        2,
+        3
+      ],
+      "x-enumNames": [
+        "One",
+        "Two",
+        "Three"
+      ]
     }
   }
 } as const;
@@ -22,3 +35,4 @@ export type Schema = typeof schema;
 
 export type Models = { [K in keyof Schema['$defs'] & string]: TSSchemaType<TSSchemaFragment<Schema, K>> };
 export type Enum = Models["Enum"];
+export type NamedEnum = Models["NamedEnum"];

@@ -8,3 +8,4 @@
 
 export * from './JSONSchema/index.js';
 export * from './TSSchemaReflection.js';
+export * from './TypeDescriptor.js';

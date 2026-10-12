@@ -11,5 +11,18 @@ declare const _3: {
       "Ccc",
     ];
   };
+  readonly NamedEnum: {
+    readonly type: "integer";
+    readonly enum: readonly [
+      1,
+      2,
+      3,
+    ];
+    readonly "x-enumNames": readonly [
+      "One",
+      "Two",
+      "Three",
+    ];
+  };
 };
 export { _0 as $schema, _1 as $id, _2 as title, _3 as $defs };
