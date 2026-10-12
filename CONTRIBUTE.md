@@ -141,3 +141,6 @@ extension), plain comments state the same types for other editors, and `// Break
   the type utilities.
 
 Only `src/_showcase.test.ts` covers public API. The others showcase internal types, classes and helpers, which are never exported from the package.
+
+Beyond the showcases, the tests themselves document every detail: each `describe` opens with a comment explaining what it tests and how,
+and any `it` whose reason is not obvious from its title explains why it exists, usually pointing at the gotcha in `AGENTS.md` it guards.

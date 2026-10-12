@@ -53,8 +53,16 @@ function _nodeClasses(name: keyof _Schema['$defs']) {
 }
 
 describe('Reflection', () => {
+  // Runtime tests of FragmentFacets.ts: the entry points parsing a schema, the router, and the type-level mirror of the router. The tree mirrors the type
+  // layer's `JSONSchema > JSONSchema fragments` tree, the router being the runtime counterpart of JSONSchemaFragmentType's dispatch over keywords
+  // (src/schema/JSONSchema/Fragment.test.ts).
   describe('JSONSchema fragment facets', () => {
+    // Each file in this directory holds the tests of one facet class under this describe; this one holds the parsing that creates them.
     describe('Schema facets', () => {
+      // parseJSONSchema, parseJSONSchemaCollection and JSONSchemaFacet, the type of what parseJSONSchema returns. Tested on small inline `as const` schemas,
+      // with and without `$defs`, by the classes of the facets created, the identity of the facets references resolve to, and AssertTypeEquality on their
+      // static types.
+      // See AGENTS.md › The collection facet is also what every `$ref` resolves against.
       it('Parses a collection as a collection facet, followed by the facets of its root fragment', () => {
         const schema = {
           type: 'object',
@@ -126,6 +134,7 @@ describe('Reflection', () => {
       });
 
       it('Rejects a schema with no $defs, through the collection shortcut', () => {
+        // The runtime check guards untyped callers (`as any`); typed ones are stopped at compile time.
         expect(() => parseJSONSchemaCollection({ type: 'string' } as any)).toThrow(TypeError);
         // @ts-expect-error A schema with no `$defs` is not a collection
         expect(() => parseJSONSchemaCollection({ type: 'string' })).toThrow(TypeError);
@@ -155,7 +164,12 @@ describe('Reflection', () => {
     });
 
     describe('Fragment facets', () => {
+      // createJSONSchemaFragmentFacets, the router. Tested on the collection above, whose definitions cover several keywords on one fragment, type arrays
+      // naming one or several groups of type names, (in)directly recursive references and a fragment with no keywords, by the classes of the facets parsed
+      // (`_nodeClasses`), the facets themselves and AssertTypeEquality on their static types; and on the res/schema.json fixture, every definition of which
+      // must parse to some facet.
       it('Parses a fragment by every facet type matching it', () => {
+        // The facets come in the order the type layer intersects the keywords in.
         expect(_nodeClasses('Enumerated')).toEqual([JSONSchemaEnumFragmentFacet, JSONSchemaPrimitiveTypeFragmentFacet]);
         const _enumerated = new JSONSchemaCollectionFragmentFacet(_schema).$defs.Enumerated;
         expect(
@@ -182,6 +196,9 @@ describe('Reflection', () => {
       });
 
       it('Parses a type array naming several groups of type names as an implicit anyOf of a branch per group', () => {
+        // The recursive Node type can not be spelled out, so it is checked piece by piece: that it includes `null`, and the type of a property of its model
+        // branch.
+        // See AGENTS.md › A `type` array naming `object`, `array` and / or `null` is split into a union of branches.
         const facets = new JSONSchemaCollectionFragmentFacet(_schema).$defs.Node;
         expect(facets.length).toBe(1);
         const anyOf = facets[0];
@@ -201,6 +218,7 @@ describe('Reflection', () => {
       });
 
       it('Parses the type independent keywords of a type array naming several groups on the fragment itself, and leaves them out of each branch', () => {
+        // Only the type independent keywords (here, `enum`) are left out of the branches: `properties` stays in each of them.
         const mixed = new JSONSchemaCollectionFragmentFacet(_schema).$defs.Mixed;
         expect(mixed.map((facet) => facet.constructor)).toEqual([JSONSchemaEnumFragmentFacet, JSONSchemaAnyOfTypeFragmentFacet]);
         const anyOf = mixed[1];
@@ -214,6 +232,8 @@ describe('Reflection', () => {
       });
 
       it('Resolves (in)directly recursive references lazily', () => {
+        // `ref` is resolved on access rather than on construction, which would never finish for a recursive schema; it is the very array of facets the
+        // collection holds for the definition, compared by identity.
         const collection = new JSONSchemaCollectionFragmentFacet(_schema);
         const facet = collection.$defs.Node[0].anyOf[0][0];
         const next = facet instanceof JSONSchemaModelFragmentFacet ? facet.properties.next[0] : undefined;
@@ -233,6 +253,8 @@ describe('Reflection', () => {
     });
 
     describe('Nested fragment facets', () => {
+      // createJSONSchemaNestedFragmentFacets, parsing a fragment owned by another (with no name), and its types JSONSchemaNestedFragmentFacets /
+      // JSONSchemaNestedFragmentsFacets.
       it('Parses a nested fragment, with no name', () => {
         const collection = new JSONSchemaCollectionFragmentFacet(_schema);
         const facets = createJSONSchemaNestedFragmentFacets({ type: 'array', items: { type: 'string' } } as const, collection);
@@ -247,6 +269,7 @@ describe('Reflection', () => {
       });
 
       it('Parses a nested boolean schema or array with no facets', () => {
+        // See AGENTS.md › Fragment facet types follow the type layer's limits, not the runtime's leniency.
         const collection = new JSONSchemaCollectionFragmentFacet(_schema);
         expect(createJSONSchemaNestedFragmentFacets(true, collection)).toEqual([]);
         expect(createJSONSchemaNestedFragmentFacets([{ type: 'string' }], collection)).toEqual([]);
@@ -263,6 +286,8 @@ describe('Reflection', () => {
     });
 
     describe('Fragment facet types', () => {
+      // JSONSchemaFragmentFacetOf, the type-level mirror of the router, and JSONSchemaParsedFragment, the fragment type a nested value is parsed as. Tested at
+      // type level only.
       it('Infers the facet types matching a fragment', () => {
         type Fragment = { readonly type: 'null'; readonly const: null };
         expect(
@@ -274,6 +299,8 @@ describe('Reflection', () => {
       });
 
       it('Infers a union of facet types from a union of fragments', () => {
+        // Distributes once over a union of fragments, as JSONSchemaFragmentType does.
+        // See AGENTS.md › A conditional type on a bare type parameter distributes over unions — per conditional.
         type Facet = JSONSchemaFragmentFacetOf<_Schema, undefined, { readonly type: 'null' } | { readonly type: 'string' }>;
         expect(
           true satisfies AssertTypeEquality<
@@ -290,6 +317,8 @@ describe('Reflection', () => {
       });
 
       it('Infers every facet type from the unspecified fragment', () => {
+        // The union of every facet type is too large to spell out, so it is only checked to include the first and the last facet type the router creates (model
+        // and reference).
         type Facet = JSONSchemaFragmentFacetOf<JSONSchemaCollection, undefined, JSONSchemaNotCollectionFragment>;
         expect(true satisfies AssertTypeEquality<Extract<Facet, JSONSchemaModelFragmentFacet<any, any, any>> extends never ? false : true, true>).toBe(true);
         expect(true satisfies AssertTypeEquality<Extract<Facet, JSONSchemaReferenceFragmentFacet<any, any, any>> extends never ? false : true, true>).toBe(
@@ -298,6 +327,8 @@ describe('Reflection', () => {
       });
 
       it('Gets the fragment type a nested value is parsed as', () => {
+        // A nested collection is not a JSONSchemaNotCollectionFragment, which forbids `$defs`, so it is parsed as an object of unknown shape: the unspecified
+        // fragment.
         expect(true satisfies AssertTypeEquality<JSONSchemaParsedFragment<{ readonly type: 'string' }>, { readonly type: 'string' }>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaParsedFragment<{ readonly $defs: {} }>, JSONSchemaNotCollectionFragment>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaParsedFragment<boolean>, never>).toBe(true);

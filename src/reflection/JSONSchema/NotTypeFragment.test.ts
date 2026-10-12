@@ -9,8 +9,15 @@ const _schema = { $defs: { Something: { not: { type: 'null' } } } } as const;
 type _Schema = typeof _schema;
 
 describe('Reflection', () => {
+  // Runtime tests of NotTypeFragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in
+  // src/schema/JSONSchema/NotTypeFragment.test.ts, so the two layers' tests line up.
   describe('JSONSchema fragment facets', () => {
+    // Each file in this directory holds the tests of one facet class under this describe.
     describe('Not Type fragment', () => {
+      // JSONSchemaNotTypeFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsNotType), the facets of its `not` fragment (parsed on construction)
+      // and the type-only `Type`, which places no constraint as the type layer does not support `not` yet. Facets are taken from a
+      // JSONSchemaCollectionFragmentFacet parsing the small inline collection above. Each runtime `expect` on a parsed value is paired with an
+      // AssertTypeEquality on its static type.
       it('Detects a not-type', () => {
         expect(JSONSchemaNotTypeFragmentFacet.is({ not: { type: 'null' } })).toBe(true);
         expect(JSONSchemaNotTypeFragmentFacet.is({ not: {} })).toBe(true);

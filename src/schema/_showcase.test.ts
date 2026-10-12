@@ -42,8 +42,13 @@ type Schema = typeof schema;
 type Person = Schema['$defs']['Person'];
 
 describe('Showcase', () => {
+  // Walks through the wrapper internals over the small inline `as const` schema above, chosen so two definitions cover every case: a model
+  // with an inline nested model and a nullable, recursive `$ref` (Person), and a fragment which is not a model (Role). How to read it is in
+  // the file header; every claim is an AssertTypeEquality (or AssertTypeAssignable) consumed through `expect(true satisfies ...)`.
   describe('TSSchema wrapper internals', () => {
+    // Grouped as the layer is built: the wrappers, then the name and value type utilities over them, then path resolution.
     describe('Wrapper shapes', () => {
+      // What each public wrapper resolves to, compared to the internal JSONSchema*Wrapper types, and how each unwraps.
       it('Wraps a collection as { __collection }', () => {
         type People = TSSchemaCollection<Schema>;
         //   ^?
@@ -88,6 +93,7 @@ describe('Showcase', () => {
     });
 
     describe('Name utilities', () => {
+      // The per-module name utilities TSSchemaName dispatches to.
       it('Gets definition names from a collection, or from any wrapper of it', () => {
         type FragmentName = TSSchemaDefinitionName<TSSchemaProperty<Schema, 'Person', 'name'>>;
         //   ^?
@@ -108,6 +114,7 @@ describe('Showcase', () => {
     });
 
     describe('Value type utilities', () => {
+      // The per-module value type utilities TSSchemaType dispatches to.
       it('Infers the type of a fragment wrapper against its own collection, or an explicitly passed one', () => {
         type PersonType = TSSchemaFragmentType<TSSchemaFragment<Schema, 'Person'>>;
         //   ^?
@@ -133,6 +140,7 @@ describe('Showcase', () => {
     });
 
     describe('Path resolution, step by step', () => {
+      // How TSSchemaProperty resolves the segments of a dot-separated path past the first, which is all its name constraint checks.
       it('Resolves a path into an inline nested model, wrapping the property with that nested model', () => {
         type City = TSSchemaProperty<Schema, 'Person', 'address.city'>;
         //   ^?

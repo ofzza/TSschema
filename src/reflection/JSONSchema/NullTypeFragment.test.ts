@@ -9,8 +9,14 @@ const _schema = { $defs: { Nothing: { type: 'null' } } } as const;
 type _Schema = typeof _schema;
 
 describe('Reflection', () => {
+  // Runtime tests of NullTypeFragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in
+  // src/schema/JSONSchema/NullTypeFragment.test.ts, so the two layers' tests line up.
   describe('JSONSchema fragment facets', () => {
+    // Each file in this directory holds the tests of one facet class under this describe.
     describe('Null Type fragment', () => {
+      // JSONSchemaNullTypeFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsNullType), the `type` it parses and the type-only `Type`. Facets are
+      // taken from a JSONSchemaCollectionFragmentFacet parsing the small inline collection above. Each runtime `expect` on a parsed value is paired with an
+      // AssertTypeEquality on its static type.
       it('Detects a null type', () => {
         expect(JSONSchemaNullTypeFragmentFacet.is({ type: 'null' })).toBe(true);
       });

@@ -28,8 +28,15 @@ type _Schema = typeof _schema;
 type _Person = _Schema['$defs']['Person'];
 
 describe('Reflection', () => {
+  // Runtime tests of ModelFragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in
+  // src/schema/JSONSchema/ModelFragment.test.ts, so the two layers' tests line up.
   describe('JSONSchema fragment facets', () => {
+    // Each file in this directory holds the tests of one facet class under this describe.
     describe('Model fragment', () => {
+      // JSONSchemaModelFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsModel), the property `names`, the facets of each property (parsed on
+      // construction), the `required` names and the type-only `Type`. Facets are taken from a JSONSchemaCollectionFragmentFacet parsing the small inline
+      // collection above (a recursive Person with a boolean schema property and a `required` naming an undefined property) and the res/schema.json fixture.
+      // Each runtime `expect` on a parsed value is paired with an AssertTypeEquality on its static type.
       it('Detects a model', () => {
         expect(JSONSchemaModelFragmentFacet.is(_schema.$defs.Person)).toBe(true);
         expect(JSONSchemaModelFragmentFacet.is(jsonSchema.$defs.Assessment)).toBe(true);
@@ -77,6 +84,9 @@ describe('Reflection', () => {
       });
 
       it('Does not carry the readonly or optional modifiers of schema properties over to the parsed properties', () => {
+        // Unlike the inferred model type, where `required` decides optionality, every property has its facets: the facets record drops the schema literal's
+        // `readonly` and `?`.
+        // See AGENTS.md › A homomorphic mapped type over a schema object copies the schema literal's modifiers.
         type Properties = JSONSchemaModelFragmentFacet<_Schema, undefined, { type: 'object'; properties: { readonly a?: { type: 'null' } } }>['properties'];
         expect(true satisfies AssertTypeEquality<keyof Properties, 'a'>).toBe(true);
         expect(true satisfies AssertTypeEquality<{ -readonly [K in keyof Properties]-?: Properties[K] }, Properties>).toBe(true);

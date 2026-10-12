@@ -21,8 +21,15 @@ type _Schema = typeof _schema;
 type _Person = _Schema['$defs']['Person'];
 
 describe('Reflection', () => {
+  // Runtime tests of AllOfTypeFragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in
+  // src/schema/JSONSchema/AllOfTypeFragment.test.ts, so the two layers' tests line up.
   describe('JSONSchema fragment facets', () => {
+    // Each file in this directory holds the tests of one facet class under this describe.
     describe('AllOf Type fragment', () => {
+      // JSONSchemaAllOfTypeFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsAllOfType), the facets of each `allOf` member (parsed on
+      // construction, typed element by element for a tuple) and the type-only `Type`. Facets are taken from a JSONSchemaCollectionFragmentFacet parsing the
+      // small inline collection above, where Person combines a `$ref` and an inline model. Each runtime `expect` on a parsed value is paired with an
+      // AssertTypeEquality on its static type.
       it('Detects an all-of-types', () => {
         expect(JSONSchemaAllOfTypeFragmentFacet.is({ allOf: [{ type: 'string' }] })).toBe(true);
         expect(JSONSchemaAllOfTypeFragmentFacet.is({ allOf: [] })).toBe(true);
@@ -52,6 +59,7 @@ describe('Reflection', () => {
       });
 
       it('Parses a member of an all-of-types which is not a schema object with no facets', () => {
+        // See AGENTS.md › Fragment facet types follow the type layer's limits, not the runtime's leniency.
         // TODO: `JSONSchemaAllOfTypeFragment` requires every member to be a schema object, so boolean schemas (valid JSON schema) are not yet supported by
         //       the types; at runtime they are parsed with no facets
         const collection = new JSONSchemaCollectionFragmentFacet({ $defs: { A: { allOf: [{ type: 'string' }, true] } } } as JSONSchemaCollection);

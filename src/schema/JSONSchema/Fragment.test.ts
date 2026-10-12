@@ -53,8 +53,14 @@ type _TypeArrayCollection = {
 };
 
 describe('JSONSchema', () => {
+  // Type layer tests of Fragment.ts. The `JSONSchema > JSONSchema fragments > <Kind> fragment` tree is kept from when src/schema/JSONSchema/ was a single file;
+  // src/reflection/JSONSchema/Fragment.test.ts mirrors it at runtime (with the router in FragmentFacets.test.ts).
   describe('JSONSchema fragments', () => {
+    // Each file in this directory holds the tests of one fragment kind under this describe; this one holds the dispatcher over all of them, and type arrays.
     describe('Any fragment', () => {
+      // JSONSchemaFragmentType, inferring a value type from a fragment of any kind by intersecting what every keyword contributes. Tested at type level only,
+      // by AssertTypeEquality, on the res/const.json, res/enum.json and res/schema.json fixtures, inline `as const` fragments, unions of fragments, and the
+      // inline collection above, whose `type` arrays name non primitive types.
       it('Infers a type from a fragment of any kind', () => {
         const _primitiveTypeFragment = { type: 'number' } as const;
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<typeof _primitiveTypeFragment>, number>).toBe(true);
@@ -76,7 +82,8 @@ describe('JSONSchema', () => {
         type Assessment = JSONSchemaFragmentType<typeof _refTypeFragment, JSONSchemaFixtureCollection>;
         expect(true satisfies AssertTypeEquality<Assessment['id'], string>).toBe(true);
         expect(true satisfies AssertTypeEquality<Assessment['weight'], number>).toBe(true);
-        expect(true satisfies AssertTypeEquality<Assessment['isOpenBook'], boolean>).toBe(true);
+        // `isOpenBook` is not listed in `required`, so indexing the type adds `undefined`
+        expect(true satisfies AssertTypeEquality<Assessment['isOpenBook'], boolean | undefined>).toBe(true);
       });
 
       it('Infers unknown from an empty fragment', () => {
@@ -85,6 +92,7 @@ describe('JSONSchema', () => {
       });
 
       it('Infers a union of types from a union of fragments', () => {
+        // See AGENTS.md › A conditional type on a bare type parameter distributes over unions — per conditional.
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<{ readonly type: 'string' } | { readonly type: 'number' }>, string | number>).toBe(
           true,
         );
@@ -99,6 +107,9 @@ describe('JSONSchema', () => {
       });
 
       it('Infers a union of the types of the branches of a type array naming non primitive types', () => {
+        // The recursive Node definition can not be spelled out as one expected type, so its union is checked piece by piece: that it includes `null`, and the
+        // type of each property of its model branch.
+        // See AGENTS.md › A `type` array naming `object`, `array` and / or `null` is split into a union of branches.
         type Mixed = JSONSchemaFragmentType<_TypeArrayCollection['$defs']['Mixed']>;
         expect(true satisfies AssertTypeEquality<Mixed, { a: number } | boolean[] | string | null>).toBe(true);
         type Node = JSONSchemaFragmentType<_TypeArrayCollection['$defs']['Node'], _TypeArrayCollection>;
@@ -116,12 +127,15 @@ describe('JSONSchema', () => {
       });
 
       it('Intersects every branch of a type array with the types of keywords applying regardless of type', () => {
+        // The branches are alternatives, but `enum` applies to each of them: only `'a'` is a valid value of the object or string branch.
         type Enumerated = { readonly type: readonly ['object', 'string']; readonly enum: readonly ['a', 1, null] };
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<Enumerated>, 'a'>).toBe(true);
       });
     });
 
     describe('Type array branches', () => {
+      // JSONSchemaFragmentTypeBranch on its own: the branches a fragment is split into, compared with AssertTypeEquality against hand-written fragment types.
+      // The runtime getJSONSchemaFragmentTypeBranches mirrors it.
       it('Splits a type array naming non primitive types into a branch per group of type names', () => {
         type Branch = JSONSchemaFragmentTypeBranch<{ readonly type: readonly ['object', 'array', 'string', 'boolean', 'null']; readonly title: 'x' }>;
         expect(
@@ -136,6 +150,7 @@ describe('JSONSchema', () => {
       });
 
       it('Splits a type array naming null off its primitive types, e.g. a nullable primitive', () => {
+        // See AGENTS.md › `null` is not a primitive type.
         type Branch = JSONSchemaFragmentTypeBranch<{ readonly type: readonly ['string', 'null'] }>;
         expect(true satisfies AssertTypeEquality<Branch, { readonly type: Array<'string'> } | { readonly type: 'null' }>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentTypeBranch<{ readonly type: readonly ['null'] }>, { readonly type: 'null' }>).toBe(true);

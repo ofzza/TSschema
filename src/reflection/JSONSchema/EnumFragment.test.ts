@@ -5,8 +5,15 @@ import { JSONSchemaCollectionFragmentFacet, JSONSchemaEnumFragmentFacet } from '
 import { default as enumJsonSchema } from '../../../res/sidecar/enum.json';
 
 describe('Reflection', () => {
+  // Runtime tests of EnumFragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in src/schema/JSONSchema/EnumFragment.test.ts,
+  // so the two layers' tests line up.
   describe('JSONSchema fragment facets', () => {
+    // Each file in this directory holds the tests of one facet class under this describe.
     describe('Enum fragment', () => {
+      // JSONSchemaEnumFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsEnum), the `enum` values and their `names`, and the type-only `Type`.
+      // Facets are taken from a JSONSchemaCollectionFragmentFacet parsing the res/enum.json fixture, whose NamedEnum names its values by `x-enumNames`, or
+      // constructed directly on inline enums of non string values. Each runtime `expect` on a parsed value is paired with an AssertTypeEquality on its static
+      // type.
       it('Detects an enum', () => {
         expect(JSONSchemaEnumFragmentFacet.is({ enum: ['a', 'b'] })).toBe(true);
         expect(JSONSchemaEnumFragmentFacet.is(enumJsonSchema.$defs.Enum)).toBe(true);
@@ -14,6 +21,7 @@ describe('Reflection', () => {
       });
 
       it('Rejects a non-enum', () => {
+        // The `as any` lets through an `enum` which is not an array, which the fragment type rejects but untyped code could pass.
         expect(JSONSchemaEnumFragmentFacet.is({ type: 'string' })).toBe(false);
         expect(JSONSchemaEnumFragmentFacet.is({ const: 'a' })).toBe(false);
         expect(JSONSchemaEnumFragmentFacet.is({ enum: 'a' } as any)).toBe(false);
@@ -27,6 +35,8 @@ describe('Reflection', () => {
       });
 
       it('Names the enumerated values by `x-enumNames`, or else by their own names', () => {
+        // `x-enumNames` is used only if it lists a string per value: the misnamed enum lists too few, so its values are named by themselves.
+        // See AGENTS.md › Enum names come from `x-enumNames`, `oneOf` titles, or the value itself.
         const named = new JSONSchemaCollectionFragmentFacet(enumJsonSchema).$defs.NamedEnum.find((facet) => facet instanceof JSONSchemaEnumFragmentFacet)!;
         expect(named.names).toEqual(['One', 'Two', 'Three']);
         expect(true satisfies AssertTypeEquality<typeof named.names, ['One', 'Two', 'Three']>).toBe(true);

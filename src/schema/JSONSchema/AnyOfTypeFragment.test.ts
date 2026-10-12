@@ -8,8 +8,14 @@ import type { JSONSchemaAnyOfTypeFragment, JSONSchemaAnyOfTypeFragmentType, JSON
 type _ModelA = { readonly type: 'object'; readonly properties: { readonly a: { readonly type: 'number' } }; readonly required: readonly ['a'] };
 
 describe('JSONSchema', () => {
+  // Type layer tests of AnyOfTypeFragment.ts. The `JSONSchema > JSONSchema fragments > <Kind> fragment` tree is kept from when src/schema/JSONSchema/ was a
+  // single file; src/reflection/JSONSchema/AnyOfTypeFragment.test.ts mirrors it at runtime.
   describe('JSONSchema fragments', () => {
+    // Each file in this directory holds the tests of one fragment kind under this describe.
     describe('AnyOf fragment', () => {
+      // JSONSchemaAnyOfTypeFragment / JSONSchemaFragmentIsAnyOfType and the value type JSONSchemaAnyOfTypeFragmentType, the union of the members' types. Tested
+      // at type level only, on inline `as const` fragments and the small model above, through both JSONSchemaAnyOfTypeFragmentType and JSONSchemaFragmentType,
+      // by AssertTypeEquality and AssertTypeAssignable.
       it('Detects an any-of-types', () => {
         const _anyOfTypeFragment = { anyOf: [{ type: 'number' }, { type: 'string' }, { const: true }] } as const;
         //    ^?
@@ -35,6 +41,8 @@ describe('JSONSchema', () => {
       });
 
       it('Infers never from an empty any-of-types', () => {
+        // An empty `anyOf` is satisfied by no value, so unlike an empty `allOf` it infers `never`.
+        // See AGENTS.md › JSON schema type inference uses `unknown` for "no constraint".
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<{ readonly anyOf: readonly [] }>, never>).toBe(true);
       });
 

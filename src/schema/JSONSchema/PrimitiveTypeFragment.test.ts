@@ -8,8 +8,14 @@ import type {
 } from './index.js';
 
 describe('JSONSchema', () => {
+  // Type layer tests of PrimitiveTypeFragment.ts. The `JSONSchema > JSONSchema fragments > <Kind> fragment` tree is kept from when src/schema/JSONSchema/ was a
+  // single file; src/reflection/JSONSchema/PrimitiveTypeFragment.test.ts mirrors it at runtime.
   describe('JSONSchema fragments', () => {
+    // Each file in this directory holds the tests of one fragment kind under this describe.
     describe('Primitive Type fragment', () => {
+      // JSONSchemaPrimitiveTypeFragment / JSONSchemaFragmentIsPrimitiveType and the value type JSONSchemaPrimitiveTypeFragmentType, for a single primitive type
+      // name or an array of them, plus what JSONSchemaFragmentType infers from those arrays. Tested at type level only, on inline `as const` fragments, by
+      // AssertTypeEquality and AssertTypeAssignable.
       it('Detects a primitive type', () => {
         const _primitiveTypeFragment = { type: 'number' } as const;
         //    ^?
@@ -19,6 +25,9 @@ describe('JSONSchema', () => {
       });
 
       it('Rejects a non-primitive type', () => {
+        // A type array naming any non primitive type, `null` included, is not a primitive type fragment: JSONSchemaFragmentType splits it into branches before
+        // matching any fragment type.
+        // See AGENTS.md › A `type` array naming `object`, `array` and / or `null` is split into a union of branches.
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsPrimitiveType<{ type: 'array' }>, false>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsPrimitiveType<{ type: 'object' }>, false>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsPrimitiveType<{ readonly type: readonly ['string', 'object'] }>, false>).toBe(true);

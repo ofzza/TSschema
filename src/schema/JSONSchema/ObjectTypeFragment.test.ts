@@ -8,8 +8,14 @@ type JSONSchemaFixtureCollection = typeof jsonSchema;
 type AssessmentModel = JSONSchemaFixtureCollection['$defs']['Assessment'];
 
 describe('JSONSchema', () => {
+  // Type layer tests of ObjectTypeFragment.ts. The `JSONSchema > JSONSchema fragments > <Kind> fragment` tree is kept from when src/schema/JSONSchema/ was a
+  // single file; src/reflection/JSONSchema/ObjectTypeFragment.test.ts mirrors it at runtime.
   describe('JSONSchema fragments', () => {
+    // Each file in this directory holds the tests of one fragment kind under this describe.
     describe('Object Type fragment', () => {
+      // JSONSchemaObjectTypeFragment / JSONSchemaFragmentIsObjectType and the value type JSONSchemaObjectTypeFragmentType, inferred from a `type: 'object'`
+      // fragment with no `properties`. Tested at type level only, on an inline `as const` fragment, and on the Assessment model of the res/schema.json fixture
+      // as a negative, by AssertTypeEquality and AssertTypeAssignable.
       it('Detects an object type', () => {
         const _objectTypeFragment = { type: 'object' } as const;
         //    ^?
@@ -18,6 +24,7 @@ describe('JSONSchema', () => {
       });
 
       it('Rejects a non-object type', () => {
+        // A model is not an object type fragment: the object type fragment forbids `properties`, so the two never both match one fragment.
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsObjectType<AssessmentModel>, false>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsObjectType<{ type: 'array' }>, false>).toBe(true);
       });

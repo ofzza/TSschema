@@ -15,8 +15,14 @@ type JSONSchemaEnum = JSONSchemaEnumCollection['$defs']['Enum'];
 //   ^?
 
 describe('JSONSchema', () => {
+  // Type layer tests of EnumFragment.ts. The `JSONSchema > JSONSchema fragments > <Kind> fragment` tree is kept from when src/schema/JSONSchema/ was a single
+  // file; src/reflection/JSONSchema/EnumFragment.test.ts mirrors it at runtime.
   describe('JSONSchema fragments', () => {
+    // Each file in this directory holds the tests of one fragment kind under this describe.
     describe('Enum fragment', () => {
+      // JSONSchemaEnumFragment / JSONSchemaFragmentIsEnum and the value type JSONSchemaEnumFragmentType, the union of the enumerated values. Tested at type
+      // level only, on the Enum definition of the res/enum.json fixture (a const of res/const.json as the negative) and on inline fragments with mixed and
+      // `null` values and a widened (non tuple) `enum` array, by AssertTypeEquality and AssertTypeAssignable.
       it('Detects an enum', () => {
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsEnum<JSONSchemaEnum>, true>).toBe(true);
         expect(true satisfies AssertTypeAssignable<JSONSchemaEnum, JSONSchemaEnumFragment>).toBe(true);
@@ -33,6 +39,8 @@ describe('JSONSchema', () => {
       });
 
       it('Infers unknown from a non-enum', () => {
+        // An absent keyword infers `unknown`, so it is neutral in JSONSchemaFragmentType's intersection of every per-keyword type.
+        // See AGENTS.md › JSON schema type inference uses `unknown` for "no constraint".
         expect(true satisfies AssertTypeEquality<JSONSchemaEnumFragmentType<{ type: 'string' }>, unknown>).toBe(true);
       });
     });

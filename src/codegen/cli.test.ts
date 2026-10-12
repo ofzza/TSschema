@@ -35,7 +35,11 @@ function _withSchemas(callback: (dir: string) => void): void {
 }
 
 describe('cli', () => {
+  // The `tsschema` command line interface, through `run`, which returns an exit code instead of exiting and prints to an injected output, so
+  // both can be asserted. Runtime only: each test works in a fresh temporary directory under os.tmpdir(), removed afterwards, holding minimal
+  // one-definition schemas (plus one in node_modules, which must be skipped).
   describe('run', () => {
+    // Argument parsing, globbing, exit codes, --check and --watch; what is generated is up to index.test.ts.
     it('Generates files for every JSON file matching the patterns, outside of node_modules', () => {
       _withSchemas((dir) => {
         const output = _output();
@@ -67,6 +71,7 @@ describe('cli', () => {
     });
 
     it('Exits with 1 when nothing matches, or a schema can not be generated', () => {
+      // A top-level `true` is a valid JSON schema, but the default sidecar mode needs an object to declare named exports for.
       _withSchemas((dir) => {
         expect(run(['generate', 'missing/*.json'], _output(), dir).code).toBe(1);
         writeFileSync(join(dir, 'schemas', 'a.json'), 'true');
@@ -98,6 +103,8 @@ describe('cli', () => {
     });
 
     it('Regenerates when a watched JSON file changes, until closed', async () => {
+      // Waits on a real fs.watch event (debounced by `run`) with expect.poll: two `written` lines are the initial run and the regeneration.
+      // `close` must be called, or the watchers would keep the test process alive.
       const dir = mkdtempSync(join(tmpdir(), 'tsschema-cli-'));
       try {
         writeFileSync(join(dir, 'a.json'), '{ "$defs": {} }');

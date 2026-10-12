@@ -24,8 +24,15 @@ type _Schema = typeof _schema;
 type _MaybeNamed = _Schema['$defs']['MaybeNamed'];
 
 describe('Reflection', () => {
+  // Runtime tests of AnyOfTypeFragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in
+  // src/schema/JSONSchema/AnyOfTypeFragment.test.ts, so the two layers' tests line up.
   describe('JSONSchema fragment facets', () => {
+    // Each file in this directory holds the tests of one facet class under this describe.
     describe('AnyOf Type fragment', () => {
+      // JSONSchemaAnyOfTypeFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsAnyOfType), the facets of each `anyOf` member, whether it is
+      // `implicit` (built by the router from a type array) and the type-only `Type`. Facets are taken from a JSONSchemaCollectionFragmentFacet parsing the
+      // small inline collection above, with an explicit nullable reference and a type array nullable model, both inferring the same type. Each runtime `expect`
+      // on a parsed value is paired with an AssertTypeEquality on its static type.
       it('Detects an any-of-types', () => {
         expect(JSONSchemaAnyOfTypeFragmentFacet.is({ anyOf: [{ type: 'string' }] })).toBe(true);
         expect(JSONSchemaAnyOfTypeFragmentFacet.is(jsonSchema.$defs.Assessment.properties.class)).toBe(true);
@@ -54,6 +61,9 @@ describe('Reflection', () => {
       });
 
       it('Parses the branches of a type array naming several groups of type names as an implicit any-of-types', () => {
+        // The `fragment` of an implicit `anyOf` is the generated `anyOf` of the branches, not the definition it was built from. Only type independent keywords
+        // are left out of each branch, so `properties` and `required` stay in all of them.
+        // See AGENTS.md › A `type` array naming `object`, `array` and / or `null` is split into a union of branches.
         const nullable = new JSONSchemaCollectionFragmentFacet(_schema).$defs.Nullable[0];
         expect(nullable).toBeInstanceOf(JSONSchemaAnyOfTypeFragmentFacet);
         expect(nullable.implicit).toBe(true);

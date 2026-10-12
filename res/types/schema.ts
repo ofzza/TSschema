@@ -4,9 +4,9 @@ import type { TSSchemaFragment, TSSchemaType } from "../../src/index.js";
 
 export type Schema = {
   readonly $schema: "https://json-schema.org/draft/2020-12/schema";
-  readonly $id: "urn:tsschema:schema:schema";
-  readonly title: "schema";
-  readonly $comment: "Definition bundle. Reference a fragment as #/$defs/<name>.";
+  readonly $id: "urn:dotnetschema:schema:school";
+  readonly title: "school";
+  readonly $comment: "Definition bundle. Exported types: School. Reference one as #/$defs/<name>.";
   readonly $defs: {
     readonly Address: {
       readonly type: "object";
@@ -18,7 +18,10 @@ export type Schema = {
           readonly type: "string";
         };
         readonly postalCode: {
-          readonly type: "string";
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
         };
         readonly countryCode: {
           readonly type: "string";
@@ -33,7 +36,6 @@ export type Schema = {
       readonly required: readonly [
         "street",
         "city",
-        "postalCode",
         "countryCode",
         "latitude",
         "longitude",
@@ -62,7 +64,10 @@ export type Schema = {
           readonly maximum: 65535;
         };
         readonly dueAt: {
-          readonly type: "string";
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
           readonly format: "date-time";
         };
         readonly isOpenBook: {
@@ -84,18 +89,16 @@ export type Schema = {
       };
       readonly required: readonly [
         "id",
-        "kind",
         "title",
         "weight",
         "maximumMarks",
         "dueAt",
-        "isOpenBook",
         "record",
       ];
     };
     readonly AssessmentKind: {
       readonly type: "integer";
-      readonly $comment: "Cornerstone.Fixtures.Schema.Enums.AssessmentKind (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.";
+      readonly $comment: "DotNetSchema.Fixtures.Schema.Enums.AssessmentKind (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.";
       readonly oneOf: readonly [
         {
           readonly const: 0;
@@ -143,11 +146,23 @@ export type Schema = {
         readonly register: {
           readonly $ref: "#/$defs/ScalarRegister";
         };
+        readonly nullableBattery: {
+          readonly $ref: "#/$defs/NullableScalarBattery";
+        };
+        readonly nullableSeries: {
+          readonly $ref: "#/$defs/NullableScalarSeries";
+        };
+        readonly nullableRegister: {
+          readonly $ref: "#/$defs/NullableScalarRegister";
+        };
       };
       readonly required: readonly [
         "battery",
         "series",
         "register",
+        "nullableBattery",
+        "nullableSeries",
+        "nullableRegister",
       ];
     };
     readonly Book: {
@@ -161,7 +176,10 @@ export type Schema = {
           readonly $ref: "#/$defs/BookName";
         };
         readonly isbn: {
-          readonly type: "string";
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
         };
         readonly edition: {
           readonly type: "integer";
@@ -195,7 +213,10 @@ export type Schema = {
           ];
         };
         readonly authors: {
-          readonly type: "array";
+          readonly type: readonly [
+            "array",
+            "null",
+          ];
           readonly items: {
             readonly $ref: "#/$defs/Person";
           };
@@ -215,14 +236,13 @@ export type Schema = {
         "pageCount",
         "price",
         "publishedOn",
-        "hasDigitalLicence",
         "authors",
         "chapters",
       ];
     };
     readonly BookName: {
       readonly type: "integer";
-      readonly $comment: "Cornerstone.Fixtures.Schema.Enums.BookName (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.";
+      readonly $comment: "DotNetSchema.Fixtures.Schema.Enums.BookName (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.";
       readonly oneOf: readonly [
         {
           readonly const: 0;
@@ -325,7 +345,10 @@ export type Schema = {
           readonly type: "boolean";
         };
         readonly builtInYear: {
-          readonly type: "integer";
+          readonly type: readonly [
+            "integer",
+            "null",
+          ];
           readonly minimum: 0;
           readonly maximum: 65535;
         };
@@ -340,7 +363,6 @@ export type Schema = {
         "id",
         "name",
         "floorCount",
-        "isAccessible",
         "builtInYear",
         "rooms",
       ];
@@ -359,7 +381,10 @@ export type Schema = {
           readonly $ref: "#/$defs/Address";
         };
         readonly openedOn: {
-          readonly type: "string";
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
           readonly format: "date";
         };
         readonly areaHectares: {
@@ -377,7 +402,6 @@ export type Schema = {
         "name",
         "address",
         "openedOn",
-        "areaHectares",
         "buildings",
       ];
     };
@@ -402,7 +426,10 @@ export type Schema = {
           readonly maximum: 65535;
         };
         readonly estimatedReadingTime: {
-          readonly type: "string";
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
           readonly pattern: "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$";
           readonly $comment: "System.TimeSpan. System.Text.Json writes [-][d.]hh:mm:ss[.fffffff], not an ISO-8601 duration, so the \"duration\" format does not hold.";
         };
@@ -424,9 +451,7 @@ export type Schema = {
         "ordinal",
         "title",
         "startPage",
-        "estimatedReadingTime",
         "sections",
-        "subChapters",
       ];
     };
     readonly Class: {
@@ -443,7 +468,14 @@ export type Schema = {
           readonly type: "string";
         };
         readonly term: {
-          readonly $ref: "#/$defs/Term";
+          readonly anyOf: readonly [
+            {
+              readonly $ref: "#/$defs/Term";
+            },
+            {
+              readonly type: "null";
+            },
+          ];
         };
         readonly academicYear: {
           readonly type: "integer";
@@ -462,7 +494,10 @@ export type Schema = {
           readonly type: "boolean";
         };
         readonly synopsis: {
-          readonly type: "string";
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
         };
         readonly professor: {
           readonly anyOf: readonly [
@@ -493,7 +528,10 @@ export type Schema = {
           };
         };
         readonly schedule: {
-          readonly type: "array";
+          readonly type: readonly [
+            "array",
+            "null",
+          ];
           readonly items: {
             readonly $ref: "#/$defs/ClassSession";
           };
@@ -519,22 +557,19 @@ export type Schema = {
         "id",
         "name",
         "code",
-        "term",
         "academicYear",
         "credits",
         "seats",
         "isEnrollmentOpen",
-        "synopsis",
+        "professor",
         "students",
         "materials",
-        "prerequisites",
-        "schedule",
         "assessments",
       ];
     };
     readonly ClassName: {
       readonly type: "integer";
-      readonly $comment: "Cornerstone.Fixtures.Schema.Enums.ClassName (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.";
+      readonly $comment: "DotNetSchema.Fixtures.Schema.Enums.ClassName (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.";
       readonly oneOf: readonly [
         {
           readonly const: 0;
@@ -657,7 +692,6 @@ export type Schema = {
         "day",
         "startsAt",
         "duration",
-        "isRemote",
       ];
     };
     readonly DayOfWeek: {
@@ -708,7 +742,10 @@ export type Schema = {
           readonly type: "string";
         };
         readonly annualBudget: {
-          readonly type: "number";
+          readonly type: readonly [
+            "number",
+            "null",
+          ];
           readonly $comment: "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly.";
         };
         readonly establishedOn: {
@@ -741,16 +778,16 @@ export type Schema = {
       readonly required: readonly [
         "id",
         "name",
-        "costCentre",
         "annualBudget",
         "establishedOn",
+        "head",
         "courses",
         "subDepartments",
       ];
     };
     readonly DepartmentName: {
       readonly type: "integer";
-      readonly $comment: "Cornerstone.Fixtures.Schema.Enums.DepartmentName (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.";
+      readonly $comment: "DotNetSchema.Fixtures.Schema.Enums.DepartmentName (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.";
       readonly oneOf: readonly [
         {
           readonly const: 0;
@@ -800,7 +837,10 @@ export type Schema = {
           readonly type: "string";
         };
         readonly difficulty: {
-          readonly type: "number";
+          readonly type: readonly [
+            "number",
+            "null",
+          ];
         };
         readonly hasWorkedSolution: {
           readonly type: "boolean";
@@ -815,8 +855,6 @@ export type Schema = {
         "id",
         "label",
         "prompt",
-        "difficulty",
-        "hasWorkedSolution",
         "marks",
       ];
     };
@@ -841,13 +879,19 @@ export type Schema = {
           readonly $comment: "System.TimeOnly. System.Text.Json writes hh:mm:ss[.fffffff] with no UTC offset, so the JSON Schema \"time\" format (RFC 3339 full-time) does not hold.";
         };
         readonly closesAt: {
-          readonly type: "string";
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
           readonly pattern: "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d{1,7})?$";
           readonly $comment: "System.TimeOnly. System.Text.Json writes hh:mm:ss[.fffffff] with no UTC offset, so the JSON Schema \"time\" format (RFC 3339 full-time) does not hold.";
         };
         readonly catalogue: {
-          readonly type: "object";
-          readonly $comment: "Keyed by Cornerstone.Fixtures.Schema.Enums.BookName. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.";
+          readonly type: readonly [
+            "object",
+            "null",
+          ];
+          readonly $comment: "Keyed by DotNetSchema.Fixtures.Schema.Enums.BookName. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.";
           readonly propertyNames: {
             readonly type: "string";
             readonly enum: readonly [
@@ -893,12 +937,764 @@ export type Schema = {
       readonly required: readonly [
         "id",
         "name",
-        "volumeCount",
         "opensAt",
         "closesAt",
         "catalogue",
         "librarians",
         "readingRooms",
+      ];
+    };
+    readonly NullableScalarBattery: {
+      readonly type: "object";
+      readonly properties: {
+        readonly isProctored: {
+          readonly type: readonly [
+            "boolean",
+            "null",
+          ];
+        };
+        readonly curveAdjustment: {
+          readonly type: readonly [
+            "integer",
+            "null",
+          ];
+          readonly minimum: -128;
+          readonly maximum: 127;
+        };
+        readonly rawScore: {
+          readonly type: readonly [
+            "integer",
+            "null",
+          ];
+          readonly minimum: 0;
+          readonly maximum: 255;
+        };
+        readonly seatNumber: {
+          readonly type: readonly [
+            "integer",
+            "null",
+          ];
+          readonly minimum: -32768;
+          readonly maximum: 32767;
+        };
+        readonly itemCount: {
+          readonly type: readonly [
+            "integer",
+            "null",
+          ];
+          readonly minimum: 0;
+          readonly maximum: 65535;
+        };
+        readonly totalPoints: {
+          readonly type: readonly [
+            "integer",
+            "null",
+          ];
+          readonly minimum: -2147483648;
+          readonly maximum: 2147483647;
+        };
+        readonly submissionSequence: {
+          readonly type: readonly [
+            "integer",
+            "null",
+          ];
+          readonly minimum: 0;
+          readonly maximum: 4294967295;
+        };
+        readonly elapsedTicks: {
+          readonly type: readonly [
+            "integer",
+            "null",
+          ];
+          readonly $comment: "System.Int64. Bounds are omitted: they are not exactly representable in IEEE-754, and values beyond 2^53 lose precision in readers that parse JSON numbers as doubles.";
+        };
+        readonly integrityChecksum: {
+          readonly type: readonly [
+            "integer",
+            "null",
+          ];
+          readonly minimum: 0;
+          readonly $comment: "System.UInt64. The upper bound is omitted: it is not exactly representable in IEEE-754.";
+        };
+        readonly percentileRank: {
+          readonly type: readonly [
+            "number",
+            "null",
+          ];
+        };
+        readonly scaledScore: {
+          readonly type: readonly [
+            "number",
+            "null",
+          ];
+        };
+        readonly weightedAverage: {
+          readonly type: readonly [
+            "number",
+            "null",
+          ];
+          readonly $comment: "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly.";
+        };
+        readonly letterGrade: {
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
+          readonly minLength: 1;
+          readonly maxLength: 1;
+        };
+        readonly remarks: {
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
+        };
+        readonly responseId: {
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
+          readonly format: "uuid";
+        };
+        readonly administeredOn: {
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
+          readonly format: "date";
+        };
+        readonly startedAt: {
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
+          readonly pattern: "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d{1,7})?$";
+          readonly $comment: "System.TimeOnly. System.Text.Json writes hh:mm:ss[.fffffff] with no UTC offset, so the JSON Schema \"time\" format (RFC 3339 full-time) does not hold.";
+        };
+        readonly allowedDuration: {
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
+          readonly pattern: "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$";
+          readonly $comment: "System.TimeSpan. System.Text.Json writes [-][d.]hh:mm:ss[.fffffff], not an ISO-8601 duration, so the \"duration\" format does not hold.";
+        };
+        readonly recordedAtUtc: {
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
+          readonly format: "date-time";
+          readonly $comment: "System.DateTime. The offset suffix is present only when DateTimeKind is Utc or Local; a DateTimeKind.Unspecified value is written without one and would not satisfy \"date-time\".";
+        };
+        readonly submittedAt: {
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
+          readonly format: "date-time";
+        };
+      };
+      readonly required: readonly [
+        "isProctored",
+        "rawScore",
+        "itemCount",
+        "submissionSequence",
+        "integrityChecksum",
+        "scaledScore",
+        "letterGrade",
+        "responseId",
+        "startedAt",
+        "recordedAtUtc",
+      ];
+    };
+    readonly NullableScalarRegister: {
+      readonly type: "object";
+      readonly properties: {
+        readonly answeredByItem: {
+          readonly type: "object";
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "boolean",
+              "null",
+            ];
+          };
+        };
+        readonly curveByItem: {
+          readonly type: "object";
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly minimum: -128;
+            readonly maximum: 127;
+          };
+        };
+        readonly rawScoreByItem: {
+          readonly type: readonly [
+            "object",
+            "null",
+          ];
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly minimum: 0;
+            readonly maximum: 255;
+          };
+        };
+        readonly seatByItem: {
+          readonly type: readonly [
+            "object",
+            "null",
+          ];
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly minimum: -32768;
+            readonly maximum: 32767;
+          };
+        };
+        readonly attemptsByItem: {
+          readonly type: "object";
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly minimum: 0;
+            readonly maximum: 65535;
+          };
+        };
+        readonly pointsByItem: {
+          readonly type: "object";
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly minimum: -2147483648;
+            readonly maximum: 2147483647;
+          };
+        };
+        readonly sequenceByItem: {
+          readonly type: readonly [
+            "object",
+            "null",
+          ];
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly minimum: 0;
+            readonly maximum: 4294967295;
+          };
+        };
+        readonly elapsedTicksByItem: {
+          readonly type: readonly [
+            "object",
+            "null",
+          ];
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly $comment: "System.Int64. Bounds are omitted: they are not exactly representable in IEEE-754, and values beyond 2^53 lose precision in readers that parse JSON numbers as doubles.";
+          };
+        };
+        readonly checksumByItem: {
+          readonly type: "object";
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly minimum: 0;
+            readonly $comment: "System.UInt64. The upper bound is omitted: it is not exactly representable in IEEE-754.";
+          };
+        };
+        readonly percentileByItem: {
+          readonly type: "object";
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "number",
+              "null",
+            ];
+          };
+        };
+        readonly scaledScoreByItem: {
+          readonly type: readonly [
+            "object",
+            "null",
+          ];
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "number",
+              "null",
+            ];
+          };
+        };
+        readonly weightByItem: {
+          readonly type: readonly [
+            "object",
+            "null",
+          ];
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "number",
+              "null",
+            ];
+            readonly $comment: "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly.";
+          };
+        };
+        readonly letterGradeByItem: {
+          readonly type: "object";
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+            readonly minLength: 1;
+            readonly maxLength: 1;
+          };
+        };
+        readonly remarkByItem: {
+          readonly type: "object";
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+          };
+        };
+        readonly responseIdByItem: {
+          readonly type: readonly [
+            "object",
+            "null",
+          ];
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+            readonly format: "uuid";
+          };
+        };
+        readonly markedOnByItem: {
+          readonly type: readonly [
+            "object",
+            "null",
+          ];
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+            readonly format: "date";
+          };
+        };
+        readonly openedAtByItem: {
+          readonly type: "object";
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+            readonly pattern: "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d{1,7})?$";
+            readonly $comment: "System.TimeOnly. System.Text.Json writes hh:mm:ss[.fffffff] with no UTC offset, so the JSON Schema \"time\" format (RFC 3339 full-time) does not hold.";
+          };
+        };
+        readonly durationByItem: {
+          readonly type: "object";
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+            readonly pattern: "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$";
+            readonly $comment: "System.TimeSpan. System.Text.Json writes [-][d.]hh:mm:ss[.fffffff], not an ISO-8601 duration, so the \"duration\" format does not hold.";
+          };
+        };
+        readonly recordedAtUtcByItem: {
+          readonly type: readonly [
+            "object",
+            "null",
+          ];
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+            readonly format: "date-time";
+            readonly $comment: "System.DateTime. The offset suffix is present only when DateTimeKind is Utc or Local; a DateTimeKind.Unspecified value is written without one and would not satisfy \"date-time\".";
+          };
+        };
+        readonly savedAtByItem: {
+          readonly type: readonly [
+            "object",
+            "null",
+          ];
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+            readonly format: "date-time";
+          };
+        };
+        readonly remarkByItemNumber: {
+          readonly type: "object";
+          readonly propertyNames: {
+            readonly type: "string";
+            readonly pattern: "^-?(0|[1-9]\\d*)$";
+          };
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+          };
+        };
+        readonly scoreByResponseId: {
+          readonly type: "object";
+          readonly propertyNames: {
+            readonly type: "string";
+            readonly format: "uuid";
+          };
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "number",
+              "null",
+            ];
+          };
+        };
+        readonly weightByAssessmentKind: {
+          readonly type: readonly [
+            "object",
+            "null",
+          ];
+          readonly $comment: "Keyed by DotNetSchema.Fixtures.Schema.Enums.AssessmentKind. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.";
+          readonly propertyNames: {
+            readonly type: "string";
+            readonly enum: readonly [
+              "Quiz",
+              "MidtermExam",
+              "FinalExam",
+              "Essay",
+              "LabReport",
+              "Practical",
+              "OralDefence",
+              "GroupProject",
+            ];
+          };
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "number",
+              "null",
+            ];
+            readonly $comment: "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly.";
+          };
+        };
+        readonly attendanceByDate: {
+          readonly type: readonly [
+            "object",
+            "null",
+          ];
+          readonly propertyNames: {
+            readonly type: "string";
+            readonly format: "date";
+          };
+          readonly additionalProperties: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly minimum: 0;
+            readonly maximum: 65535;
+          };
+        };
+      };
+      readonly required: readonly [
+        "answeredByItem",
+        "rawScoreByItem",
+        "attemptsByItem",
+        "sequenceByItem",
+        "checksumByItem",
+        "scaledScoreByItem",
+        "letterGradeByItem",
+        "responseIdByItem",
+        "openedAtByItem",
+        "recordedAtUtcByItem",
+        "remarkByItemNumber",
+        "weightByAssessmentKind",
+      ];
+    };
+    readonly NullableScalarSeries: {
+      readonly type: "object";
+      readonly properties: {
+        readonly attemptedFlags: {
+          readonly type: "array";
+          readonly items: {
+            readonly type: readonly [
+              "boolean",
+              "null",
+            ];
+          };
+        };
+        readonly curveAdjustments: {
+          readonly type: "array";
+          readonly items: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly minimum: -128;
+            readonly maximum: 127;
+          };
+        };
+        readonly rawScores: {
+          readonly type: readonly [
+            "array",
+            "null",
+          ];
+          readonly items: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly minimum: 0;
+            readonly maximum: 255;
+          };
+        };
+        readonly seatNumbers: {
+          readonly type: readonly [
+            "array",
+            "null",
+          ];
+          readonly items: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly minimum: -32768;
+            readonly maximum: 32767;
+          };
+        };
+        readonly attemptCounts: {
+          readonly type: "array";
+          readonly items: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly minimum: 0;
+            readonly maximum: 65535;
+          };
+        };
+        readonly pointsPerItem: {
+          readonly type: "array";
+          readonly items: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly minimum: -2147483648;
+            readonly maximum: 2147483647;
+          };
+        };
+        readonly submissionSequences: {
+          readonly type: readonly [
+            "array",
+            "null",
+          ];
+          readonly items: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly minimum: 0;
+            readonly maximum: 4294967295;
+          };
+        };
+        readonly elapsedTicksPerItem: {
+          readonly type: readonly [
+            "array",
+            "null",
+          ];
+          readonly items: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly $comment: "System.Int64. Bounds are omitted: they are not exactly representable in IEEE-754, and values beyond 2^53 lose precision in readers that parse JSON numbers as doubles.";
+          };
+        };
+        readonly integrityChecksums: {
+          readonly type: "array";
+          readonly items: {
+            readonly type: readonly [
+              "integer",
+              "null",
+            ];
+            readonly minimum: 0;
+            readonly $comment: "System.UInt64. The upper bound is omitted: it is not exactly representable in IEEE-754.";
+          };
+        };
+        readonly percentileRanks: {
+          readonly type: "array";
+          readonly items: {
+            readonly type: readonly [
+              "number",
+              "null",
+            ];
+          };
+        };
+        readonly scaledScores: {
+          readonly type: readonly [
+            "array",
+            "null",
+          ];
+          readonly items: {
+            readonly type: readonly [
+              "number",
+              "null",
+            ];
+          };
+        };
+        readonly weightedAverages: {
+          readonly type: readonly [
+            "array",
+            "null",
+          ];
+          readonly items: {
+            readonly type: readonly [
+              "number",
+              "null",
+            ];
+            readonly $comment: "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly.";
+          };
+        };
+        readonly letterGrades: {
+          readonly type: "array";
+          readonly items: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+            readonly minLength: 1;
+            readonly maxLength: 1;
+          };
+        };
+        readonly remarks: {
+          readonly type: "array";
+          readonly items: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+          };
+        };
+        readonly responseIds: {
+          readonly type: readonly [
+            "array",
+            "null",
+          ];
+          readonly items: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+            readonly format: "uuid";
+          };
+        };
+        readonly markedOn: {
+          readonly type: readonly [
+            "array",
+            "null",
+          ];
+          readonly items: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+            readonly format: "date";
+          };
+        };
+        readonly openedAt: {
+          readonly type: "array";
+          readonly items: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+            readonly pattern: "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d{1,7})?$";
+            readonly $comment: "System.TimeOnly. System.Text.Json writes hh:mm:ss[.fffffff] with no UTC offset, so the JSON Schema \"time\" format (RFC 3339 full-time) does not hold.";
+          };
+        };
+        readonly durations: {
+          readonly type: "array";
+          readonly items: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+            readonly pattern: "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$";
+            readonly $comment: "System.TimeSpan. System.Text.Json writes [-][d.]hh:mm:ss[.fffffff], not an ISO-8601 duration, so the \"duration\" format does not hold.";
+          };
+        };
+        readonly recordedAtUtc: {
+          readonly type: readonly [
+            "array",
+            "null",
+          ];
+          readonly items: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+            readonly format: "date-time";
+            readonly $comment: "System.DateTime. The offset suffix is present only when DateTimeKind is Utc or Local; a DateTimeKind.Unspecified value is written without one and would not satisfy \"date-time\".";
+          };
+        };
+        readonly savedAt: {
+          readonly type: readonly [
+            "array",
+            "null",
+          ];
+          readonly items: {
+            readonly type: readonly [
+              "string",
+              "null",
+            ];
+            readonly format: "date-time";
+          };
+        };
+        readonly answerSheetScan: {
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
+          readonly contentEncoding: "base64";
+        };
+      };
+      readonly required: readonly [
+        "attemptedFlags",
+        "rawScores",
+        "attemptCounts",
+        "submissionSequences",
+        "integrityChecksums",
+        "scaledScores",
+        "letterGrades",
+        "responseIds",
+        "openedAt",
+        "recordedAtUtc",
+        "answerSheetScan",
       ];
     };
     readonly Person: {
@@ -922,13 +1718,19 @@ export type Schema = {
           readonly format: "date";
         };
         readonly email: {
-          readonly type: "string";
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
         };
         readonly isActive: {
           readonly type: "boolean";
         };
         readonly gradePointAverage: {
-          readonly type: "number";
+          readonly type: readonly [
+            "number",
+            "null",
+          ];
         };
         readonly classes: {
           readonly type: "array";
@@ -938,7 +1740,7 @@ export type Schema = {
         };
         readonly grades: {
           readonly type: "object";
-          readonly $comment: "Keyed by Cornerstone.Fixtures.Schema.Enums.ClassName. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.";
+          readonly $comment: "Keyed by DotNetSchema.Fixtures.Schema.Enums.ClassName. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.";
           readonly propertyNames: {
             readonly type: "string";
             readonly enum: readonly [
@@ -971,7 +1773,10 @@ export type Schema = {
           };
         };
         readonly contactMethods: {
-          readonly type: "object";
+          readonly type: readonly [
+            "object",
+            "null",
+          ];
           readonly additionalProperties: {
             readonly type: "string";
           };
@@ -1009,18 +1814,14 @@ export type Schema = {
         "familyName",
         "role",
         "bornOn",
-        "email",
         "isActive",
         "gradePointAverage",
         "classes",
-        "grades",
-        "contactMethods",
-        "advisees",
       ];
     };
     readonly PersonRole: {
       readonly type: "integer";
-      readonly $comment: "Cornerstone.Fixtures.Schema.Enums.PersonRole (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.";
+      readonly $comment: "DotNetSchema.Fixtures.Schema.Enums.PersonRole (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.";
       readonly oneOf: readonly [
         {
           readonly const: 0;
@@ -1059,7 +1860,14 @@ export type Schema = {
           readonly type: "string";
         };
         readonly kind: {
-          readonly $ref: "#/$defs/RoomKind";
+          readonly anyOf: readonly [
+            {
+              readonly $ref: "#/$defs/RoomKind";
+            },
+            {
+              readonly type: "null";
+            },
+          ];
         };
         readonly seats: {
           readonly type: "integer";
@@ -1082,14 +1890,13 @@ export type Schema = {
         "id",
         "code",
         "kind",
-        "seats",
         "floor",
         "classes",
       ];
     };
     readonly RoomKind: {
       readonly type: "integer";
-      readonly $comment: "Cornerstone.Fixtures.Schema.Enums.RoomKind (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.";
+      readonly $comment: "DotNetSchema.Fixtures.Schema.Enums.RoomKind (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.";
       readonly oneOf: readonly [
         {
           readonly const: 0;
@@ -1415,7 +2222,7 @@ export type Schema = {
         };
         readonly weightByAssessmentKind: {
           readonly type: "object";
-          readonly $comment: "Keyed by Cornerstone.Fixtures.Schema.Enums.AssessmentKind. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.";
+          readonly $comment: "Keyed by DotNetSchema.Fixtures.Schema.Enums.AssessmentKind. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.";
           readonly propertyNames: {
             readonly type: "string";
             readonly enum: readonly [
@@ -1625,12 +2432,8 @@ export type Schema = {
           };
         };
         readonly answerSheetScan: {
-          readonly type: "array";
-          readonly items: {
-            readonly type: "integer";
-            readonly minimum: 0;
-            readonly maximum: 255;
-          };
+          readonly type: "string";
+          readonly contentEncoding: "base64";
         };
       };
       readonly required: readonly [
@@ -1668,7 +2471,10 @@ export type Schema = {
           readonly type: "string";
         };
         readonly motto: {
-          readonly type: "string";
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
         };
         readonly foundedOn: {
           readonly type: "string";
@@ -1694,7 +2500,7 @@ export type Schema = {
         };
         readonly departments: {
           readonly type: "object";
-          readonly $comment: "Keyed by Cornerstone.Fixtures.Schema.Enums.DepartmentName. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.";
+          readonly $comment: "Keyed by DotNetSchema.Fixtures.Schema.Enums.DepartmentName. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.";
           readonly propertyNames: {
             readonly type: "string";
             readonly enum: readonly [
@@ -1732,10 +2538,8 @@ export type Schema = {
       readonly required: readonly [
         "id",
         "name",
-        "motto",
         "foundedOn",
         "isAccredited",
-        "enrollmentCap",
         "endowment",
         "campuses",
         "departments",
@@ -1753,7 +2557,10 @@ export type Schema = {
           readonly type: "string";
         };
         readonly heading: {
-          readonly type: "string";
+          readonly type: readonly [
+            "string",
+            "null",
+          ];
         };
         readonly body: {
           readonly type: "string";
@@ -1775,13 +2582,12 @@ export type Schema = {
         "number",
         "heading",
         "body",
-        "wordCount",
         "exercises",
       ];
     };
     readonly Term: {
       readonly type: "integer";
-      readonly $comment: "Cornerstone.Fixtures.Schema.Enums.Term (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.";
+      readonly $comment: "DotNetSchema.Fixtures.Schema.Enums.Term (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.";
       readonly oneOf: readonly [
         {
           readonly const: 0;
@@ -1822,6 +2628,9 @@ export type Department = Models["Department"];
 export type DepartmentName = Models["DepartmentName"];
 export type Exercise = Models["Exercise"];
 export type Library = Models["Library"];
+export type NullableScalarBattery = Models["NullableScalarBattery"];
+export type NullableScalarRegister = Models["NullableScalarRegister"];
+export type NullableScalarSeries = Models["NullableScalarSeries"];
 export type Person = Models["Person"];
 export type PersonRole = Models["PersonRole"];
 export type Room = Models["Room"];

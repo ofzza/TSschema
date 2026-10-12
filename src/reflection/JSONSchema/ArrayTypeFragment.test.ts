@@ -16,8 +16,14 @@ const _schema = {
 type _Schema = typeof _schema;
 
 describe('Reflection', () => {
+  // Runtime tests of ArrayTypeFragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in
+  // src/schema/JSONSchema/ArrayTypeFragment.test.ts, so the two layers' tests line up.
   describe('JSONSchema fragment facets', () => {
+    // Each file in this directory holds the tests of one facet class under this describe.
     describe('Array Type fragment', () => {
+      // JSONSchemaArrayTypeFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsArrayType), the facets of its `items` (parsed on construction) and
+      // the type-only `Type`. Facets are taken from a JSONSchemaCollectionFragmentFacet parsing the small inline collection above, which covers a single
+      // schema, absent, boolean schema and tuple `items`. Each runtime `expect` on a parsed value is paired with an AssertTypeEquality on its static type.
       it('Detects an array type', () => {
         expect(JSONSchemaArrayTypeFragmentFacet.is({ type: 'array' })).toBe(true);
         expect(JSONSchemaArrayTypeFragmentFacet.is({ type: 'array', items: { type: 'string' } })).toBe(true);
@@ -29,6 +35,7 @@ describe('Reflection', () => {
       });
 
       it('Parses the items of an array type', () => {
+        // `items` is a nested fragment, parsed with no name: hence `undefined` as its facets' name type.
         const names = new JSONSchemaCollectionFragmentFacet(_schema).$defs.Names[0];
         expect(names).toBeInstanceOf(JSONSchemaArrayTypeFragmentFacet);
         expect(names.type).toBe('array');
@@ -47,6 +54,8 @@ describe('Reflection', () => {
       });
 
       it('Parses items which are not a single schema object with no facets', () => {
+        // Boolean schemas and tuples parse as no facets, while an absent `items` is `undefined` (above).
+        // See AGENTS.md › Fragment facet types follow the type layer's limits, not the runtime's leniency.
         const collection = new JSONSchemaCollectionFragmentFacet(_schema);
         expect(collection.$defs.Booleans[0].items).toEqual([]);
         expect(collection.$defs.Tuple[0].items).toEqual([]);
