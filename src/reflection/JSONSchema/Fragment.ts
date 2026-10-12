@@ -1,9 +1,9 @@
 /**
- * Base class of every JSON schema fragment reflection, and the runtime counterpart of `JSONSchemaFragmentTypeBranch`, splitting a fragment's `type`
+ * Base class of every JSON schema fragment node, and the runtime counterpart of `JSONSchemaFragmentTypeBranch`, splitting a fragment's `type`
  * array into branches.
  *
- * Every per-keyword reflection class extends the base class defined here, so this file must never import any of them (or the router in
- * `FragmentReflections.ts`, which does) as a value: it is kept out of the reflection files' import cycle, so that it is always evaluated before any class
+ * Every per-keyword node class extends the base class defined here, so this file must never import any of them (or the router in
+ * `FragmentNodes.ts`, which does) as a value: it is kept out of the node files' import cycle, so that it is always evaluated before any class
  * extending it.
  */
 
@@ -15,24 +15,24 @@ import type {
   JSONSchemaFragmentTypeBranch,
   JSONSchemaNotCollectionFragment,
 } from '../../schema/JSONSchema/index.js';
-import type { JSONSchemaCollectionFragmentReflect } from './CollectionFragment.js';
+import type { JSONSchemaCollectionFragmentNode } from './CollectionFragment.js';
 import { isJSONSchemaPrimitiveTypeName } from './JSONSchema7.js';
 
 /**
- * Reflects a JSON schema fragment. Base class of every per-keyword fragment reflection: a fragment carrying several keywords is reflected by an instance
- * of each matching reflection class (see `createJSONSchemaFragmentReflections`).
+ * Parses a JSON schema fragment. Base class of every per-keyword fragment node: a fragment carrying several keywords is parsed by an instance
+ * of each matching node class (see `createJSONSchemaFragmentNodes`).
  */
-export abstract class JSONSchemaFragmentReflect<
+export abstract class JSONSchemaFragmentNode<
   TSchema extends JSONSchemaCollection,
   TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchema7 = JSONSchemaNotCollectionFragment,
 > {
   /**
-   * Value type inferred from the reflected fragment (see `JSONSchemaFragmentType`), or from its root fragment for a collection (see
-   * `JSONSchemaCollectionRootFragment`). Only meant for type inference, as `typeof reflect.Type`: it holds no value, and throws if accessed at runtime.
+   * Value type inferred from the parsed fragment (see `JSONSchemaFragmentType`), or from its root fragment for a collection (see
+   * `JSONSchemaCollectionRootFragment`). Only meant for type inference, as `typeof node.Type`: it holds no value, and throws if accessed at runtime.
    */
-  public get Type(): _JSONSchemaReflectedFragmentType<TFragment, TSchema> {
-    throw new Error('This accessor should never be accessed, it is only meant to be used for type inference convenience: `typeof reflect.Type`');
+  public get Type(): _JSONSchemaParsedFragmentType<TFragment, TSchema> {
+    throw new Error('This accessor should never be accessed, it is only meant to be used for type inference convenience: `typeof node.Type`');
   }
 
   /**
@@ -43,22 +43,22 @@ export abstract class JSONSchemaFragmentReflect<
   }
 
   /**
-   * The reflected JSON fragment
+   * The parsed JSON fragment
    */
   public get fragment(): TFragment {
     return this._fragment;
   }
 
   /**
-   * The reflected JSON fragment
+   * The parsed JSON fragment
    */
   protected _fragment: TFragment;
 
   /**
-   * Reflection of the JSON schema collection the fragment belongs to, against which every `$ref` is resolved, or `undefined` if the reflected schema has
+   * Node of the JSON schema collection the fragment belongs to, against which every `$ref` is resolved, or `undefined` if the parsed schema has
    * no `$defs`
    */
-  protected _context: JSONSchemaCollectionFragmentReflect<TSchema> | undefined;
+  protected _context: JSONSchemaCollectionFragmentNode<TSchema> | undefined;
 
   /**
    * Name of the fragment within its collection, or `undefined` for a nested (or root) fragment
@@ -66,11 +66,11 @@ export abstract class JSONSchemaFragmentReflect<
   protected _name: TName;
 
   /**
-   * Reflects a JSON schema fragment
-   * @param fragment JSON fragment to reflect on
-   * @param options Context and name of the reflected fragment (see `JSONSchemaFragmentReflectOptions`)
+   * Parses a JSON schema fragment
+   * @param fragment JSON fragment to parse
+   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentNodeOptions`)
    */
-  public constructor(fragment: TFragment, { context, name }: JSONSchemaFragmentReflectOptions<TSchema, TName> = {}) {
+  public constructor(fragment: TFragment, { context, name }: JSONSchemaFragmentNodeOptions<TSchema, TName> = {}) {
     this._fragment = fragment;
     this._context = context;
     this._name = name as TName;
@@ -80,14 +80,14 @@ export abstract class JSONSchemaFragmentReflect<
 }
 
 /**
- * Options of a JSON schema fragment reflection, naming the context the fragment is reflected in
+ * Options of a JSON schema fragment node, naming the context the fragment is parsed in
  */
-export type JSONSchemaFragmentReflectOptions<TSchema extends JSONSchemaCollection, TName extends JSONSchemaFragmentName<TSchema> | undefined> = {
+export type JSONSchemaFragmentNodeOptions<TSchema extends JSONSchemaCollection, TName extends JSONSchemaFragmentName<TSchema> | undefined> = {
   /**
-   * Reflection of the JSON schema collection the fragment belongs to, against which every `$ref` is resolved. Omitted if the reflected schema has no
+   * Node of the JSON schema collection the fragment belongs to, against which every `$ref` is resolved. Omitted if the parsed schema has no
    * `$defs`, leaving every `$ref` unresolved.
    */
-  context?: JSONSchemaCollectionFragmentReflect<TSchema>;
+  context?: JSONSchemaCollectionFragmentNode<TSchema>;
   /**
    * Name of the fragment within the collection. Omitted for a nested (or root) fragment.
    */
@@ -124,9 +124,9 @@ export type JSONSchemaCollectionRootFragment<TSchema extends JSONSchemaCollectio
   Omit<TSchema, '$defs'> extends infer F extends JSONSchemaNotCollectionFragment ? F : never;
 
 /**
- * Infers the value type of a reflected fragment: of its root fragment for a collection, of the fragment itself otherwise
+ * Infers the value type of a parsed fragment: of its root fragment for a collection, of the fragment itself otherwise
  */
-type _JSONSchemaReflectedFragmentType<TFragment extends JSONSchema7, TSchema extends JSONSchemaCollection> =
+type _JSONSchemaParsedFragmentType<TFragment extends JSONSchema7, TSchema extends JSONSchemaCollection> =
   // Collection
   TFragment extends JSONSchemaCollection
     ? JSONSchemaFragmentType<JSONSchemaCollectionRootFragment<TFragment>, TSchema>

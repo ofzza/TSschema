@@ -5,7 +5,7 @@
 import type { JSONSchemaPrimitiveTypeName } from '../../schema/JSONSchema/index.js';
 
 /**
- * Names of all primitive types. `null` is not a primitive type here: like `object` and `array`, it has a fragment reflection of its own.
+ * Names of all primitive types. `null` is not a primitive type here: like `object` and `array`, it has a fragment node of its own.
  */
 export const JSONSchemaPrimitiveTypeNames: ReadonlyArray<JSONSchemaPrimitiveTypeName> = ['string', 'number', 'integer', 'boolean'];
 

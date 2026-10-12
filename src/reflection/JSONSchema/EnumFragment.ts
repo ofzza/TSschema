@@ -1,18 +1,18 @@
 /**
- * Reflection of JSON schema `enum` fragments: the enumerated values.
+ * Nodes of JSON schema `enum` fragments: the enumerated values.
  */
 
 import type { JSONSchema7, JSONSchemaCollection, JSONSchemaEnumFragment, JSONSchemaFragmentName } from '../../schema/JSONSchema/index.js';
-import { JSONSchemaFragmentReflect, type JSONSchemaFragmentReflectOptions } from './Fragment.js';
+import { JSONSchemaFragmentNode, type JSONSchemaFragmentNodeOptions } from './Fragment.js';
 
 /**
- * Reflects a JSON schema enum definition, which is any schema fragment containing an `enum` property.
+ * Parses a JSON schema enum definition, which is any schema fragment containing an `enum` property.
  */
-export class JSONSchemaEnumFragmentReflect<
+export class JSONSchemaEnumFragmentNode<
   TSchema extends JSONSchemaCollection,
   TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaEnumFragment = JSONSchemaEnumFragment,
-> extends JSONSchemaFragmentReflect<TSchema, TName, TFragment> {
+> extends JSONSchemaFragmentNode<TSchema, TName, TFragment> {
   /**
    * Determines if a JSON schema fragment is an enum definition (i.e., contains an `enum` array). The runtime counterpart of `JSONSchemaFragmentIsEnum`.
    * @param fragment JSON fragment to check
@@ -28,11 +28,11 @@ export class JSONSchemaEnumFragmentReflect<
   public readonly enum: TFragment['enum'];
 
   /**
-   * Reflects a JSON schema enum definition
-   * @param fragment JSON fragment to reflect on
-   * @param options Context and name of the reflected fragment (see `JSONSchemaFragmentReflectOptions`)
+   * Parses a JSON schema enum definition
+   * @param fragment JSON fragment to parse
+   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentNodeOptions`)
    */
-  public constructor(fragment: TFragment, options: JSONSchemaFragmentReflectOptions<TSchema, TName> = {}) {
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentNodeOptions<TSchema, TName> = {}) {
     super(fragment, options);
     this.enum = fragment['enum'];
   }

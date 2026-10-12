@@ -1,19 +1,19 @@
 /**
- * Reflection of JSON schema `allOf` fragments: the reflections of each listed fragment.
+ * Nodes of JSON schema `allOf` fragments: the nodes of each listed fragment.
  */
 
 import type { JSONSchema7, JSONSchemaAllOfTypeFragment, JSONSchemaCollection, JSONSchemaFragmentName } from '../../schema/JSONSchema/index.js';
-import { JSONSchemaFragmentReflect, type JSONSchemaFragmentReflectOptions } from './Fragment.js';
-import { createJSONSchemaNestedFragmentReflections, type JSONSchemaNestedFragmentsReflections } from './FragmentReflections.js';
+import { JSONSchemaFragmentNode, type JSONSchemaFragmentNodeOptions } from './Fragment.js';
+import { createJSONSchemaNestedFragmentNodes, type JSONSchemaNestedFragmentsNodes } from './FragmentNodes.js';
 
 /**
- * Reflects a JSON schema all-of-types definition, which is any schema fragment containing an `allOf` property. Reflects each listed fragment on construction.
+ * Parses a JSON schema all-of-types definition, which is any schema fragment containing an `allOf` property. Parses each listed fragment on construction.
  */
-export class JSONSchemaAllOfTypeFragmentReflect<
+export class JSONSchemaAllOfTypeFragmentNode<
   TSchema extends JSONSchemaCollection,
   TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaAllOfTypeFragment = JSONSchemaAllOfTypeFragment,
-> extends JSONSchemaFragmentReflect<TSchema, TName, TFragment> {
+> extends JSONSchemaFragmentNode<TSchema, TName, TFragment> {
   /**
    * Determines if a JSON schema fragment is an all-of-types definition (i.e., contains an `allOf` array). The runtime counterpart of
    * `JSONSchemaFragmentIsAllOfType`.
@@ -25,18 +25,18 @@ export class JSONSchemaAllOfTypeFragmentReflect<
   }
 
   /**
-   * Reflections of each `allOf` fragment, in order. A member which is not a schema object (e.g. a boolean schema) has no reflections.
+   * Nodes of each `allOf` fragment, in order. A member which is not a schema object (e.g. a boolean schema) has no nodes.
    */
-  public readonly allOf: JSONSchemaNestedFragmentsReflections<TSchema, TFragment['allOf']>;
+  public readonly allOf: JSONSchemaNestedFragmentsNodes<TSchema, TFragment['allOf']>;
 
   /**
-   * Reflects a JSON schema all-of-types definition
-   * @param fragment JSON fragment to reflect on
-   * @param options Context and name of the reflected fragment (see `JSONSchemaFragmentReflectOptions`)
+   * Parses a JSON schema all-of-types definition
+   * @param fragment JSON fragment to parse
+   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentNodeOptions`)
    */
-  public constructor(fragment: TFragment, options: JSONSchemaFragmentReflectOptions<TSchema, TName> = {}) {
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentNodeOptions<TSchema, TName> = {}) {
     super(fragment, options);
-    this.allOf = fragment['allOf'].map((member) => createJSONSchemaNestedFragmentReflections(member, this._context)) as JSONSchemaNestedFragmentsReflections<
+    this.allOf = fragment['allOf'].map((member) => createJSONSchemaNestedFragmentNodes(member, this._context)) as JSONSchemaNestedFragmentsNodes<
       TSchema,
       TFragment['allOf']
     >;

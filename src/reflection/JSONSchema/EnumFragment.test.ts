@@ -1,33 +1,33 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality } from '@ofzza/tsstd';
-import { JSONSchemaCollectionFragmentReflect, JSONSchemaEnumFragmentReflect } from './index.js';
+import { JSONSchemaCollectionFragmentNode, JSONSchemaEnumFragmentNode } from './index.js';
 
 import { default as enumJsonSchema } from '../../../res/sidecar/enum.json';
 
 describe('Reflection', () => {
-  describe('JSONSchema fragment reflections', () => {
+  describe('JSONSchema fragment nodes', () => {
     describe('Enum fragment', () => {
       it('Detects an enum', () => {
-        expect(JSONSchemaEnumFragmentReflect.is({ enum: ['a', 'b'] })).toBe(true);
-        expect(JSONSchemaEnumFragmentReflect.is(enumJsonSchema.$defs.Enum)).toBe(true);
-        expect(JSONSchemaEnumFragmentReflect.is({ enum: [] })).toBe(true);
+        expect(JSONSchemaEnumFragmentNode.is({ enum: ['a', 'b'] })).toBe(true);
+        expect(JSONSchemaEnumFragmentNode.is(enumJsonSchema.$defs.Enum)).toBe(true);
+        expect(JSONSchemaEnumFragmentNode.is({ enum: [] })).toBe(true);
       });
 
       it('Rejects a non-enum', () => {
-        expect(JSONSchemaEnumFragmentReflect.is({ type: 'string' })).toBe(false);
-        expect(JSONSchemaEnumFragmentReflect.is({ const: 'a' })).toBe(false);
-        expect(JSONSchemaEnumFragmentReflect.is({ enum: 'a' } as any)).toBe(false);
+        expect(JSONSchemaEnumFragmentNode.is({ type: 'string' })).toBe(false);
+        expect(JSONSchemaEnumFragmentNode.is({ const: 'a' })).toBe(false);
+        expect(JSONSchemaEnumFragmentNode.is({ enum: 'a' } as any)).toBe(false);
       });
 
-      it('Reflects the enumerated values of an enum', () => {
-        const enumeration = new JSONSchemaCollectionFragmentReflect(enumJsonSchema).$defs.Enum[0];
-        expect(enumeration).toBeInstanceOf(JSONSchemaEnumFragmentReflect);
+      it('Parses the enumerated values of an enum', () => {
+        const enumeration = new JSONSchemaCollectionFragmentNode(enumJsonSchema).$defs.Enum[0];
+        expect(enumeration).toBeInstanceOf(JSONSchemaEnumFragmentNode);
         expect(enumeration.enum).toEqual(['Aaa', 'Bbb', 'Ccc']);
         expect(true satisfies AssertTypeEquality<(typeof enumeration.enum)[number], 'Aaa' | 'Bbb' | 'Ccc'>).toBe(true);
       });
 
       it('Infers the type of an enum', () => {
-        const _enumeration = new JSONSchemaCollectionFragmentReflect(enumJsonSchema).$defs.Enum[0];
+        const _enumeration = new JSONSchemaCollectionFragmentNode(enumJsonSchema).$defs.Enum[0];
         expect(true satisfies AssertTypeEquality<typeof _enumeration.Type, 'Aaa' | 'Bbb' | 'Ccc'>).toBe(true);
       });
     });

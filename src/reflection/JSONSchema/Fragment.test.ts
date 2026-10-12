@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality } from '@ofzza/tsstd';
 import type { JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaFragmentType, JSONSchemaFragmentTypeBranch } from '../../schema/JSONSchema/index.js';
-import { JSONSchemaCollectionFragmentReflect, JSONSchemaFragmentReflect, JSONSchemaModelFragmentReflect, getJSONSchemaFragmentTypeBranches } from './index.js';
+import { JSONSchemaCollectionFragmentNode, JSONSchemaFragmentNode, JSONSchemaModelFragmentNode, getJSONSchemaFragmentTypeBranches } from './index.js';
 
 /**
  * Small collection, used in the tests below
@@ -14,33 +14,33 @@ const _schema = {
 type _Schema = typeof _schema;
 
 describe('Reflection', () => {
-  describe('JSONSchema fragment reflections', () => {
+  describe('JSONSchema fragment nodes', () => {
     describe('Any fragment', () => {
-      it('Reflects any fragment with a common base class', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0];
-        expect(person).toBeInstanceOf(JSONSchemaFragmentReflect);
+      it('Parses any fragment with a common base class', () => {
+        const person = new JSONSchemaCollectionFragmentNode(_schema).$defs.Person[0];
+        expect(person).toBeInstanceOf(JSONSchemaFragmentNode);
       });
 
       it('Gets the name of a fragment of the collection', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0];
+        const person = new JSONSchemaCollectionFragmentNode(_schema).$defs.Person[0];
         expect(person.name).toBe('Person');
         expect(true satisfies AssertTypeEquality<typeof person.name, 'Person'>).toBe(true);
       });
 
       it('Gets no name for a nested fragment', () => {
-        const name = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0].properties.name[0];
+        const name = new JSONSchemaCollectionFragmentNode(_schema).$defs.Person[0].properties.name[0];
         expect(name.name).toBe(undefined);
         expect(true satisfies AssertTypeEquality<typeof name.name, undefined>).toBe(true);
       });
 
-      it('Gets the reflected JSON fragment', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0];
+      it('Gets the parsed JSON fragment', () => {
+        const person = new JSONSchemaCollectionFragmentNode(_schema).$defs.Person[0];
         expect(person.fragment).toBe(_schema.$defs.Person);
         expect(true satisfies AssertTypeEquality<typeof person.fragment, _Schema['$defs']['Person']>).toBe(true);
       });
 
-      it('Infers the type of the reflected fragment, but holds no value for it', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0];
+      it('Infers the type of the parsed fragment, but holds no value for it', () => {
+        const person = new JSONSchemaCollectionFragmentNode(_schema).$defs.Person[0];
         type Person = typeof person.Type;
         //   ^?
         expect(true satisfies AssertTypeEquality<Person, JSONSchemaFragmentType<_Schema['$defs']['Person'], _Schema>>).toBe(true);
@@ -49,27 +49,27 @@ describe('Reflection', () => {
       });
 
       it('Takes the context and name of a fragment as named options', () => {
-        const collection = new JSONSchemaCollectionFragmentReflect(_schema);
-        const person = new JSONSchemaModelFragmentReflect(_schema.$defs.Person, { context: collection, name: 'Person' });
+        const collection = new JSONSchemaCollectionFragmentNode(_schema);
+        const person = new JSONSchemaModelFragmentNode(_schema.$defs.Person, { context: collection, name: 'Person' });
         expect(person.name).toBe('Person');
         expect(person.properties.mentor[0].ref).toBe(collection.$defs.Person);
-        expect(true satisfies AssertTypeEquality<typeof person, JSONSchemaModelFragmentReflect<_Schema, 'Person', _Schema['$defs']['Person']>>).toBe(true);
+        expect(true satisfies AssertTypeEquality<typeof person, JSONSchemaModelFragmentNode<_Schema, 'Person', _Schema['$defs']['Person']>>).toBe(true);
         // @ts-expect-error A name must name a fragment of the context collection
-        expect(new JSONSchemaModelFragmentReflect(_schema.$defs.Person, { context: collection, name: 'Nobody' }).name).toBe('Nobody');
+        expect(new JSONSchemaModelFragmentNode(_schema.$defs.Person, { context: collection, name: 'Nobody' }).name).toBe('Nobody');
       });
 
-      it('Reflects a fragment with no context and no name when both are omitted', () => {
-        const person = new JSONSchemaModelFragmentReflect(_schema.$defs.Person);
+      it('Parses a fragment with no context and no name when both are omitted', () => {
+        const person = new JSONSchemaModelFragmentNode(_schema.$defs.Person);
         expect(person.name).toBe(undefined);
         expect(person.properties.mentor[0].ref).toBe(undefined);
         expect(true satisfies AssertTypeEquality<typeof person.name, JSONSchemaFragmentName<JSONSchemaCollection> | undefined>).toBe(true);
       });
 
-      it('Can be extended by a reflection of its own', () => {
-        class Custom extends JSONSchemaFragmentReflect<_Schema, undefined, { readonly title: 'Custom' }> {}
-        const custom = new Custom({ title: 'Custom' }, { context: new JSONSchemaCollectionFragmentReflect(_schema) });
+      it('Can be extended by a node of its own', () => {
+        class Custom extends JSONSchemaFragmentNode<_Schema, undefined, { readonly title: 'Custom' }> {}
+        const custom = new Custom({ title: 'Custom' }, { context: new JSONSchemaCollectionFragmentNode(_schema) });
         expect(custom.fragment.title).toBe('Custom');
-        expect(custom).not.toBeInstanceOf(JSONSchemaModelFragmentReflect);
+        expect(custom).not.toBeInstanceOf(JSONSchemaModelFragmentNode);
       });
     });
 

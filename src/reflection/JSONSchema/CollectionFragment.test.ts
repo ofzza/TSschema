@@ -2,13 +2,13 @@ import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality } from '@ofzza/tsstd';
 import type { JSONSchemaCollection, JSONSchemaFragmentType, JSONSchemaNotCollectionFragment } from '../../schema/JSONSchema/index.js';
 import {
-  JSONSchemaCollectionFragmentReflect,
-  JSONSchemaEnumFragmentReflect,
-  JSONSchemaFragmentReflect,
-  JSONSchemaModelFragmentReflect,
-  type JSONSchemaCollectionReflectedFragment,
+  JSONSchemaCollectionFragmentNode,
+  JSONSchemaEnumFragmentNode,
+  JSONSchemaFragmentNode,
+  JSONSchemaModelFragmentNode,
+  type JSONSchemaCollectionParsedFragment,
   type JSONSchemaCollectionRootFragment,
-  type JSONSchemaFragmentReflection,
+  type JSONSchemaFragmentNodeOf,
 } from './index.js';
 
 import { default as jsonSchema } from '../../../res/sidecar/schema.json';
@@ -30,46 +30,44 @@ const _schema = {
 type _Schema = typeof _schema;
 
 describe('Reflection', () => {
-  describe('JSONSchema fragment reflections', () => {
+  describe('JSONSchema fragment nodes', () => {
     describe('Collection fragment', () => {
       it('Detects a collection', () => {
-        expect(JSONSchemaCollectionFragmentReflect.is(_schema)).toBe(true);
-        expect(JSONSchemaCollectionFragmentReflect.is(jsonSchema)).toBe(true);
-        expect(JSONSchemaCollectionFragmentReflect.is({ $defs: {} })).toBe(true);
+        expect(JSONSchemaCollectionFragmentNode.is(_schema)).toBe(true);
+        expect(JSONSchemaCollectionFragmentNode.is(jsonSchema)).toBe(true);
+        expect(JSONSchemaCollectionFragmentNode.is({ $defs: {} })).toBe(true);
       });
 
       it('Rejects a non-collection', () => {
-        expect(JSONSchemaCollectionFragmentReflect.is({ type: 'object' })).toBe(false);
-        expect(JSONSchemaCollectionFragmentReflect.is({ $defs: [] } as any)).toBe(false);
-        expect(JSONSchemaCollectionFragmentReflect.is({ $defs: true } as any)).toBe(false);
+        expect(JSONSchemaCollectionFragmentNode.is({ type: 'object' })).toBe(false);
+        expect(JSONSchemaCollectionFragmentNode.is({ $defs: [] } as any)).toBe(false);
+        expect(JSONSchemaCollectionFragmentNode.is({ $defs: true } as any)).toBe(false);
       });
 
       it('Gets the names of all fragments of the collection', () => {
-        const collection = new JSONSchemaCollectionFragmentReflect(_schema);
+        const collection = new JSONSchemaCollectionFragmentNode(_schema);
         expect(collection.names).toEqual(['Person', 'Role']);
         expect(true satisfies AssertTypeEquality<typeof collection.names, Array<'Person' | 'Role'>>).toBe(true);
-        expect(new JSONSchemaCollectionFragmentReflect(jsonSchema).names).toEqual(Object.keys(jsonSchema.$defs));
+        expect(new JSONSchemaCollectionFragmentNode(jsonSchema).names).toEqual(Object.keys(jsonSchema.$defs));
       });
 
-      it('Reflects each fragment of the collection, addressed by name', () => {
-        const collection = new JSONSchemaCollectionFragmentReflect(_schema);
+      it('Parses each fragment of the collection, addressed by name', () => {
+        const collection = new JSONSchemaCollectionFragmentNode(_schema);
         const person = collection.$defs.Person;
         expect(person.length).toBe(1);
-        expect(person[0]).toBeInstanceOf(JSONSchemaModelFragmentReflect);
+        expect(person[0]).toBeInstanceOf(JSONSchemaModelFragmentNode);
         expect(person[0].name).toBe('Person');
         expect(person[0].fragment).toBe(_schema.$defs.Person);
-        expect(true satisfies AssertTypeEquality<typeof person, Array<JSONSchemaModelFragmentReflect<_Schema, 'Person', _Schema['$defs']['Person']>>>).toBe(
-          true,
-        );
+        expect(true satisfies AssertTypeEquality<typeof person, Array<JSONSchemaModelFragmentNode<_Schema, 'Person', _Schema['$defs']['Person']>>>).toBe(true);
         const role = collection.$defs.Role;
-        expect(role[0]).toBeInstanceOf(JSONSchemaEnumFragmentReflect);
-        expect(true satisfies AssertTypeEquality<typeof role, Array<JSONSchemaEnumFragmentReflect<_Schema, 'Role', _Schema['$defs']['Role']>>>).toBe(true);
+        expect(role[0]).toBeInstanceOf(JSONSchemaEnumFragmentNode);
+        expect(true satisfies AssertTypeEquality<typeof role, Array<JSONSchemaEnumFragmentNode<_Schema, 'Role', _Schema['$defs']['Role']>>>).toBe(true);
       });
 
-      it('Reflects the fragments of the fixture collection', () => {
-        const collection = new JSONSchemaCollectionFragmentReflect(jsonSchema);
+      it('Parses the fragments of the fixture collection', () => {
+        const collection = new JSONSchemaCollectionFragmentNode(jsonSchema);
         const assessment = collection.$defs.Assessment[0];
-        expect(assessment).toBeInstanceOf(JSONSchemaModelFragmentReflect);
+        expect(assessment).toBeInstanceOf(JSONSchemaModelFragmentNode);
         expect(assessment.names).toContain('weight');
         type Assessment = typeof assessment.Type;
         //   ^?
@@ -81,9 +79,9 @@ describe('Reflection', () => {
         ).toBe(true);
       });
 
-      it('Reflects the collection as a fragment reflection of the whole schema', () => {
-        const collection = new JSONSchemaCollectionFragmentReflect(_schema);
-        expect(collection).toBeInstanceOf(JSONSchemaFragmentReflect);
+      it('Parses the collection as a fragment node of the whole schema', () => {
+        const collection = new JSONSchemaCollectionFragmentNode(_schema);
+        expect(collection).toBeInstanceOf(JSONSchemaFragmentNode);
         expect(collection.name).toBe(undefined);
         expect(collection.fragment).toBe(_schema);
         expect(true satisfies AssertTypeEquality<typeof collection.name, undefined>).toBe(true);
@@ -91,37 +89,35 @@ describe('Reflection', () => {
       });
 
       it('Infers the value type of the collection from its root fragment, leaving out its $defs', () => {
-        const _collection = new JSONSchemaCollectionFragmentReflect(_schema);
+        const _collection = new JSONSchemaCollectionFragmentNode(_schema);
         expect(true satisfies AssertTypeEquality<typeof _collection.Type, JSONSchemaFragmentType<JSONSchemaCollectionRootFragment<_Schema>, _Schema>>).toBe(
           true,
         );
         expect(true satisfies AssertTypeEquality<keyof JSONSchemaCollectionRootFragment<_Schema>, 'title' | 'type' | 'properties'>).toBe(true);
       });
 
-      it('Reflects no fragments for a collection with empty $defs', () => {
-        const collection = new JSONSchemaCollectionFragmentReflect({ $defs: {} });
+      it('Parses no fragments for a collection with empty $defs', () => {
+        const collection = new JSONSchemaCollectionFragmentNode({ $defs: {} });
         expect(collection.names).toEqual([]);
         expect(collection.$defs).toEqual({});
       });
 
-      it('Reflects any fragment of an unspecified collection', () => {
-        const collection = new JSONSchemaCollectionFragmentReflect({ $defs: { A: { type: 'string' } } } as JSONSchemaCollection);
+      it('Parses any fragment of an unspecified collection', () => {
+        const collection = new JSONSchemaCollectionFragmentNode({ $defs: { A: { type: 'string' } } } as JSONSchemaCollection);
         expect(collection.$defs.A.length).toBe(1);
         expect(
           true satisfies AssertTypeEquality<
             (typeof collection.$defs)[string],
-            Array<JSONSchemaFragmentReflection<JSONSchemaCollection, string, JSONSchemaNotCollectionFragment>>
+            Array<JSONSchemaFragmentNodeOf<JSONSchemaCollection, string, JSONSchemaNotCollectionFragment>>
           >,
         ).toBe(true);
       });
     });
 
-    describe('Collection reflected fragment', () => {
-      it('Gets a fragment of a collection, as reflected', () => {
-        expect(true satisfies AssertTypeEquality<JSONSchemaCollectionReflectedFragment<_Schema, 'Role'>, _Schema['$defs']['Role']>).toBe(true);
-        expect(true satisfies AssertTypeEquality<JSONSchemaCollectionReflectedFragment<JSONSchemaCollection, string>, JSONSchemaNotCollectionFragment>).toBe(
-          true,
-        );
+    describe('Collection parsed fragment', () => {
+      it('Gets a fragment of a collection, as parsed', () => {
+        expect(true satisfies AssertTypeEquality<JSONSchemaCollectionParsedFragment<_Schema, 'Role'>, _Schema['$defs']['Role']>).toBe(true);
+        expect(true satisfies AssertTypeEquality<JSONSchemaCollectionParsedFragment<JSONSchemaCollection, string>, JSONSchemaNotCollectionFragment>).toBe(true);
       });
     });
   });

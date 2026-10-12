@@ -1,19 +1,19 @@
 /**
- * Reflection of JSON schema `const` fragments: the constant value.
+ * Nodes of JSON schema `const` fragments: the constant value.
  */
 
 import type { JSONSchema7, JSONSchemaCollection, JSONSchemaConstFragment, JSONSchemaFragmentName } from '../../schema/JSONSchema/index.js';
-import { JSONSchemaFragmentReflect, type JSONSchemaFragmentReflectOptions } from './Fragment.js';
+import { JSONSchemaFragmentNode, type JSONSchemaFragmentNodeOptions } from './Fragment.js';
 import { isJSONSchemaObject } from './JSONSchema7.js';
 
 /**
- * Reflects a JSON schema const definition, which is any schema fragment containing a `const` property.
+ * Parses a JSON schema const definition, which is any schema fragment containing a `const` property.
  */
-export class JSONSchemaConstFragmentReflect<
+export class JSONSchemaConstFragmentNode<
   TSchema extends JSONSchemaCollection,
   TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaConstFragment = JSONSchemaConstFragment,
-> extends JSONSchemaFragmentReflect<TSchema, TName, TFragment> {
+> extends JSONSchemaFragmentNode<TSchema, TName, TFragment> {
   /**
    * Determines if a JSON schema fragment is a const definition (i.e., contains a `const` property, of any value). The runtime counterpart of
    * `JSONSchemaFragmentIsConst`.
@@ -30,11 +30,11 @@ export class JSONSchemaConstFragmentReflect<
   public readonly const: TFragment['const'];
 
   /**
-   * Reflects a JSON schema const definition
-   * @param fragment JSON fragment to reflect on
-   * @param options Context and name of the reflected fragment (see `JSONSchemaFragmentReflectOptions`)
+   * Parses a JSON schema const definition
+   * @param fragment JSON fragment to parse
+   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentNodeOptions`)
    */
-  public constructor(fragment: TFragment, options: JSONSchemaFragmentReflectOptions<TSchema, TName> = {}) {
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentNodeOptions<TSchema, TName> = {}) {
     super(fragment, options);
     this.const = fragment['const'];
   }
