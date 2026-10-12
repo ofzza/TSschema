@@ -53,7 +53,10 @@ type Schema = typeof schema;
 // #endregion
 
 describe('Runtime reflection', () => {
+  // The README's "Runtime reflection" section: `reflect` and the reflections and type descriptors it leads to, over the shared schema above.
+  // Each runtime result is asserted with `expect` and its static type with AssertTypeEquality, as reflections are typed by the type layer.
   describe('reflect', () => {
+    // The entry point, reflecting the schema's root.
     it('Reflects a schema, and the names of its definitions', () => {
       const root = reflect(schema);
       const definitionNames = root.definitionNames;
@@ -67,6 +70,7 @@ describe('Runtime reflection', () => {
   });
 
   describe('Definitions', () => {
+    // Looking up a definition of the collection by name.
     it('Reflects a definition by name, typed by its value type', () => {
       const root = reflect(schema);
       const person = root.getDefinition('Person');
@@ -83,6 +87,7 @@ describe('Runtime reflection', () => {
   });
 
   describe('Properties and paths', () => {
+    // Looking up a property by name or by dot-separated path, from a definition's reflection.
     it('Reflects a property by name, with its parent and whether it is required', () => {
       const person = reflect(schema).getDefinition('Person');
       const propertyNames = person.propertyNames;
@@ -125,6 +130,7 @@ describe('Runtime reflection', () => {
   });
 
   describe('Type descriptors', () => {
+    // The runtime description of a reflection's value type, exported as types only (TSSchemaTypeDescriptor and one per kind).
     it('Describes the type of a reflection at runtime, typed by the schema', () => {
       const root = reflect(schema);
       const person = root.getDefinition('Person');
@@ -188,6 +194,7 @@ describe('Runtime reflection', () => {
   });
 
   describe('Coming next', () => {
+    // What the README lists as coming next for reflection, as placeholders.
     it.todo('Validates values against a reflected schema');
     it.todo('Supports the readOnly and writeOnly keywords');
     it.todo('Describes tuples and additionalProperties');
@@ -195,7 +202,11 @@ describe('Runtime reflection', () => {
 });
 
 describe('Code generation: Schemas from JSON files', () => {
+  // The README's "Code generation" section: keeping the literal types a schema needs, by declaring it `as const` and checking it with
+  // `satisfies`, or by generating TypeScript from a JSON file. Only the pure generateFiles is shown, over the shared schema above, so no file
+  // is read or written; the `tsschema` command itself is covered by src/codegen/cli.test.ts.
   describe('Schemas declared as const', () => {
+    // Checking a schema declared in TypeScript against the exported TSSchemaJSONCollection type.
     it('Checks a schema declared as const, without losing its literal types', () => {
       // Apply `satisfies` to the declared constant rather than to the literal, so keywords these types do not know are not rejected as excess properties
       const people = { $defs: { Person: { type: 'object', properties: { name: { type: 'string' } } } } } as const;
@@ -211,6 +222,7 @@ describe('Code generation: Schemas from JSON files', () => {
   });
 
   describe('Programmatic use', () => {
+    // The `@ofzza/tsschema/codegen` subpath, generating the same files as the `tsschema` command in each mode.
     it('Generates a sidecar declaration file, keeping the literal types of a JSON schema file', () => {
       // `generateFiles` is the pure core of the `tsschema` command (generating the very same files): JSON in, files out, no file system access
       const files = generateFiles('src/people.json', schema);
@@ -239,7 +251,11 @@ describe('Code generation: Schemas from JSON files', () => {
 });
 
 describe('Type inference', () => {
+  // The README's "Type inference" section: the type-only wrappers, TSSchemaName and TSSchemaType, over the shared schema above. Type level,
+  // asserted with AssertTypeEquality consumed through `expect(true satisfies ...)`, and every "will fail at compile time" line with
+  // `@ts-expect-error`.
   describe('TSSchemaCollection', () => {
+    // Wrapping the schema as a collection.
     it('Wraps a collection', () => {
       // A wrapped collection is what every other wrapper carries along, so that `$ref`s can be resolved later
       type People = TSSchemaCollection<Schema>;
@@ -250,6 +266,7 @@ describe('Type inference', () => {
   });
 
   describe('TSSchemaFragment', () => {
+    // Wrapping fragments of the collection, by name or given directly.
     it('Wraps a fragment of a collection, addressed by name', () => {
       type Person = TSSchemaFragment<TSSchemaCollection<Schema>, 'Person'>;
       //   ^?
@@ -283,6 +300,7 @@ describe('Type inference', () => {
   });
 
   describe('TSSchemaProperty', () => {
+    // Wrapping properties of a model, by name or by dot-separated path.
     it('Wraps a property of a model, addressed by name', () => {
       // From a fragment wrapper, from a collection by model and property name, or from a model given directly
       type PersonName = TSSchemaProperty<TSSchemaFragment<Schema, 'Person'>, 'name'>;
@@ -326,6 +344,7 @@ describe('Type inference', () => {
   });
 
   describe('TSSchemaName', () => {
+    // Getting the names addressable within a collection, model or wrapper.
     it('Infers the names addressable within a collection, a model or a wrapper', () => {
       // Direct names only, never dot-separated paths: a recursive schema (Person.mentor -> Person) has infinitely many of them
       type DefinitionName = TSSchemaName<Schema>;
@@ -348,6 +367,7 @@ describe('Type inference', () => {
   });
 
   describe('TSSchemaType', () => {
+    // Inferring value types from fragments and properties.
     it('Infers the value type of a fragment, resolving every $ref against its collection', () => {
       type PersonType = TSSchemaType<TSSchemaFragment<Schema, 'Person'>>;
       //   ^?

@@ -50,8 +50,13 @@ const schema = {
 type Schema = typeof schema;
 
 describe('Showcase', () => {
+  // Internal showcase of src/schema/JSONSchema/, the JSON schema base of the type layer, walking through its utilities in the order they build on each other.
+  // Every example works on the small inline `as const` collection above (a model with a nullable, a referenced and an array property, plus an enum), so each
+  // inferred type stays short enough to read in a `// ^?` query.
   describe('JSONSchema type utilities', () => {
+    // Each nested describe shows one group of utilities; src/reflection/JSONSchema/_showcase.test.ts walks through their runtime mirror, the fragment facets.
     describe('Collections and their fragments', () => {
+      // Collections (CollectionFragment.ts): telling one apart, and its definition names.
       it('Tells a collection (a schema with $defs) apart from a fragment, and gets its definition names', () => {
         type IsCollection = JSONSchemaFragmentIsCollection<Schema>;
         //   ^?
@@ -69,6 +74,7 @@ describe('Showcase', () => {
     });
 
     describe('One utility trio per keyword', () => {
+      // The per-keyword files: what every one of them defines, shown on a few of the keywords.
       it('Detects a fragment kind with JSONSchemaFragmentIs*', () => {
         // Every per-keyword file defines `JSONSchema<Kind>Fragment` (its shape), `JSONSchemaFragmentIs<Kind>` and `JSONSchema<Kind>FragmentType`
         type IsModel = JSONSchemaFragmentIsModel<Schema['$defs']['Person']>;
@@ -115,6 +121,7 @@ describe('Showcase', () => {
     });
 
     describe('Models', () => {
+      // The model fragment (ModelFragment.ts): property names and the model's value type, inferred without a collection.
       it('Gets the property names of a model, and infers its type', () => {
         type PropertyName = JSONSchemaFragmentPropertyName<Schema['$defs']['Person']>;
         //   ^?
@@ -129,6 +136,7 @@ describe('Showcase', () => {
     });
 
     describe('References', () => {
+      // The reference fragment (ReferenceFragment.ts), with and without a collection to resolve against.
       it('Resolves a reference against a collection', () => {
         type Role = JSONSchemaReferenceFragmentType<{ readonly $ref: '#/$defs/Role' }, Schema>;
         //   ^?
@@ -142,6 +150,7 @@ describe('Showcase', () => {
     });
 
     describe('Any fragment', () => {
+      // JSONSchemaFragmentType (Fragment.ts), the dispatcher intersecting what every keyword contributes.
       it('Intersects the types of every keyword a fragment carries', () => {
         // `JSONSchemaFragmentType` dispatches to every per-keyword type and intersects them, so sibling keywords narrow each other
         type Narrowed = JSONSchemaFragmentType<{ readonly type: 'string'; readonly enum: readonly ['a', 'b', 1] }>;
@@ -163,6 +172,7 @@ describe('Showcase', () => {
     });
 
     describe('Type array branches', () => {
+      // JSONSchemaFragmentTypeBranch (Fragment.ts), splitting a type array naming non primitive types into alternatives.
       it('Splits a type array naming object, array and / or null into a branch per group of type names', () => {
         type Branch = JSONSchemaFragmentTypeBranch<{ readonly type: readonly ['object', 'string', 'integer', 'null']; readonly title: 'x' }>;
         //   ^?

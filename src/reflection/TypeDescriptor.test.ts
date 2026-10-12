@@ -52,15 +52,24 @@ type _Schema = typeof _schema;
 type _String = TSSchemaPrimitiveTypeDescriptor<'string', false>;
 
 describe('Reflection', () => {
+  // Type descriptors (TypeDescriptor.ts): getTSSchemaTypeDescriptor, building one from a fragment's facets, and its type-level mirror TSSchemaTypeDescriptorOf.
+  // Most cases describe an inline fragment with `_describe` (parsed with no collection, and inferred under the unspecified collection), asserting the runtime
+  // descriptor with `toEqual` next to an `AssertTypeEquality` on its inferred type. References use the recursive `_schema` collection above, and named enums
+  // the res/sidecar/enum.json and schema.json fixtures.
   describe('TypeDescriptor', () => {
+    // The runtime builder with its inferred types, then what only the type-level mirror does.
     describe('getTSSchemaTypeDescriptor', () => {
+      // One case per descriptor kind and per rule combining facets: extracting `null` into the `nullable` flag, absorbing a type next to an enum or const,
+      // implicit `anyOf` / `allOf`, lazy references and caching.
       it('Describes a fragment with no type keywords as unknown', () => {
+        // A fragment holding only annotations parses into no facets.
         const descriptor = _describe({ description: 'Anything' });
         expect(descriptor).toEqual({ kind: 'unknown', nullable: false });
         expect(true satisfies AssertTypeEquality<typeof descriptor, TSSchemaUnknownTypeDescriptor<false>>).toBe(true);
       });
 
       it('Describes a constant, and a null constant as the null type', () => {
+        // A `null` constant is the `null` kind rather than a nullable constant (see AGENTS.md › null is a flag (nullable), never an alternative).
         const descriptor = _describe({ const: 'a' });
         expect(descriptor).toEqual({ kind: 'const', value: 'a', nullable: false });
         expect(true satisfies AssertTypeEquality<typeof descriptor, TSSchemaConstTypeDescriptor<'a', false>>).toBe(true);
@@ -79,6 +88,8 @@ describe('Reflection', () => {
       });
 
       it('Describes an enum, naming its values by `x-enumNames`', () => {
+        // `x-enumNames` is used only if it names every value: one shorter than `enum` is ignored, at runtime and type level alike (see AGENTS.md › Enum names
+        // come from x-enumNames, oneOf titles, or the value itself).
         const descriptor = getTSSchemaTypeDescriptor(parseJSONSchemaCollection(enumJsonSchema).$defs.NamedEnum);
         expect(descriptor).toEqual({ kind: 'enum', values: [1, 2, 3], names: ['One', 'Two', 'Three'], nullable: false });
         expect(_describe({ enum: ['a', 'b'], 'x-enumNames': ['A'] })).toEqual({ kind: 'enum', values: ['a', 'b'], names: ['a', 'b'], nullable: false });
@@ -89,6 +100,7 @@ describe('Reflection', () => {
       });
 
       it('Extracts a null value of an enum into its nullable flag, together with its name', () => {
+        // The name of the `null` value is dropped with it, so that names stay aligned with values.
         const descriptor = _describe({ enum: ['a', null, 'b'], 'x-enumNames': ['A', 'None', 'B'] });
         expect(descriptor).toEqual({ kind: 'enum', values: ['a', 'b'], names: ['A', 'B'], nullable: true });
         expect(true satisfies AssertTypeEquality<typeof descriptor, TSSchemaEnumTypeDescriptor<readonly ['a', 'b'], readonly ['A', 'B'], true>>).toBe(true);
@@ -99,6 +111,8 @@ describe('Reflection', () => {
       });
 
       it('Describes a oneOf of constants as an enum, naming its values by their titles', () => {
+        // The enum idiom the sibling dotnetschema generates, as in the fixture's `AssessmentKind`: the `type` next to the `oneOf` is absorbed, and a `null`
+        // constant member makes the enum nullable (see AGENTS.md › Enum names come from x-enumNames, oneOf titles, or the value itself).
         const descriptor = _describe({ type: 'integer', oneOf: [{ const: 0, title: 'Zero' }, { const: 1 }] });
         expect(descriptor).toEqual({ kind: 'enum', values: [0, 1], names: ['Zero', '1'], nullable: false });
         expect(true satisfies AssertTypeEquality<typeof descriptor, TSSchemaEnumTypeDescriptor<readonly [0, 1], readonly ['Zero', '1'], false>>).toBe(true);
@@ -118,6 +132,8 @@ describe('Reflection', () => {
       });
 
       it('Describes a oneOf of anything other than only constants as a oneOf, never extracting null from it', () => {
+        // A `oneOf` with a `null` member stays a `oneOf`, nullable only if exactly one member is (see AGENTS.md › null is a flag (nullable), never an
+        // alternative).
         const descriptor = _describe({ oneOf: [{ const: 0 }, { type: 'string' }] });
         expect(descriptor).toEqual({
           kind: 'oneOf',
@@ -151,6 +167,8 @@ describe('Reflection', () => {
       });
 
       it('Describes a primitive type, and several as an implicit anyOf', () => {
+        // A type array naming only primitive types is one group, parsed as a single primitive type facet listing them in order, so its members infer as a
+        // tuple.
         const string = _describe({ type: 'string' });
         expect(string).toEqual({ kind: 'primitive', type: 'string', nullable: false });
         expect(true satisfies AssertTypeEquality<typeof string, _String>).toBe(true);
@@ -180,6 +198,8 @@ describe('Reflection', () => {
       });
 
       it('Extracts null from a type array into the nullable flag of the rest', () => {
+        // A type array naming `null` is split into branches (see AGENTS.md › null is not a primitive type), whose `null` branch is extracted like an `anyOf`
+        // member.
         const nullable = _describe({ type: ['string', 'null'] });
         expect(nullable).toEqual({ kind: 'primitive', type: 'string', nullable: true });
         expect(true satisfies AssertTypeEquality<typeof nullable, TSSchemaPrimitiveTypeDescriptor<'string', true>>).toBe(true);
@@ -208,6 +228,7 @@ describe('Reflection', () => {
       });
 
       it('Extracts null from an anyOf into the nullable flag of the rest', () => {
+        // Unlike the branches of a type array, an `anyOf` keyword is not implicit, and its members infer as a tuple.
         const single = _describe({ anyOf: [{ type: 'string' }, { type: 'null' }] });
         expect(single).toEqual({ kind: 'primitive', type: 'string', nullable: true });
         expect(true satisfies AssertTypeEquality<typeof single, TSSchemaPrimitiveTypeDescriptor<'string', true>>).toBe(true);
@@ -258,6 +279,8 @@ describe('Reflection', () => {
       });
 
       it('Describes a model by each of its properties, with whether it is required, and the required names', () => {
+        // `note` is a boolean schema, which parses into no facets and so is described as unknown. Being required belongs to the property entry, not its type
+        // descriptor (see AGENTS.md › A model descriptor's properties hold { required, type } entries).
         const descriptor = _describe({ type: 'object', properties: { id: { type: 'string' }, note: true }, required: ['id'] });
         expect(descriptor).toEqual({
           kind: 'model',
@@ -284,6 +307,7 @@ describe('Reflection', () => {
       });
 
       it('Describes allOf, nullable only if every member is, and not, never nullable', () => {
+        // A `not` is never explicitly nullable, whatever it negates (see AGENTS.md › null is a flag (nullable), never an alternative).
         const allOf = _describe({ allOf: [{ type: 'string' }, { const: 'a' }] });
         expect(allOf).toEqual({
           kind: 'allOf',
@@ -311,6 +335,8 @@ describe('Reflection', () => {
       });
 
       it('Absorbs the type alongside an enum or const', () => {
+        // The `type` only restates what the enum allows, so the enum alone describes the fragment (see AGENTS.md › Type descriptors are type shaped, facets
+        // keyword shaped).
         const enumeration = _describe({ type: 'string', enum: ['a', 'b'] });
         expect(enumeration).toEqual({ kind: 'enum', values: ['a', 'b'], names: ['a', 'b'], nullable: false });
         expect(true satisfies AssertTypeEquality<typeof enumeration, TSSchemaEnumTypeDescriptor<readonly ['a', 'b'], readonly ['a', 'b'], false>>).toBe(true);
@@ -325,6 +351,8 @@ describe('Reflection', () => {
       });
 
       it('Describes several keywords of one fragment as an implicit allOf, nullable only if every one is', () => {
+        // At type level the facets are a union, with no order, so the members infer as an array rather than a tuple (see AGENTS.md › Type descriptors are type
+        // shaped, facets keyword shaped).
         const descriptor = _describe({ type: 'string', not: { const: '' } });
         expect(descriptor).toEqual({
           kind: 'allOf',
@@ -344,6 +372,8 @@ describe('Reflection', () => {
       });
 
       it('Describes a reference lazily, by the same descriptor as its definition', () => {
+        // `mentor` refers back to `Person`: an eager `target` would never finish describing it, and the cache per facets array is what makes `target` the
+        // definition's very descriptor (see AGENTS.md › A reference descriptor's target is a lazy getter).
         const collection = parseJSONSchemaCollection(_schema);
         const person = getTSSchemaTypeDescriptor(collection.$defs.Person);
         expect(person.properties.name).toEqual({ required: true, type: { kind: 'primitive', type: 'string', nullable: false } });
@@ -357,6 +387,9 @@ describe('Reflection', () => {
       });
 
       it('Extracts null next to a reference as a nullable copy, keeping its target lazy and its definition untouched', () => {
+        // `buddy` is an `anyOf` of a `Person` reference and `null`. Setting `nullable` in place would leak into every use of the shared, cached descriptors,
+        // and copying by spreading would resolve the lazy `target`; hence the checks for a getter on the copy and an untouched definition (see AGENTS.md › null
+        // is a flag (nullable), never an alternative).
         const collection = parseJSONSchemaCollection(_schema);
         const person = getTSSchemaTypeDescriptor(collection.$defs.Person);
         const buddy = person.properties.buddy.type;
@@ -392,6 +425,7 @@ describe('Reflection', () => {
     });
 
     describe('TSSchemaTypeDescriptorOf', () => {
+      // Type-level only cases, with no runtime counterpart: the unspecified fragment, and a definition of a known collection.
       it('Infers any descriptor for the unspecified fragment', () => {
         expect(true satisfies AssertTypeEquality<TSSchemaTypeDescriptorOf<JSONSchemaCollection, JSONSchemaNotCollectionFragment>, TSSchemaTypeDescriptor>).toBe(
           true,

@@ -14,8 +14,14 @@ const _schema = {
 type _Schema = typeof _schema;
 
 describe('Reflection', () => {
+  // Runtime tests of Fragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in src/schema/JSONSchema/Fragment.test.ts, so the
+  // two layers' tests line up; the router, which the type layer's dispatcher maps to, is tested in FragmentFacets.test.ts.
   describe('JSONSchema fragment facets', () => {
+    // Each file in this directory holds the tests of one facet class under this describe; this one holds their base class, and type array branches.
     describe('Any fragment', () => {
+      // The abstract JSONSchemaFragmentFacet base class every facet class extends: its `name`, `fragment` and `collection`, the type-only `Type`, and its `{
+      // collection, name }` options. Tested on the facets of the small recursive collection above, taken from a JSONSchemaCollectionFragmentFacet or
+      // constructed directly, and on a facet class of the test's own. Each runtime `expect` is paired with an AssertTypeEquality on its static type.
       it('Parses any fragment with a common base class', () => {
         const person = new JSONSchemaCollectionFragmentFacet(_schema).$defs.Person[0];
         expect(person).toBeInstanceOf(JSONSchemaFragmentFacet);
@@ -40,6 +46,7 @@ describe('Reflection', () => {
       });
 
       it('Infers the type of the parsed fragment, but holds no value for it', () => {
+        // `Type` is only meant for `typeof`: the getter throws when read. The recursive `mentor` is compared through `Pick`, which keeps it optional.
         const person = new JSONSchemaCollectionFragmentFacet(_schema).$defs.Person[0];
         type Person = typeof person.Type;
         //   ^?
@@ -59,6 +66,8 @@ describe('Reflection', () => {
       });
 
       it('Parses a fragment with no collection and no name when both are omitted', () => {
+        // With no collection to infer it from, the name is typed as any definition name of the unspecified collection, or `undefined`.
+        // See AGENTS.md › The collection facet is also what every `$ref` resolves against.
         const person = new JSONSchemaModelFragmentFacet(_schema.$defs.Person);
         expect(person.name).toBe(undefined);
         expect(person.properties.mentor[0].ref).toBe(undefined);
@@ -74,6 +83,8 @@ describe('Reflection', () => {
     });
 
     describe('Type array branches', () => {
+      // getJSONSchemaFragmentTypeBranches, the runtime mirror of JSONSchemaFragmentTypeBranch, tested side by side with it on inline `as const` fragments: the
+      // branches by `toEqual`, and their static type by AssertTypeEquality against the type layer's.
       it('Splits a type array naming non primitive types into a branch per group of type names', () => {
         const fragment = { type: ['object', 'array', 'string', 'boolean', 'null'], title: 'x' } as const;
         const branches = getJSONSchemaFragmentTypeBranches(fragment);
@@ -97,6 +108,7 @@ describe('Reflection', () => {
       });
 
       it('Leaves a fragment with no type array naming non primitive types as is', () => {
+        // A fragment which is not split is returned itself, not a copy, hence `toBe`.
         const primitives = { type: ['string', 'boolean'] } as const;
         expect(getJSONSchemaFragmentTypeBranches(primitives)).toEqual([primitives]);
         expect(getJSONSchemaFragmentTypeBranches(primitives)[0]).toBe(primitives);

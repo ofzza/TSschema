@@ -25,8 +25,15 @@ const _schema = {
 type _Schema = typeof _schema;
 
 describe('Reflection', () => {
+  // Runtime tests of ReferenceFragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in
+  // src/schema/JSONSchema/ReferenceFragment.test.ts, so the two layers' tests line up.
   describe('JSONSchema fragment facets', () => {
+    // Each file in this directory holds the tests of one facet class under this describe.
     describe('$Ref fragment', () => {
+      // JSONSchemaReferenceFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsReference), the `refName` parsed on construction, the `ref` facets
+      // resolved against the collection on access, and the type-only `Type`. Facets are taken from a JSONSchemaCollectionFragmentFacet parsing the small inline
+      // collection above, whose references resolve, recurse, or do not resolve (missing, external, a JSON pointer). Each runtime `expect` on a parsed value is
+      // paired with an AssertTypeEquality on its static type.
       it('Detects a reference', () => {
         expect(JSONSchemaReferenceFragmentFacet.is({ $ref: '#/$defs/Role' })).toBe(true);
         expect(JSONSchemaReferenceFragmentFacet.is({ $ref: 'https://example.com/schema.json' })).toBe(true);
@@ -65,6 +72,7 @@ describe('Reflection', () => {
       });
 
       it('Resolves a recursive reference', () => {
+        // `ref` is resolved lazily, on access, so a definition referencing itself is parsed once and resolves to its very own facets.
         const collection = new JSONSchemaCollectionFragmentFacet(_schema);
         const facet = collection.$defs.Node[0];
         expect(facet.properties.next[0].ref[0]).toBe(facet);
@@ -84,12 +92,15 @@ describe('Reflection', () => {
       });
 
       it('Resolves no facets for a reference with no collection to resolve it against', () => {
+        // See AGENTS.md › The collection facet is also what every `$ref` resolves against.
         const reference = new JSONSchemaReferenceFragmentFacet({ $ref: '#/$defs/Role' } as const);
         expect(reference.refName).toBe(undefined);
         expect(reference.ref).toBe(undefined);
       });
 
       it('Resolves any fragment of the collection for an unspecified reference', () => {
+        // An unspecified (`string`) `$ref` may name any definition, so `ref` is a union of every definition's facets and `undefined`, too large to spell out:
+        // members of it are picked out with `Extract` instead.
         type Reference = JSONSchemaReferenceFragmentFacet<_Schema, undefined, JSONSchemaReferenceFragment>;
         expect(true satisfies AssertTypeEquality<Reference['refName'], keyof _Schema['$defs'] | undefined>).toBe(true);
         type Ref = Reference['ref'];

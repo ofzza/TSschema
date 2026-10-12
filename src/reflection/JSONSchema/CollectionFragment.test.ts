@@ -30,8 +30,15 @@ const _schema = {
 type _Schema = typeof _schema;
 
 describe('Reflection', () => {
+  // Runtime tests of CollectionFragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in
+  // src/schema/JSONSchema/CollectionFragment.test.ts, so the two layers' tests line up.
   describe('JSONSchema fragment facets', () => {
+    // Each file in this directory holds the tests of one facet class under this describe.
     describe('Collection fragment', () => {
+      // JSONSchemaCollectionFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsCollection), the definition `names`, the `$defs` record of each
+      // definition's facets, and its own role as a facet of the whole schema. Tested on the small inline collection above (a root model next to `$defs`
+      // referencing each other) and on the res/schema.json fixture, constructing the collection facet directly. Each runtime `expect` on a parsed value is
+      // paired with an AssertTypeEquality on its static type.
       it('Detects a collection', () => {
         expect(JSONSchemaCollectionFragmentFacet.is(_schema)).toBe(true);
         expect(JSONSchemaCollectionFragmentFacet.is(jsonSchema)).toBe(true);
@@ -89,6 +96,8 @@ describe('Reflection', () => {
       });
 
       it('Infers the value type of the collection from its root fragment, leaving out its $defs', () => {
+        // The root fragment is the collection with its `$defs` left out (JSONSchemaCollectionRootFragment).
+        // See AGENTS.md › The collection facet is also what every `$ref` resolves against.
         const _collection = new JSONSchemaCollectionFragmentFacet(_schema);
         expect(true satisfies AssertTypeEquality<typeof _collection.Type, JSONSchemaFragmentType<JSONSchemaCollectionRootFragment<_Schema>, _Schema>>).toBe(
           true,
@@ -103,6 +112,7 @@ describe('Reflection', () => {
       });
 
       it('Parses any fragment of an unspecified collection', () => {
+        // With the unspecified JSONSchemaCollection, nothing is known of a definition, so its facets are typed as every facet type the router can create.
         const collection = new JSONSchemaCollectionFragmentFacet({ $defs: { A: { type: 'string' } } } as JSONSchemaCollection);
         expect(collection.$defs.A.length).toBe(1);
         expect(
@@ -115,6 +125,7 @@ describe('Reflection', () => {
     });
 
     describe('Collection parsed fragment', () => {
+      // JSONSchemaCollectionParsedFragment, the fragment of a definition as it is parsed. Tested at type level only.
       it('Gets a fragment of a collection, as parsed', () => {
         expect(true satisfies AssertTypeEquality<JSONSchemaCollectionParsedFragment<_Schema, 'Role'>, _Schema['$defs']['Role']>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaCollectionParsedFragment<JSONSchemaCollection, string>, JSONSchemaNotCollectionFragment>).toBe(true);

@@ -52,7 +52,13 @@ type _TypeArrayCollection = {
 };
 
 describe('TSSchemaProperty', () => {
+  // Wrapping a property of a model fragment, addressed by name or by dot-separated path, unwrapping it, and inferring its value type with
+  // TSSchemaPropertyType. Uses the res/sidecar/schema.json fixture (imported through its sidecar for literal types) for realistic models,
+  // `$ref`s and recursion, and small inline schemas (_JSONSchemaNestingModel, _TypeArrayCollection, ...) for edge cases. Type level only:
+  // each AssertTypeEquality is consumed through `expect(true satisfies ...)` so both Vitest pools check it, and invalid names are asserted
+  // with `@ts-expect-error`.
   it('Imports the testing schema with literal types', () => {
+    // Guards every other assertion: were the sidecar not picked up, the fixture would be widened (or `any`) and the equalities meaningless.
     expect(true satisfies AssertTypeInequality<JSONSchemaFixtureCollection, any>).toBe(true);
   });
 
@@ -108,6 +114,8 @@ describe('TSSchemaProperty', () => {
     });
 
     it('Wraps a model given directly with no property name as a property', () => {
+      // The exception to an omitted name wrapping every property: a model given directly with no name, such as an inline nested model, is
+      // wrapped itself. See AGENTS.md › A name parameter defaulting to `never` must be guarded before a distributive check.
       type NestedWrapper = TSSchemaProperty<_JSONSchemaNestingModel['properties']['nested']>;
       expect(true satisfies AssertTypeEquality<NestedWrapper['__property'], _JSONSchemaNestingModel['properties']['nested']>).toBe(true);
       expect(true satisfies AssertTypeEquality<NestedWrapper['__fragment'], JSONSchemaModelFragment>).toBe(true);
@@ -125,6 +133,7 @@ describe('TSSchemaProperty', () => {
     });
 
     it('Wraps every property of a model wrapper, or of a model addressed from a collection, when no property name is given', () => {
+      // See AGENTS.md › A name parameter defaulting to `never` must be guarded before a distributive check.
       type AssessmentPropertyName = 'id' | 'kind' | 'title' | 'weight' | 'maximumMarks' | 'dueAt' | 'isOpenBook' | 'record' | 'class';
       type CollectionWrappers = TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment'>;
       type ModelWrapperWrappers = TSSchemaProperty<TSSchemaFragment<JSONSchemaFixtureCollection, 'Assessment'>>;
@@ -156,6 +165,7 @@ describe('TSSchemaProperty', () => {
     });
 
     it('Wraps a sibling property addressed by name from a model property wrapper', () => {
+      // A property wrapper is the fragment wrapper of its parent model. See AGENTS.md › Wrappers nest structurally.
       type TitleWrapper = TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'title'>;
       expect(true satisfies AssertTypeEquality<TSSchemaProperty<TitleWrapper, 'id'>, TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'id'>>).toBe(
         true,
@@ -186,7 +196,10 @@ describe('TSSchemaProperty', () => {
   });
 
   describe('TSSchemaProperty paths', () => {
+    // Dot-separated paths, resolved in the body of TSSchemaProperty, where only the first segment is checked by the name constraint at the
+    // call site: an invalid remainder infers `never` rather than erroring. See AGENTS.md › Paths are resolved, never enumerated.
     it('Wraps a property addressed by a path, with its own parent model, from a collection, a collection wrapper or a model wrapper', () => {
+      // The wrapper is that of the last segment within its own model (Class), not of the model the path started from (Assessment).
       type NameWrapper = TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'class.name'>;
       //   ^?
       expect(true satisfies AssertTypeEquality<NameWrapper['__property'], JSONSchemaFixtureCollection['$defs']['Class']['properties']['name']>).toBe(true);
@@ -205,17 +218,21 @@ describe('TSSchemaProperty', () => {
     });
 
     it('Wraps a property addressed by a path through several nested models, references and nullable references', () => {
+      // `class` and `professor` are nullable references (an `anyOf` of a `$ref` and `type: 'null'`), passed through member by member. `email` is nullable
+      // itself (and optional, which its own type never shows).
       type EmailWrapper = TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'class.professor.email'>;
       expect(true satisfies AssertTypeEquality<EmailWrapper, TSSchemaProperty<JSONSchemaFixtureCollection, 'Person', 'email'>>).toBe(true);
-      expect(true satisfies AssertTypeEquality<TSSchemaPropertyType<EmailWrapper>, string>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaPropertyType<EmailWrapper>, string | null>).toBe(true);
     });
 
     it('Wraps a property addressed by a path through a recursive model', () => {
+      // Person.mentor refers back to Person, so the set of valid paths is infinite and can only be resolved, never enumerated.
       type EmailWrapper = TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'class.professor.mentor.mentor.mentor.email'>;
       expect(true satisfies AssertTypeEquality<EmailWrapper, TSSchemaProperty<JSONSchemaFixtureCollection, 'Person', 'email'>>).toBe(true);
     });
 
     it('Wraps a property of, or addressed by a path through, the object branch of a type array, e.g. of a nullable model', () => {
+      // See AGENTS.md › A `type` array naming `object`, `array` and / or `null` is split into a union of branches.
       type ValueWrapper = TSSchemaProperty<_TypeArrayCollection, 'Node', 'value'>;
       expect(true satisfies AssertTypeEquality<TSSchemaPropertyType<ValueWrapper>, string>).toBe(true);
       expect(true satisfies AssertTypeEquality<TSSchemaProperty<TSSchemaFragment<_TypeArrayCollection, 'Node'>, 'value'>, ValueWrapper>).toBe(true);
@@ -239,6 +256,7 @@ describe('TSSchemaProperty', () => {
     });
 
     it('Wraps a property addressed by a path through every member of an anyOf, oneOf or allOf, as a union of wrappers', () => {
+      // Every member is pathed into, not just one: `a` is found in both models, `b` only in _ModelB, whatever the combining keyword.
       type _ModelA = { readonly type: 'object'; readonly properties: { readonly a: { readonly type: 'string' } } };
       type _ModelB = { readonly type: 'object'; readonly properties: { readonly a: { readonly type: 'number' }; readonly b: { readonly type: 'boolean' } } };
       type _Model = {
@@ -256,6 +274,9 @@ describe('TSSchemaProperty', () => {
     });
 
     it('Wraps a property addressed by a path into an object of unknown shape as a property of unknown type', () => {
+      // Covers all three kinds of unknown shape: an object with no `properties` (School.departments, a record), a `$ref` with no collection
+      // known, and an array with no single schema `items`. Its property name is the rest of the path. See AGENTS.md › A path into content of
+      // unknown shape wraps the empty schema `{}`.
       type DepartmentWrapper = TSSchemaProperty<JSONSchemaFixtureCollection, 'School', 'departments.x.y'>;
       expect(true satisfies AssertTypeEquality<DepartmentWrapper['__propertyName'], 'x.y'>).toBe(true);
       expect(true satisfies AssertTypeEquality<TSSchemaPropertyType<DepartmentWrapper>, unknown>).toBe(true);
@@ -287,6 +308,8 @@ describe('TSSchemaProperty', () => {
     });
 
     it('Wraps no property for a path which does not address a property past its first segment', () => {
+      // Models with `properties` are treated as closed, so an undefined name in a nested model is `never`, not unknown.
+      // See AGENTS.md › A path into content of unknown shape wraps the empty schema `{}`.
       // A primitive property has no properties to path into
       expect(true satisfies AssertTypeEquality<TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'id.name'>, never>).toBe(true);
       // Properties not defined in a nested model
@@ -299,6 +322,7 @@ describe('TSSchemaProperty', () => {
     });
 
     it('Rejects a path whose first segment is not a property of the model', () => {
+      // Only the first segment is part of the name constraint, so only it can error at the call site.
       // @ts-expect-error `unknown` is not a property of the `Assessment` model
       type _ModelWrapper = TSSchemaProperty<JSONSchemaAssessmentModel, 'unknown.name'>;
       // @ts-expect-error `unknown` is not a property of the `Assessment` model
@@ -345,6 +369,8 @@ describe('TSSchemaProperty', () => {
     });
 
     it('Infers a type from a property wrapper, resolving $refs against its parent collection', () => {
+      // `class` is optional in its model, yet its own type includes no `undefined`.
+      // See AGENTS.md › Model properties are optional unless listed in `required`.
       type Assessment = _FixtureModel<'Assessment'>;
       type _Type<TName extends keyof Assessment> = TSSchemaPropertyType<TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', TName>>;
       expect(true satisfies AssertTypeEquality<_Type<'title'>, string>).toBe(true);
@@ -354,6 +380,8 @@ describe('TSSchemaProperty', () => {
     });
 
     it('Infers a type from a property wrapper, resolving $refs against an explicitly passed collection over its parent collection', () => {
+      // _OtherCollection redefines AssessmentKind as a string, so the result tells which collection the `$ref` was resolved against.
+      // See AGENTS.md › `*Type` utilities prefer an explicitly passed collection over the wrapper's own.
       type _OtherCollection = { readonly $defs: { readonly AssessmentKind: { readonly type: 'string' } } };
       type KindWrapper = TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'kind'>;
       expect(true satisfies AssertTypeEquality<TSSchemaPropertyType<KindWrapper, _OtherCollection>, string>).toBe(true);

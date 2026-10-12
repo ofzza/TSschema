@@ -11,14 +11,22 @@ const _schema = {
 type _Schema = typeof _schema;
 
 describe('Reflection', () => {
+  // Runtime tests of PrimitiveTypeFragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in
+  // src/schema/JSONSchema/PrimitiveTypeFragment.test.ts, so the two layers' tests line up.
   describe('JSONSchema fragment facets', () => {
+    // Each file in this directory holds the tests of one facet class under this describe.
     describe('Primitive Type fragment', () => {
+      // JSONSchemaPrimitiveTypeFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsPrimitiveType), the `type` it parses (a name or an array of
+      // names) and the type-only `Type`. Facets are taken from a JSONSchemaCollectionFragmentFacet parsing the small inline collection above. Each runtime
+      // `expect` on a parsed value is paired with an AssertTypeEquality on its static type.
       it('Detects a primitive type', () => {
         expect(['string', 'number', 'integer', 'boolean'].every((type) => JSONSchemaPrimitiveTypeFragmentFacet.is({ type } as any))).toBe(true);
         expect(JSONSchemaPrimitiveTypeFragmentFacet.is({ type: ['string', 'number'] })).toBe(true);
       });
 
       it('Rejects a non-primitive type, including null', () => {
+        // A type array naming `null` is not a primitive type: the router splits it into branches before any facet class checks it.
+        // See AGENTS.md › `null` is not a primitive type.
         expect(JSONSchemaPrimitiveTypeFragmentFacet.is({ type: 'null' })).toBe(false);
         expect(JSONSchemaPrimitiveTypeFragmentFacet.is({ type: 'object' })).toBe(false);
         expect(JSONSchemaPrimitiveTypeFragmentFacet.is({ type: 'array' })).toBe(false);

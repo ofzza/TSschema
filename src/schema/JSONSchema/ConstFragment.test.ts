@@ -15,8 +15,14 @@ type JSONSchemaEnum = JSONSchemaEnumCollection['$defs']['Enum'];
 //   ^?
 
 describe('JSONSchema', () => {
+  // Type layer tests of ConstFragment.ts. The `JSONSchema > JSONSchema fragments > <Kind> fragment` tree is kept from when src/schema/JSONSchema/ was a single
+  // file; src/reflection/JSONSchema/ConstFragment.test.ts mirrors it at runtime.
   describe('JSONSchema fragments', () => {
+    // Each file in this directory holds the tests of one fragment kind under this describe.
     describe('Const fragment', () => {
+      // JSONSchemaConstFragment / JSONSchemaFragmentIsConst and the value type JSONSchemaConstFragmentType. Tested at type level only, on the Const definition
+      // of the res/const.json fixture (an enum of res/enum.json as the negative) and on inline fragments with `null` and tuple values, by AssertTypeEquality
+      // and AssertTypeAssignable.
       it('Detects a const', () => {
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsConst<JSONSchemaConst>, true>).toBe(true);
         expect(true satisfies AssertTypeAssignable<JSONSchemaConst, JSONSchemaConstFragment>).toBe(true);
@@ -33,6 +39,8 @@ describe('JSONSchema', () => {
       });
 
       it('Infers unknown from a non-const', () => {
+        // An absent keyword infers `unknown`, so it is neutral in JSONSchemaFragmentType's intersection of every per-keyword type.
+        // See AGENTS.md › JSON schema type inference uses `unknown` for "no constraint".
         expect(true satisfies AssertTypeEquality<JSONSchemaConstFragmentType<{ type: 'string' }>, unknown>).toBe(true);
       });
     });

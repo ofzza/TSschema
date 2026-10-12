@@ -3,9 +3,17 @@ import type { AssertTypeEquality, AssertTypeAssignable } from '@ofzza/tsstd';
 import type { JSONSchemaArrayTypeFragment, JSONSchemaArrayTypeFragmentType, JSONSchemaFragmentIsArrayType, JSONSchemaFragmentType } from './index.js';
 
 describe('JSONSchema', () => {
+  // Type layer tests of ArrayTypeFragment.ts. The `JSONSchema > JSONSchema fragments > <Kind> fragment` tree is kept from when src/schema/JSONSchema/ was a
+  // single file; src/reflection/JSONSchema/ArrayTypeFragment.test.ts mirrors it at runtime.
   describe('JSONSchema fragments', () => {
+    // Each file in this directory holds the tests of one fragment kind under this describe.
     describe('Array Type fragment', () => {
+      // JSONSchemaArrayTypeFragment / JSONSchemaFragmentIsArrayType and the value type JSONSchemaArrayTypeFragmentType, an Array of the type inferred from a
+      // single schema `items`. Tested at type level only, on inline `as const` fragments with `items` of every primitive type, `null` and a model, by
+      // AssertTypeEquality and AssertTypeAssignable.
       it('Detects an array type', () => {
+        // The tuple `items` case guards the check against drifting from the fragment type that JSONSchemaFragmentType dispatches on.
+        // See AGENTS.md › Define every `JSONSchemaFragmentIs*<T>` as `T extends JSONSchema*Fragment ? true : false`.
         const _arrayTypeFragment = { type: 'array' } as const;
         //    ^?
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsArrayType<typeof _arrayTypeFragment>, true>).toBe(true);
@@ -19,6 +27,7 @@ describe('JSONSchema', () => {
       });
 
       it('Rejects a non-array type', () => {
+        // `items` alone, with no `type: 'array'`, does not make an array type fragment.
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsArrayType<{ type: 'object' }>, false>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsArrayType<{ items: { type: 'string' } }>, false>).toBe(true);
       });
@@ -41,6 +50,7 @@ describe('JSONSchema', () => {
       });
 
       it('Infers an array of unknown when items are not a single schema', () => {
+        // Tuple `items` are not supported yet, and a boolean schema `items` gives no type to infer, so both infer the unconstrained `Array<unknown>`.
         const _arrayTupleTypeFragment = { type: 'array', items: [{ type: 'string' }, { type: 'number' }] } as const;
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<typeof _arrayTupleTypeFragment>, Array<unknown>>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentType<{ readonly type: 'array'; readonly items: true }>, Array<unknown>>).toBe(true);

@@ -5,8 +5,14 @@ import { JSONSchemaCollectionFragmentFacet, JSONSchemaConstFragmentFacet } from 
 import { default as constJsonSchema } from '../../../res/sidecar/const.json';
 
 describe('Reflection', () => {
+  // Runtime tests of ConstFragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in
+  // src/schema/JSONSchema/ConstFragment.test.ts, so the two layers' tests line up.
   describe('JSONSchema fragment facets', () => {
+    // Each file in this directory holds the tests of one facet class under this describe.
     describe('Const fragment', () => {
+      // JSONSchemaConstFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsConst), and the `const` value and type-only `Type` it parses. Facets are
+      // taken from a JSONSchemaCollectionFragmentFacet parsing the res/const.json fixture or a small inline collection, so each is typed with its collection
+      // and definition name, as the parser creates it. Each runtime `expect` on a parsed value is paired with an AssertTypeEquality on its static type.
       it('Detects a const', () => {
         expect(JSONSchemaConstFragmentFacet.is({ const: 123 })).toBe(true);
         expect(JSONSchemaConstFragmentFacet.is(constJsonSchema.$defs.Const)).toBe(true);
@@ -28,6 +34,8 @@ describe('Reflection', () => {
       });
 
       it('Parses an object constant as declared', () => {
+        // An object constant keeps the `readonly` of the `as const` schema it was declared in: `const` values are returned as declared.
+        // See AGENTS.md › A homomorphic mapped type over a schema object copies the schema literal's modifiers.
         const collection = new JSONSchemaCollectionFragmentFacet({ $defs: { Point: { const: { x: 1, y: 2 } } } } as const);
         const point = collection.$defs.Point[0];
         expect(point.const).toEqual({ x: 1, y: 2 });

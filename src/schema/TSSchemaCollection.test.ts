@@ -10,6 +10,9 @@ type JSONSchemaFixtureCollection = typeof jsonSchema;
 //   ^?
 
 describe('TSSchemaCollection', () => {
+  // Wrapping a collection, unwrapping any wrapper back to its collection, and getting a collection's definition names. Uses the
+  // res/sidecar/schema.json fixture, imported through its sidecar for literal types, with the unspecified JSONSchemaCollection as the fallback.
+  // Type level only: each AssertTypeEquality is consumed through `expect(true satisfies ...)`, so both Vitest pools check it.
   it('Imports the testing schema with literal types', () => {
     expect(true satisfies AssertTypeInequality<JSONSchemaFixtureCollection, any>).toBe(true);
   });
@@ -68,6 +71,9 @@ describe('TSSchemaCollection', () => {
           | 'DepartmentName'
           | 'Exercise'
           | 'Library'
+          | 'NullableScalarBattery'
+          | 'NullableScalarRegister'
+          | 'NullableScalarSeries'
           | 'Person'
           | 'PersonRole'
           | 'Room'
@@ -92,6 +98,7 @@ describe('TSSchemaCollection', () => {
     });
 
     it('Gets string | number definition names from the default collection', () => {
+      // The unspecified collection's `$defs` is a `Record<string, ...>`, and `keyof` of a string index signature is `string | number`.
       expect(true satisfies AssertTypeEquality<TSSchemaDefinitionName, string | number>).toBe(true);
       expect(true satisfies AssertTypeEquality<TSSchemaDefinitionName<TSSchemaCollection>, string | number>).toBe(true);
     });

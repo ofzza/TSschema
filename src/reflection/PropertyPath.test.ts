@@ -42,9 +42,16 @@ function _shapes(name: keyof _Schema['$defs']) {
 }
 
 describe('Reflection', () => {
+  // Property lookup over facets (PropertyPath.ts), the runtime walk the reflections' propertyNames and getProperty are built on, next to its type-level mirror.
+  // Each runtime result is asserted side by side with what the mirror infers for the same fragment, as the two must stay in step (see AGENTS.md › getProperty
+  // resolves like TSSchemaProperty, with deliberate differences).
   describe('Property paths', () => {
+    // From the marker of an unknown shape, through the shapes reachable from a fragment, to the properties matched in them by name.
     describe('Unknown shape fragment', () => {
+      // JSONSchemaUnknownShapeFragment, the fragment of a property found in a shape which is not known, marked by its `$comment` so that the property is of
+      // unknown shape itself. Checked by its guard, and by parsing it and inferring its value type, as it must constrain nothing.
       it('Marks a property of unknown shape by its $comment', () => {
+        // A copy is recognised too: the marker is the `$comment` value, not the frozen instance.
         expect(isJSONSchemaUnknownShapeFragment(JSONSchemaUnknownShapeFragment)).toBe(true);
         expect(isJSONSchemaUnknownShapeFragment({ ...JSONSchemaUnknownShapeFragment })).toBe(true);
         expect(isJSONSchemaUnknownShapeFragment({})).toBe(false);
@@ -58,6 +65,9 @@ describe('Reflection', () => {
     });
 
     describe('Shapes', () => {
+      // getJSONSchemaPropertyShapes, the runtime walk to every model reachable from a fragment, next to its type-level mirrors JSONSchemaReachablePropertyName
+      // and JSONSchemaPropertyShapeIsUnknown. Each case parses a definition of the `_schema` collection above (built to reach models in every supported way)
+      // and asserts the runtime shapes or names and the inferred ones side by side.
       it('Reaches a model directly', () => {
         const shapes = _shapes('Cat');
         expect(shapes.length).toBe(1);
@@ -76,17 +86,22 @@ describe('Reflection', () => {
       });
 
       it('Reaches each model once, terminating on recursive references', () => {
+        // `Loop` refers to itself, so a walk that does not track visited facets would never end; `Both` reaches `Cat` twice through its `allOf`, yet it is one
+        // shape.
         expect(_shapes('Loop').length).toBe(1);
         expect(_shapes('Both').length).toBe(1);
         expect(true satisfies AssertTypeEquality<JSONSchemaReachablePropertyName<_Schema['$defs']['Loop'], _Schema>, 'name' | 'lives'>).toBe(true);
       });
 
       it('Reaches the model of a nullable model', () => {
+        // `Maybe`'s type array is split into branches held by an implicit `anyOf` facet, whose `object` branch is the model (see AGENTS.md › A type array
+        // naming object, array and / or null is split into a union of branches).
         expect(getJSONSchemaPropertyShapesNames(_shapes('Maybe'))).toEqual(['value']);
         expect(true satisfies AssertTypeEquality<JSONSchemaReachablePropertyName<_Schema['$defs']['Maybe'], _Schema>, 'value'>).toBe(true);
       });
 
       it('Reaches an unknown shape from an object with no properties, an array with no single schema items, and an unresolved reference', () => {
+        // An unknown shape is a single `undefined` among the shapes. `Pet` reaches models only, as a counter-check.
         for (const name of ['Bag', 'Tuple', 'Unresolved'] as const) expect(_shapes(name)).toEqual([undefined]);
         expect(true satisfies AssertTypeEquality<JSONSchemaPropertyShapeIsUnknown<_Schema['$defs']['Bag'], _Schema>, true>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaPropertyShapeIsUnknown<_Schema['$defs']['Tuple'], _Schema>, true>).toBe(true);
@@ -95,19 +110,27 @@ describe('Reflection', () => {
       });
 
       it('Reaches an unknown shape from any reference when no collection is known', () => {
+        // Parsed with no collection, the `$ref` has nothing to resolve against; at type level the unspecified collection stands for the same (see AGENTS.md ›
+        // The collection facet is also what every $ref resolves against).
         const shapes = getJSONSchemaPropertyShapes(createJSONSchemaFragmentFacets({ $ref: '#/$defs/Cat' } as const));
         expect(shapes).toEqual([undefined]);
         expect(true satisfies AssertTypeEquality<JSONSchemaPropertyShapeIsUnknown<{ readonly $ref: '#/$defs/Cat' }, JSONSchemaCollection>, true>).toBe(true);
       });
 
       it('Reaches an unknown shape from a property of unknown shape', () => {
+        // A property of unknown shape has no facets, so the `unknown` flag is what keeps any name addressable below it.
         expect(getJSONSchemaPropertyShapes([], true)).toEqual([undefined]);
         expect(true satisfies AssertTypeEquality<JSONSchemaPropertyShapeIsUnknown<JSONSchemaUnknownShapeFragment, _Schema>, true>).toBe(true);
       });
     });
 
     describe('Matches', () => {
+      // getJSONSchemaPropertyMatches and hasJSONSchemaPropertyShapesName over the shapes of a `_schema` definition, next to the type-level mirror
+      // JSONSchemaPropertyFragment, the fragment a property found by name infers. Only exact names match here: splitting a path is up to the reflection.
       it('Finds a property by its exact name in every model defining it', () => {
+        // `Cat` and `Dog` both define `name`, but only `Cat` requires it. Found twice, it infers an implicit `anyOf`, checked by its inferred value type rather
+        // than compared, as its member union holds structurally identical members (see AGENTS.md › A property found in several models is one reflection holding
+        // a fresh implicit anyOf facet).
         const shapes = _shapes('Pet');
         expect(hasJSONSchemaPropertyShapesName(shapes, 'name')).toBe(true);
         expect(hasJSONSchemaPropertyShapesName(shapes, 'name.length')).toBe(false);
@@ -139,6 +162,7 @@ describe('Reflection', () => {
       });
 
       it('Infers a boolean schema property as the empty schema', () => {
+        // At runtime the fragment stays as declared (`true`, parsing into no facets); at type level it infers `{}`, which is just as unconstrained.
         const [match] = getJSONSchemaPropertyMatches(_shapes('Flag'), 'any');
         expect(match.fragment).toBe(true);
         expect(match.facets).toEqual([]);

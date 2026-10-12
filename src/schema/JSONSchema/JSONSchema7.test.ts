@@ -7,11 +7,17 @@ type JSONSchemaFixtureCollection = typeof jsonSchema;
 //   ^?
 
 describe('JSONSchema', () => {
+  // Type layer tests of JSONSchema7.ts: the importing of the res/schema.json fixture with literal types, and the primitive type name / value type utilities.
+  // Tested at type level only, by AssertTypeEquality (and AssertTypeInequality) against hand-written types, with a `@ts-expect-error` for what must not
+  // compile. Kept as `JSONSchema > Primitive types` from when src/schema/JSONSchema/ was a single file; src/reflection/JSONSchema/JSONSchema7.test.ts mirrors
+  // it at runtime.
   it('Imports the testing schema with literal types', () => {
+    // Every other test relies on the sidecar typing the fixture's JSON with literal types: if it were `any`, their assertions would hold vacuously.
     expect(true satisfies AssertTypeInequality<JSONSchemaFixtureCollection, any>).toBe(true);
   });
 
   describe('Primitive types', () => {
+    // JSONSchemaPrimitiveTypeName, JSONSchemaPrimitiveType and JSONSchemaPrimitiveTypeFromName, which cover `string`, `number`, `integer` and `boolean`.
     it('Lists all primitive type names', () => {
       expect(true satisfies AssertTypeEquality<JSONSchemaPrimitiveTypeName, 'string' | 'boolean' | 'number' | 'integer'>).toBe(true);
     });
@@ -29,6 +35,7 @@ describe('JSONSchema', () => {
     });
 
     it('Does not treat null as a primitive type', () => {
+      // See AGENTS.md › `null` is not a primitive type.
       // @ts-expect-error `null` is not a primitive type name
       expect(true satisfies AssertTypeEquality<JSONSchemaPrimitiveTypeFromName<'null'>, null>).toBe(true);
     });

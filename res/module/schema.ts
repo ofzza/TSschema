@@ -4,9 +4,9 @@ import type { TSSchemaJSONCollection, TSSchemaFragment, TSSchemaType } from "../
 
 const schema = {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:tsschema:schema:schema",
-  "title": "schema",
-  "$comment": "Definition bundle. Reference a fragment as #/$defs/<name>.",
+  "$id": "urn:dotnetschema:schema:school",
+  "title": "school",
+  "$comment": "Definition bundle. Exported types: School. Reference one as #/$defs/<name>.",
   "$defs": {
     "Address": {
       "type": "object",
@@ -18,7 +18,10 @@ const schema = {
           "type": "string"
         },
         "postalCode": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "countryCode": {
           "type": "string"
@@ -33,7 +36,6 @@ const schema = {
       "required": [
         "street",
         "city",
-        "postalCode",
         "countryCode",
         "latitude",
         "longitude"
@@ -62,7 +64,10 @@ const schema = {
           "maximum": 65535
         },
         "dueAt": {
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "date-time"
         },
         "isOpenBook": {
@@ -84,18 +89,16 @@ const schema = {
       },
       "required": [
         "id",
-        "kind",
         "title",
         "weight",
         "maximumMarks",
         "dueAt",
-        "isOpenBook",
         "record"
       ]
     },
     "AssessmentKind": {
       "type": "integer",
-      "$comment": "Cornerstone.Fixtures.Schema.Enums.AssessmentKind (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.",
+      "$comment": "DotNetSchema.Fixtures.Schema.Enums.AssessmentKind (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.",
       "oneOf": [
         {
           "const": 0,
@@ -142,12 +145,24 @@ const schema = {
         },
         "register": {
           "$ref": "#/$defs/ScalarRegister"
+        },
+        "nullableBattery": {
+          "$ref": "#/$defs/NullableScalarBattery"
+        },
+        "nullableSeries": {
+          "$ref": "#/$defs/NullableScalarSeries"
+        },
+        "nullableRegister": {
+          "$ref": "#/$defs/NullableScalarRegister"
         }
       },
       "required": [
         "battery",
         "series",
-        "register"
+        "register",
+        "nullableBattery",
+        "nullableSeries",
+        "nullableRegister"
       ]
     },
     "Book": {
@@ -161,7 +176,10 @@ const schema = {
           "$ref": "#/$defs/BookName"
         },
         "isbn": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "edition": {
           "type": "integer",
@@ -195,7 +213,10 @@ const schema = {
           ]
         },
         "authors": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "items": {
             "$ref": "#/$defs/Person"
           }
@@ -215,14 +236,13 @@ const schema = {
         "pageCount",
         "price",
         "publishedOn",
-        "hasDigitalLicence",
         "authors",
         "chapters"
       ]
     },
     "BookName": {
       "type": "integer",
-      "$comment": "Cornerstone.Fixtures.Schema.Enums.BookName (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.",
+      "$comment": "DotNetSchema.Fixtures.Schema.Enums.BookName (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.",
       "oneOf": [
         {
           "const": 0,
@@ -325,7 +345,10 @@ const schema = {
           "type": "boolean"
         },
         "builtInYear": {
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "minimum": 0,
           "maximum": 65535
         },
@@ -340,7 +363,6 @@ const schema = {
         "id",
         "name",
         "floorCount",
-        "isAccessible",
         "builtInYear",
         "rooms"
       ]
@@ -359,7 +381,10 @@ const schema = {
           "$ref": "#/$defs/Address"
         },
         "openedOn": {
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "date"
         },
         "areaHectares": {
@@ -377,7 +402,6 @@ const schema = {
         "name",
         "address",
         "openedOn",
-        "areaHectares",
         "buildings"
       ]
     },
@@ -402,7 +426,10 @@ const schema = {
           "maximum": 65535
         },
         "estimatedReadingTime": {
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "pattern": "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$",
           "$comment": "System.TimeSpan. System.Text.Json writes [-][d.]hh:mm:ss[.fffffff], not an ISO-8601 duration, so the \"duration\" format does not hold."
         },
@@ -424,9 +451,7 @@ const schema = {
         "ordinal",
         "title",
         "startPage",
-        "estimatedReadingTime",
-        "sections",
-        "subChapters"
+        "sections"
       ]
     },
     "Class": {
@@ -443,7 +468,14 @@ const schema = {
           "type": "string"
         },
         "term": {
-          "$ref": "#/$defs/Term"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Term"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "academicYear": {
           "type": "integer",
@@ -462,7 +494,10 @@ const schema = {
           "type": "boolean"
         },
         "synopsis": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "professor": {
           "anyOf": [
@@ -493,7 +528,10 @@ const schema = {
           }
         },
         "schedule": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "items": {
             "$ref": "#/$defs/ClassSession"
           }
@@ -519,22 +557,19 @@ const schema = {
         "id",
         "name",
         "code",
-        "term",
         "academicYear",
         "credits",
         "seats",
         "isEnrollmentOpen",
-        "synopsis",
+        "professor",
         "students",
         "materials",
-        "prerequisites",
-        "schedule",
         "assessments"
       ]
     },
     "ClassName": {
       "type": "integer",
-      "$comment": "Cornerstone.Fixtures.Schema.Enums.ClassName (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.",
+      "$comment": "DotNetSchema.Fixtures.Schema.Enums.ClassName (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.",
       "oneOf": [
         {
           "const": 0,
@@ -656,8 +691,7 @@ const schema = {
         "id",
         "day",
         "startsAt",
-        "duration",
-        "isRemote"
+        "duration"
       ]
     },
     "DayOfWeek": {
@@ -708,7 +742,10 @@ const schema = {
           "type": "string"
         },
         "annualBudget": {
-          "type": "number",
+          "type": [
+            "number",
+            "null"
+          ],
           "$comment": "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly."
         },
         "establishedOn": {
@@ -741,16 +778,16 @@ const schema = {
       "required": [
         "id",
         "name",
-        "costCentre",
         "annualBudget",
         "establishedOn",
+        "head",
         "courses",
         "subDepartments"
       ]
     },
     "DepartmentName": {
       "type": "integer",
-      "$comment": "Cornerstone.Fixtures.Schema.Enums.DepartmentName (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.",
+      "$comment": "DotNetSchema.Fixtures.Schema.Enums.DepartmentName (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.",
       "oneOf": [
         {
           "const": 0,
@@ -800,7 +837,10 @@ const schema = {
           "type": "string"
         },
         "difficulty": {
-          "type": "number"
+          "type": [
+            "number",
+            "null"
+          ]
         },
         "hasWorkedSolution": {
           "type": "boolean"
@@ -815,8 +855,6 @@ const schema = {
         "id",
         "label",
         "prompt",
-        "difficulty",
-        "hasWorkedSolution",
         "marks"
       ]
     },
@@ -841,13 +879,19 @@ const schema = {
           "$comment": "System.TimeOnly. System.Text.Json writes hh:mm:ss[.fffffff] with no UTC offset, so the JSON Schema \"time\" format (RFC 3339 full-time) does not hold."
         },
         "closesAt": {
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "pattern": "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d{1,7})?$",
           "$comment": "System.TimeOnly. System.Text.Json writes hh:mm:ss[.fffffff] with no UTC offset, so the JSON Schema \"time\" format (RFC 3339 full-time) does not hold."
         },
         "catalogue": {
-          "type": "object",
-          "$comment": "Keyed by Cornerstone.Fixtures.Schema.Enums.BookName. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "$comment": "Keyed by DotNetSchema.Fixtures.Schema.Enums.BookName. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.",
           "propertyNames": {
             "type": "string",
             "enum": [
@@ -893,12 +937,764 @@ const schema = {
       "required": [
         "id",
         "name",
-        "volumeCount",
         "opensAt",
         "closesAt",
         "catalogue",
         "librarians",
         "readingRooms"
+      ]
+    },
+    "NullableScalarBattery": {
+      "type": "object",
+      "properties": {
+        "isProctored": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "curveAdjustment": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": -128,
+          "maximum": 127
+        },
+        "rawScore": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 255
+        },
+        "seatNumber": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": -32768,
+          "maximum": 32767
+        },
+        "itemCount": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "totalPoints": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "submissionSequence": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "elapsedTicks": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "$comment": "System.Int64. Bounds are omitted: they are not exactly representable in IEEE-754, and values beyond 2^53 lose precision in readers that parse JSON numbers as doubles."
+        },
+        "integrityChecksum": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "$comment": "System.UInt64. The upper bound is omitted: it is not exactly representable in IEEE-754."
+        },
+        "percentileRank": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "scaledScore": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "weightedAverage": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "$comment": "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly."
+        },
+        "letterGrade": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 1
+        },
+        "remarks": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "responseId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "administeredOn": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "startedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d{1,7})?$",
+          "$comment": "System.TimeOnly. System.Text.Json writes hh:mm:ss[.fffffff] with no UTC offset, so the JSON Schema \"time\" format (RFC 3339 full-time) does not hold."
+        },
+        "allowedDuration": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$",
+          "$comment": "System.TimeSpan. System.Text.Json writes [-][d.]hh:mm:ss[.fffffff], not an ISO-8601 duration, so the \"duration\" format does not hold."
+        },
+        "recordedAtUtc": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "$comment": "System.DateTime. The offset suffix is present only when DateTimeKind is Utc or Local; a DateTimeKind.Unspecified value is written without one and would not satisfy \"date-time\"."
+        },
+        "submittedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "isProctored",
+        "rawScore",
+        "itemCount",
+        "submissionSequence",
+        "integrityChecksum",
+        "scaledScore",
+        "letterGrade",
+        "responseId",
+        "startedAt",
+        "recordedAtUtc"
+      ]
+    },
+    "NullableScalarRegister": {
+      "type": "object",
+      "properties": {
+        "answeredByItem": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "curveByItem": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": -128,
+            "maximum": 127
+          }
+        },
+        "rawScoreByItem": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "seatByItem": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": -32768,
+            "maximum": 32767
+          }
+        },
+        "attemptsByItem": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 65535
+          }
+        },
+        "pointsByItem": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          }
+        },
+        "sequenceByItem": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "elapsedTicksByItem": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "$comment": "System.Int64. Bounds are omitted: they are not exactly representable in IEEE-754, and values beyond 2^53 lose precision in readers that parse JSON numbers as doubles."
+          }
+        },
+        "checksumByItem": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "$comment": "System.UInt64. The upper bound is omitted: it is not exactly representable in IEEE-754."
+          }
+        },
+        "percentileByItem": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "scaledScoreByItem": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "weightByItem": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "$comment": "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly."
+          }
+        },
+        "letterGradeByItem": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 1
+          }
+        },
+        "remarkByItem": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "responseIdByItem": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "markedOnByItem": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          }
+        },
+        "openedAtByItem": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d{1,7})?$",
+            "$comment": "System.TimeOnly. System.Text.Json writes hh:mm:ss[.fffffff] with no UTC offset, so the JSON Schema \"time\" format (RFC 3339 full-time) does not hold."
+          }
+        },
+        "durationByItem": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$",
+            "$comment": "System.TimeSpan. System.Text.Json writes [-][d.]hh:mm:ss[.fffffff], not an ISO-8601 duration, so the \"duration\" format does not hold."
+          }
+        },
+        "recordedAtUtcByItem": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "$comment": "System.DateTime. The offset suffix is present only when DateTimeKind is Utc or Local; a DateTimeKind.Unspecified value is written without one and would not satisfy \"date-time\"."
+          }
+        },
+        "savedAtByItem": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "remarkByItemNumber": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^-?(0|[1-9]\\d*)$"
+          },
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "scoreByResponseId": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "additionalProperties": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "weightByAssessmentKind": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "$comment": "Keyed by DotNetSchema.Fixtures.Schema.Enums.AssessmentKind. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.",
+          "propertyNames": {
+            "type": "string",
+            "enum": [
+              "Quiz",
+              "MidtermExam",
+              "FinalExam",
+              "Essay",
+              "LabReport",
+              "Practical",
+              "OralDefence",
+              "GroupProject"
+            ]
+          },
+          "additionalProperties": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "$comment": "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly."
+          }
+        },
+        "attendanceByDate": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "propertyNames": {
+            "type": "string",
+            "format": "date"
+          },
+          "additionalProperties": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 65535
+          }
+        }
+      },
+      "required": [
+        "answeredByItem",
+        "rawScoreByItem",
+        "attemptsByItem",
+        "sequenceByItem",
+        "checksumByItem",
+        "scaledScoreByItem",
+        "letterGradeByItem",
+        "responseIdByItem",
+        "openedAtByItem",
+        "recordedAtUtcByItem",
+        "remarkByItemNumber",
+        "weightByAssessmentKind"
+      ]
+    },
+    "NullableScalarSeries": {
+      "type": "object",
+      "properties": {
+        "attemptedFlags": {
+          "type": "array",
+          "items": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "curveAdjustments": {
+          "type": "array",
+          "items": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": -128,
+            "maximum": 127
+          }
+        },
+        "rawScores": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "seatNumbers": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": -32768,
+            "maximum": 32767
+          }
+        },
+        "attemptCounts": {
+          "type": "array",
+          "items": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 65535
+          }
+        },
+        "pointsPerItem": {
+          "type": "array",
+          "items": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          }
+        },
+        "submissionSequences": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "elapsedTicksPerItem": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "$comment": "System.Int64. Bounds are omitted: they are not exactly representable in IEEE-754, and values beyond 2^53 lose precision in readers that parse JSON numbers as doubles."
+          }
+        },
+        "integrityChecksums": {
+          "type": "array",
+          "items": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "$comment": "System.UInt64. The upper bound is omitted: it is not exactly representable in IEEE-754."
+          }
+        },
+        "percentileRanks": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "scaledScores": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "weightedAverages": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "$comment": "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly."
+          }
+        },
+        "letterGrades": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 1
+          }
+        },
+        "remarks": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "responseIds": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "markedOn": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          }
+        },
+        "openedAt": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d{1,7})?$",
+            "$comment": "System.TimeOnly. System.Text.Json writes hh:mm:ss[.fffffff] with no UTC offset, so the JSON Schema \"time\" format (RFC 3339 full-time) does not hold."
+          }
+        },
+        "durations": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$",
+            "$comment": "System.TimeSpan. System.Text.Json writes [-][d.]hh:mm:ss[.fffffff], not an ISO-8601 duration, so the \"duration\" format does not hold."
+          }
+        },
+        "recordedAtUtc": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "$comment": "System.DateTime. The offset suffix is present only when DateTimeKind is Utc or Local; a DateTimeKind.Unspecified value is written without one and would not satisfy \"date-time\"."
+          }
+        },
+        "savedAt": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "answerSheetScan": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "contentEncoding": "base64"
+        }
+      },
+      "required": [
+        "attemptedFlags",
+        "rawScores",
+        "attemptCounts",
+        "submissionSequences",
+        "integrityChecksums",
+        "scaledScores",
+        "letterGrades",
+        "responseIds",
+        "openedAt",
+        "recordedAtUtc",
+        "answerSheetScan"
       ]
     },
     "Person": {
@@ -922,13 +1718,19 @@ const schema = {
           "format": "date"
         },
         "email": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "isActive": {
           "type": "boolean"
         },
         "gradePointAverage": {
-          "type": "number"
+          "type": [
+            "number",
+            "null"
+          ]
         },
         "classes": {
           "type": "array",
@@ -938,7 +1740,7 @@ const schema = {
         },
         "grades": {
           "type": "object",
-          "$comment": "Keyed by Cornerstone.Fixtures.Schema.Enums.ClassName. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.",
+          "$comment": "Keyed by DotNetSchema.Fixtures.Schema.Enums.ClassName. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.",
           "propertyNames": {
             "type": "string",
             "enum": [
@@ -971,7 +1773,10 @@ const schema = {
           }
         },
         "contactMethods": {
-          "type": "object",
+          "type": [
+            "object",
+            "null"
+          ],
           "additionalProperties": {
             "type": "string"
           }
@@ -1009,18 +1814,14 @@ const schema = {
         "familyName",
         "role",
         "bornOn",
-        "email",
         "isActive",
         "gradePointAverage",
-        "classes",
-        "grades",
-        "contactMethods",
-        "advisees"
+        "classes"
       ]
     },
     "PersonRole": {
       "type": "integer",
-      "$comment": "Cornerstone.Fixtures.Schema.Enums.PersonRole (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.",
+      "$comment": "DotNetSchema.Fixtures.Schema.Enums.PersonRole (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.",
       "oneOf": [
         {
           "const": 0,
@@ -1059,7 +1860,14 @@ const schema = {
           "type": "string"
         },
         "kind": {
-          "$ref": "#/$defs/RoomKind"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoomKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "seats": {
           "type": "integer",
@@ -1082,14 +1890,13 @@ const schema = {
         "id",
         "code",
         "kind",
-        "seats",
         "floor",
         "classes"
       ]
     },
     "RoomKind": {
       "type": "integer",
-      "$comment": "Cornerstone.Fixtures.Schema.Enums.RoomKind (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.",
+      "$comment": "DotNetSchema.Fixtures.Schema.Enums.RoomKind (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.",
       "oneOf": [
         {
           "const": 0,
@@ -1415,7 +2222,7 @@ const schema = {
         },
         "weightByAssessmentKind": {
           "type": "object",
-          "$comment": "Keyed by Cornerstone.Fixtures.Schema.Enums.AssessmentKind. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.",
+          "$comment": "Keyed by DotNetSchema.Fixtures.Schema.Enums.AssessmentKind. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.",
           "propertyNames": {
             "type": "string",
             "enum": [
@@ -1625,12 +2432,8 @@ const schema = {
           }
         },
         "answerSheetScan": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 255
-          }
+          "type": "string",
+          "contentEncoding": "base64"
         }
       },
       "required": [
@@ -1668,7 +2471,10 @@ const schema = {
           "type": "string"
         },
         "motto": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "foundedOn": {
           "type": "string",
@@ -1694,7 +2500,7 @@ const schema = {
         },
         "departments": {
           "type": "object",
-          "$comment": "Keyed by Cornerstone.Fixtures.Schema.Enums.DepartmentName. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.",
+          "$comment": "Keyed by DotNetSchema.Fixtures.Schema.Enums.DepartmentName. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.",
           "propertyNames": {
             "type": "string",
             "enum": [
@@ -1732,10 +2538,8 @@ const schema = {
       "required": [
         "id",
         "name",
-        "motto",
         "foundedOn",
         "isAccredited",
-        "enrollmentCap",
         "endowment",
         "campuses",
         "departments",
@@ -1753,7 +2557,10 @@ const schema = {
           "type": "string"
         },
         "heading": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "body": {
           "type": "string"
@@ -1775,13 +2582,12 @@ const schema = {
         "number",
         "heading",
         "body",
-        "wordCount",
         "exercises"
       ]
     },
     "Term": {
       "type": "integer",
-      "$comment": "Cornerstone.Fixtures.Schema.Enums.Term (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.",
+      "$comment": "DotNetSchema.Fixtures.Schema.Enums.Term (System.Int32). System.Text.Json writes the numeric value here; as a dictionary key the same type is written as the member name instead.",
       "oneOf": [
         {
           "const": 0,
@@ -1825,6 +2631,9 @@ export type Department = Models["Department"];
 export type DepartmentName = Models["DepartmentName"];
 export type Exercise = Models["Exercise"];
 export type Library = Models["Library"];
+export type NullableScalarBattery = Models["NullableScalarBattery"];
+export type NullableScalarRegister = Models["NullableScalarRegister"];
+export type NullableScalarSeries = Models["NullableScalarSeries"];
 export type Person = Models["Person"];
 export type PersonRole = Models["PersonRole"];
 export type Room = Models["Room"];

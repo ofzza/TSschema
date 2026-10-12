@@ -26,7 +26,10 @@ import {
 import { default as jsonSchema } from '../../res/sidecar/schema.json';
 
 describe('Showcase', () => {
+  // The runtime reflection module, walked through on the res/sidecar/schema.json fixture (and a small inline collection where the fixture has no fitting case).
+  // Each runtime result is asserted with `expect`, and each inferred type by an `AssertTypeEquality` next to its `// ^?` query.
   describe('Runtime reflection', () => {
+    // From parsing a collection into facets, through reflecting it, to describing a reflection's type.
     it('Parses a JSON schema collection through the module entry', () => {
       // A schema kept in a JSON file works as well as one declared `as const`, once a `tsschema` generated sidecar types it
       const collection = parseJSONSchemaCollection(jsonSchema);
@@ -58,14 +61,15 @@ describe('Showcase', () => {
 
       // Properties are looked up through `$ref`s, `anyOf` / `oneOf` / `allOf` members (here a nullable `Person`) and array items, by key or path
       const email = course.getProperty('professor.email');
-      // Breakpoint: inspect `email`, its `parent` (the `professor` property) and its `parent.parent` (`course`)
+      // Breakpoint: inspect `email`, its `parent` (the `professor` property) and its `parent.parent` (`course`). Being required and being nullable are
+      // independent: `professor` is required yet nullable, `email` is optional and nullable
       expect(email).toBeInstanceOf(TSSchemaPropertyReflection);
       expect(email.parent.parent).toBe(course);
-      expect([email.parent.required, email.required]).toEqual([false, true]);
+      expect([email.parent.required, email.required]).toEqual([true, false]);
       type Email = typeof email.Type;
       //   ^?
-      // Email: string
-      expect(true satisfies AssertTypeEquality<Email, string>).toBe(true);
+      // Email: string | null
+      expect(true satisfies AssertTypeEquality<Email, string | null>).toBe(true);
     });
 
     it('Reflects a property found in several models as one', () => {

@@ -54,8 +54,13 @@ const schema = {
 type Schema = typeof schema;
 
 describe('Showcase', () => {
+  // Internal showcase of src/reflection/JSONSchema/, the JSON schema base of the runtime layer: parsing a schema into facets, as the type layer's showcase
+  // (src/schema/JSONSchema/_showcase.test.ts) walks through the fragment types the facets are typed by. Every example parses the small inline `as const` schema
+  // above (a root model next to `$defs` with a recursive model and an enum), with runtime expects paired with AssertTypeEquality.
   describe('JSONSchema fragment facets', () => {
+    // Each nested describe shows one aspect of the facets, in the order they build on each other.
     describe('Parsing a schema', () => {
+      // The entry points: parseJSONSchema for any schema, parseJSONSchemaCollection for a collection of definitions alone.
       it('Parses a schema as an array of facets, one per fragment kind its root matches', () => {
         // `parseJSONSchema` is the entry point: a schema with `$defs` is parsed as a collection facet, followed by the facets of the
         // root's other keywords (here, a model)
@@ -102,6 +107,7 @@ describe('Showcase', () => {
     });
 
     describe('Facets are typed by the fragment they parse', () => {
+      // The facet classes, typed with the fragment they parse, its collection and its definition name.
       it('Parses a model, with each property parsed in turn', () => {
         const person = parseJSONSchemaCollection(schema).$defs.Person[0];
         // Breakpoint: inspect `person` and its `properties`, `names` and `required`
@@ -146,6 +152,7 @@ describe('Showcase', () => {
     });
 
     describe('References', () => {
+      // The reference facet, resolving against the collection facet.
       it('Resolves references lazily, against the facets the collection holds', () => {
         const collection = parseJSONSchemaCollection(schema);
         const role = collection.$defs.Person[0].properties.role[0];
@@ -165,6 +172,7 @@ describe('Showcase', () => {
     });
 
     describe('Type arrays', () => {
+      // Type arrays naming non primitive types, split into branches parsed as an implicit `anyOf`.
       it('Splits a type array naming object, array and / or null into branches', () => {
         const branches = getJSONSchemaFragmentTypeBranches(schema.$defs.Person.properties.nickname);
         // Breakpoint: inspect `branches`, the runtime counterpart of `JSONSchemaFragmentTypeBranch`
@@ -185,6 +193,7 @@ describe('Showcase', () => {
     });
 
     describe('The router', () => {
+      // The router, which every entry point and facet class parsing a nested fragment goes through.
       it('Parses any fragment, by every facet class it matches', () => {
         // Every facet class has a static `is` type guard, the runtime counterpart of `JSONSchemaFragmentIs*`, which the router tries in turn. The
         // router is internal to parsing a schema: like every facet class, it takes the fragment, then optionally the collection facet to

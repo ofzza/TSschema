@@ -32,8 +32,16 @@ type _JSONSchemaTreeCollection = {
 };
 
 describe('JSONSchema', () => {
+  // Type layer tests of CollectionFragment.ts. The `JSONSchema > JSONSchema fragments > <Kind> fragment` tree, shared by every test file in this directory, is
+  // kept from when src/schema/JSONSchema/ was a single file, so test names did not change with the split. src/reflection/JSONSchema/CollectionFragment.test.ts
+  // is the runtime mirror of this file.
   describe('JSONSchema fragments', () => {
+    // Each file in this directory holds the tests of one fragment kind under this describe.
     describe('Collection fragment', () => {
+      // JSONSchemaFragmentIsCollection / JSONSchemaFragmentIsNotCollection, the JSONSchemaCollection / JSONSchemaNotCollectionFragment types and the
+      // JSONSchemaDefinitionName utility. Tested at type level only, on the res/schema.json fixture (a collection) and its Assessment model (a fragment which
+      // is not one), and on a small inline self-referencing collection with a single, known definition name, by AssertTypeEquality and AssertTypeAssignable /
+      // AssertTypeUnassignable.
       it('Detects a collection', () => {
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsCollection<JSONSchemaFixtureCollection>, true>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsNotCollection<JSONSchemaFixtureCollection>, false>).toBe(true);
@@ -48,6 +56,8 @@ describe('JSONSchema', () => {
       });
 
       it('Rejects every fragment kind for a collection', () => {
+        // A fragment with `$defs` is a collection and nothing else: every per-keyword fragment type is a JSONSchemaNotCollectionFragment, which forbids
+        // `$defs`.
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsModel<JSONSchemaFixtureCollection>, false>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsReference<{ $defs: {}; $ref: '#/$defs/A' }>, false>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsPrimitiveType<{ $defs: {}; type: 'string' }>, false>).toBe(true);
@@ -61,6 +71,7 @@ describe('JSONSchema', () => {
       });
 
       it('Gets string | number definition names from the default collection', () => {
+        // The unspecified collection, standing for "no collection known", has `Record<string, …>` definitions, whose `keyof` is `string | number`.
         expect(true satisfies AssertTypeEquality<JSONSchemaDefinitionName, string | number>).toBe(true);
       });
     });

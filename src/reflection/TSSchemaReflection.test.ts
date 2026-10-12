@@ -33,7 +33,12 @@ const _schema = {
 type _Schema = typeof _schema;
 
 describe('Reflection', () => {
+  // `reflect` and the reflection classes (TSSchemaReflection.ts). Every case reflects either the `_schema` collection above (a model root, with models reached
+  // through references, an `anyOf`, array items and a nullable model, plus a property named with a dot and an object of unknown shape) or the
+  // res/sidecar/schema.json fixture (a large recursive collection, typed by its sidecar), pairing each runtime `expect` with an `AssertTypeEquality` on the
+  // static type of the reflection's `Type`, `name` or other members.
   describe('reflect', () => {
+    // What `reflect` returns for a collection, for a schema with no `$defs`, and for a JSON file: always the reflection of the root fragment.
     it('Reflects a collection as its root fragment, with the collection as its collection', () => {
       const root = reflect(_schema);
       expect(root).toBeInstanceOf(TSSchemaFragmentReflection);
@@ -53,6 +58,7 @@ describe('Reflection', () => {
     });
 
     it('Reflects a JSON file typed by its sidecar', () => {
+      // The fixture's root holds only annotations (`$schema`, `title`, ...) next to its `$defs`, so it parses into no facets.
       const root = reflect(jsonSchema);
       expect(root.facets).toEqual([]);
       expect(root.definitionNames).toContain('School');
@@ -60,8 +66,11 @@ describe('Reflection', () => {
   });
 
   describe('TSSchemaFragmentReflection', () => {
+    // The lookups of the base class, shared by every reflection, one nested describe per group of members.
     describe('Definitions', () => {
+      // getDefinition and definitionNames, which every reflection of a schema answers from the same collection facet.
       it('Reflects a definition by name, from the root', () => {
+        // A definition reflection holds the collection facet's own facets of the definition, by identity, rather than parsing it again.
         const root = reflect(_schema);
         expect(root.definitionNames).toEqual(['Cat', 'Dog', 'Pet', 'Owner']);
         expect(true satisfies AssertTypeEquality<(typeof root.definitionNames)[number], 'Cat' | 'Dog' | 'Pet' | 'Owner'>).toBe(true);
@@ -80,6 +89,7 @@ describe('Reflection', () => {
       });
 
       it('Reflects no definition by an unknown name', () => {
+        // Typed as the unspecified collection, where a definition may not exist, so `getDefinition` is typed as possibly returning `undefined`.
         const root = reflect({ $defs: {} } as JSONSchemaCollection);
         expect(root.getDefinition('Missing')).toBe(undefined);
         expect(true satisfies AssertTypeEquality<undefined extends ReturnType<typeof root.getDefinition> ? true : false, true>).toBe(true);
@@ -87,7 +97,10 @@ describe('Reflection', () => {
     });
 
     describe('Properties', () => {
+      // getProperty and propertyNames, which resolve like the type layer's TSSchemaProperty, with deliberate differences (see AGENTS.md › getProperty resolves
+      // like TSSchemaProperty, with deliberate differences).
       it('Reflects a property by its name', () => {
+        // A property found in a single model keeps that model's facets, by identity.
         const cat = reflect(_schema).getDefinition('Cat');
         expect(cat.propertyNames).toEqual(['name', 'lives']);
         const lives = cat.getProperty('lives');
@@ -101,6 +114,7 @@ describe('Reflection', () => {
       });
 
       it('Reflects a property through a reference, and of a nullable model', () => {
+        // `Owner` is `type: ['object', 'null']`, so its model is reached through the implicit `anyOf` of its branches.
         const root = reflect(_schema);
         expect(root.getProperty('pet').propertyNames).toEqual(['name', 'lives', 'good']);
         const owner = root.getDefinition('Owner');
@@ -109,6 +123,8 @@ describe('Reflection', () => {
       });
 
       it('Reflects a property found in several models as one, holding an implicit anyOf of each', () => {
+        // Its static type is checked by the inferred `Type` alone, as the implicit `anyOf` member union holds structurally identical members (see AGENTS.md › A
+        // property found in several models is one reflection holding a fresh implicit anyOf facet).
         const pet = reflect(_schema).getDefinition('Pet');
         const name = pet.getProperty('name');
         expect(name.facets.length).toBe(1);
@@ -125,6 +141,7 @@ describe('Reflection', () => {
       });
 
       it('Reflects a property by a dot-separated path, through array items, with the path prefix as its parent', () => {
+        // `getProperty('pets.good')` equals `getProperty('pets').getProperty('good')`, which is what makes `parent` the reflection of the path prefix.
         const owner = reflect(_schema).getDefinition('Owner');
         const good = owner.getProperty('pets.good');
         expect(good.name).toBe('good');
@@ -135,6 +152,8 @@ describe('Reflection', () => {
       });
 
       it('Reflects a property by an exact name containing a dot, rather than by a path', () => {
+        // `Owner` defines both `home.city` (a string) and `home`, with a numeric `city`: the exact name wins, as in the type layer (see AGENTS.md › An exact
+        // property name wins over a dotted path).
         const owner = reflect(_schema).getDefinition('Owner');
         const city = owner.getProperty('home.city');
         expect(city.parent).toBe(owner);
@@ -143,6 +162,8 @@ describe('Reflection', () => {
       });
 
       it('Reflects any property of an object of unknown shape, of unknown type and shape', () => {
+        // `notes` is an object with no `properties`. An unknown shape consumes one path segment at a time, so every segment is a reflection of its own, never
+        // required, and `name` is the last key.
         const owner = reflect(_schema).getDefinition('Owner');
         const deep = owner.getProperty('notes.a.b');
         expect(deep.name).toBe('b');
@@ -153,6 +174,8 @@ describe('Reflection', () => {
       });
 
       it('Reflects no property by a name or path which addresses none', () => {
+        // `name` is a string, so the rest of the path addresses nothing. Only a path's first segment is checked at compile time, so the rest infers `undefined`
+        // rather than erroring (see AGENTS.md › Paths are resolved, never enumerated).
         const cat = reflect(_schema).getDefinition('Cat');
         expect(cat.getProperty('name.length' as 'name')).toBe(undefined);
         expect(true satisfies AssertTypeEquality<ReturnType<typeof cat.getProperty<'name.length'>>, undefined>).toBe(true);
@@ -161,17 +184,22 @@ describe('Reflection', () => {
       });
 
       it('Reflects properties of a recursive schema at any depth', () => {
+        // `Person` and `Class` refer to each other (`classes` holds `Class` items, `professor` is a nullable `Person`), so the path loops through both twice;
+        // `professor` is required in `Class` though nullable, while `email` is optional in `Person` and nullable.
         const person = reflect(jsonSchema).getDefinition('Person');
         const email = person.getProperty('classes.professor.classes.professor.email');
         expect(email.name).toBe('email');
-        expect(email.required).toBe(true);
-        expect(email.parent.required).toBe(false);
-        expect(true satisfies AssertTypeEquality<typeof email.Type, string>).toBe(true);
+        expect(email.required).toBe(false);
+        expect(email.parent.required).toBe(true);
+        expect(true satisfies AssertTypeEquality<typeof email.Type, string | null>).toBe(true);
       });
     });
 
     describe('Type descriptors', () => {
+      // The `typeDescriptor` getter of a reflection: only how descriptors relate to the reflections and are shared between them, and how a property's being
+      // required (on the reflection) is kept apart from its being nullable (on the descriptor), as building them is covered by TypeDescriptor.test.ts.
       it('Describes the type of the root, a definition and a property', () => {
+        // Descriptors are cached per facets array, and `lives` keeps its model's facets, so its descriptor is the very `type` of `Cat`'s property entry.
         const root = reflect(_schema);
         expect(root.typeDescriptor.kind).toBe('model');
         expect(true satisfies AssertTypeEquality<typeof root.typeDescriptor.properties.pet.type.name, 'Pet'>).toBe(true);
@@ -191,6 +219,8 @@ describe('Reflection', () => {
       });
 
       it('Describes a definition by the same descriptor as every reference to it', () => {
+        // A reference's lazy `target` is the definition reflection's descriptor itself, thanks to the cache within one parsed schema (see AGENTS.md › A
+        // reference descriptor's target is a lazy getter).
         const root = reflect(_schema);
         const pet = root.getProperty('pet').typeDescriptor;
         expect(pet.target).toBe(root.getDefinition('Pet').typeDescriptor);
@@ -198,12 +228,48 @@ describe('Reflection', () => {
       });
 
       it('Describes a nullable model as a model, flagged nullable', () => {
+        // Being required belongs to a property entry of the model descriptor, never to the property's type descriptor (see AGENTS.md › A model descriptor's
+        // properties hold { required, type } entries).
         const owner = reflect(_schema).getDefinition('Owner').typeDescriptor;
         expect([owner.kind, owner.nullable]).toEqual(['model', true]);
         expect(owner.properties.pets.required).toBe(true);
         expect(owner.properties.notes.required).toBe(false);
         expect(true satisfies AssertTypeEquality<typeof owner.nullable, true>).toBe(true);
         expect(true satisfies AssertTypeEquality<typeof owner.properties.notes.required, false>).toBe(true);
+      });
+
+      it('Tells being required and being nullable apart, for properties of every kind', () => {
+        // The fixture has every combination of the two, for references (to models and to enums), arrays (with nullable items, too), records and primitives.
+        // `required` is the property reflection's, `nullable` its type descriptor's.
+        const schema = reflect(jsonSchema);
+        const professor = schema.getDefinition('Class').getProperty('professor');
+        expect([professor.required, professor.typeDescriptor.kind, professor.typeDescriptor.nullable]).toEqual([true, 'reference', true]);
+        expect(true satisfies AssertTypeEquality<typeof professor.typeDescriptor.nullable, true>).toBe(true);
+        const term = schema.getDefinition('Class').getProperty('term');
+        expect([term.required, term.typeDescriptor.kind, term.typeDescriptor.nullable]).toEqual([false, 'reference', true]);
+        expect(true satisfies AssertTypeEquality<typeof term.typeDescriptor.nullable, true>).toBe(true);
+        const schedule = schema.getDefinition('Class').getProperty('schedule');
+        expect([schedule.required, schedule.typeDescriptor.kind, schedule.typeDescriptor.nullable]).toEqual([false, 'array', true]);
+        expect(true satisfies AssertTypeEquality<typeof schedule.typeDescriptor.nullable, true>).toBe(true);
+
+        const rawScores = schema.getDefinition('NullableScalarSeries').getProperty('rawScores');
+        expect([rawScores.required, rawScores.typeDescriptor.nullable, rawScores.typeDescriptor.items.nullable]).toEqual([true, true, true]);
+        expect(true satisfies AssertTypeEquality<typeof rawScores.typeDescriptor.items.nullable, true>).toBe(true);
+        expect(true satisfies AssertTypeEquality<typeof rawScores.Type, Array<number | null> | null>).toBe(true);
+        const attemptedFlags = schema.getDefinition('NullableScalarSeries').getProperty('attemptedFlags');
+        expect([attemptedFlags.required, attemptedFlags.typeDescriptor.nullable, attemptedFlags.typeDescriptor.items.nullable]).toEqual([true, false, true]);
+        expect(true satisfies AssertTypeEquality<typeof attemptedFlags.typeDescriptor.nullable, false>).toBe(true);
+
+        const seatByItem = schema.getDefinition('NullableScalarRegister').getProperty('seatByItem');
+        expect([seatByItem.required, seatByItem.typeDescriptor.kind, seatByItem.typeDescriptor.nullable]).toEqual([false, 'record', true]);
+        expect(true satisfies AssertTypeEquality<typeof seatByItem.typeDescriptor.nullable, true>).toBe(true);
+
+        const curveAdjustment = schema.getDefinition('NullableScalarBattery').getProperty('curveAdjustment');
+        expect([curveAdjustment.required, curveAdjustment.typeDescriptor.kind, curveAdjustment.typeDescriptor.nullable]).toEqual([false, 'primitive', true]);
+        expect(true satisfies AssertTypeEquality<typeof curveAdjustment.Type, number | null>).toBe(true);
+        const isOpenBook = schema.getDefinition('Assessment').getProperty('isOpenBook');
+        expect([isOpenBook.required, isOpenBook.typeDescriptor.kind, isOpenBook.typeDescriptor.nullable]).toEqual([false, 'primitive', false]);
+        expect(true satisfies AssertTypeEquality<typeof isOpenBook.Type, boolean>).toBe(true);
       });
 
       it('Describes a property of unknown shape as unknown', () => {
