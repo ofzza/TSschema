@@ -29,11 +29,11 @@ examples: `// ^?` queries show the inferred types live in editors with twoslash 
 extension), plain comments state the same types for other editors, and `// Breakpoint:` comments mark where to inspect runtime values with the
 "TS: Debug Current Test File" launch configuration.
 
-- [`src/showcase.test.ts`](src/showcase.test.ts) - the public API, as documented in the README.
-- [`src/schema/showcase.test.ts`](src/schema/showcase.test.ts) - the wrapper types behind the public API, and how property paths are resolved.
-- [`src/schema/JSONSchema/showcase.test.ts`](src/schema/JSONSchema/showcase.test.ts) - the per-keyword JSON schema type utilities everything is built on.
-- [`src/reflection/showcase.test.ts`](src/reflection/showcase.test.ts) - the (internal, work in progress) runtime reflection module.
-- [`src/reflection/JSONSchema/showcase.test.ts`](src/reflection/JSONSchema/showcase.test.ts) - the runtime JSON schema fragment reflections, mirroring
+- [`src/_showcase.test.ts`](src/_showcase.test.ts) - the public API, as documented in the README.
+- [`src/schema/_showcase.test.ts`](src/schema/_showcase.test.ts) - the wrapper types behind the public API, and how property paths are resolved.
+- [`src/schema/JSONSchema/_showcase.test.ts`](src/schema/JSONSchema/_showcase.test.ts) - the per-keyword JSON schema type utilities everything is built on.
+- [`src/reflection/_showcase.test.ts`](src/reflection/_showcase.test.ts) - the (internal, work in progress) runtime reflection module.
+- [`src/reflection/JSONSchema/_showcase.test.ts`](src/reflection/JSONSchema/_showcase.test.ts) - the runtime JSON schema fragment reflections, mirroring
   the type utilities.
 
-Only `src/showcase.test.ts` covers public API. The others showcase internal types, classes and helpers, which are never exported from the package.
+Only `src/_showcase.test.ts` covers public API. The others showcase internal types, classes and helpers, which are never exported from the package.

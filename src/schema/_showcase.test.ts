@@ -1,7 +1,7 @@
 /**
  * Showcase of the internals of the TSSchema wrapper types: the wrapper shapes the public `TSSchemaCollection` / `TSSchemaFragment` / `TSSchemaProperty`
  * produce, how they nest, and the per-module name and value type utilities `TSSchemaName` / `TSSchemaType` dispatch to. Never public: meant for
- * understanding the inner workings of the library before changing them (see CONTRIBUTE.md). For the public API, see `src/showcase.test.ts`.
+ * understanding the inner workings of the library before changing them (see CONTRIBUTE.md). For the public API, see `src/_showcase.test.ts`.
  *
  * - Hover any `// ^?` comment in an editor with twoslash query support (VS Code: the recommended `orta.vscode-twoslash-queries` extension) to see the
  *   type inferred for the identifier above it. Every `// ^?` is followed by a plain comment stating the same type, for editors without it.
