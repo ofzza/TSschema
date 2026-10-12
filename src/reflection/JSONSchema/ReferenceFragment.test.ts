@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality } from '@ofzza/tsstd';
 import type { JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaReferenceFragment } from '../../schema/JSONSchema/index.js';
 import {
-  JSONSchemaCollectionFragmentReflect,
-  JSONSchemaEnumFragmentReflect,
-  JSONSchemaModelFragmentReflect,
-  JSONSchemaReferenceFragmentReflect,
-  type JSONSchemaFragmentReflection,
+  JSONSchemaCollectionFragmentNode,
+  JSONSchemaEnumFragmentNode,
+  JSONSchemaModelFragmentNode,
+  JSONSchemaReferenceFragmentNode,
+  type JSONSchemaFragmentNodeOf,
 } from './index.js';
 
 /**
@@ -25,27 +25,27 @@ const _schema = {
 type _Schema = typeof _schema;
 
 describe('Reflection', () => {
-  describe('JSONSchema fragment reflections', () => {
+  describe('JSONSchema fragment nodes', () => {
     describe('$Ref fragment', () => {
       it('Detects a reference', () => {
-        expect(JSONSchemaReferenceFragmentReflect.is({ $ref: '#/$defs/Role' })).toBe(true);
-        expect(JSONSchemaReferenceFragmentReflect.is({ $ref: 'https://example.com/schema.json' })).toBe(true);
+        expect(JSONSchemaReferenceFragmentNode.is({ $ref: '#/$defs/Role' })).toBe(true);
+        expect(JSONSchemaReferenceFragmentNode.is({ $ref: 'https://example.com/schema.json' })).toBe(true);
       });
 
       it('Rejects a non-reference', () => {
-        expect(JSONSchemaReferenceFragmentReflect.is({ type: 'string' })).toBe(false);
-        expect(JSONSchemaReferenceFragmentReflect.is({ $ref: 1 } as any)).toBe(false);
+        expect(JSONSchemaReferenceFragmentNode.is({ type: 'string' })).toBe(false);
+        expect(JSONSchemaReferenceFragmentNode.is({ $ref: 1 } as any)).toBe(false);
       });
 
       it('Gets the name of the referenced fragment', () => {
-        const hasRole = new JSONSchemaCollectionFragmentReflect(_schema).$defs.HasRole[0];
-        expect(hasRole).toBeInstanceOf(JSONSchemaReferenceFragmentReflect);
+        const hasRole = new JSONSchemaCollectionFragmentNode(_schema).$defs.HasRole[0];
+        expect(hasRole).toBeInstanceOf(JSONSchemaReferenceFragmentNode);
         expect(hasRole.refName).toBe('Role');
         expect(true satisfies AssertTypeEquality<typeof hasRole.refName, 'Role'>).toBe(true);
       });
 
       it('Gets no name for a reference which does not name a fragment of the collection', () => {
-        const collection = new JSONSchemaCollectionFragmentReflect(_schema);
+        const collection = new JSONSchemaCollectionFragmentNode(_schema);
         const missing = collection.$defs.Missing[0];
         expect(missing.refName).toBe(undefined);
         expect(true satisfies AssertTypeEquality<typeof missing.refName, undefined>).toBe(true);
@@ -56,58 +56,53 @@ describe('Reflection', () => {
         expect(true satisfies AssertTypeEquality<typeof nested.refName, undefined>).toBe(true);
       });
 
-      it('Resolves the reflections of the referenced fragment, as held by the collection', () => {
-        const collection = new JSONSchemaCollectionFragmentReflect(_schema);
+      it('Resolves the nodes of the referenced fragment, as held by the collection', () => {
+        const collection = new JSONSchemaCollectionFragmentNode(_schema);
         const hasRole = collection.$defs.HasRole[0];
         expect(hasRole.ref).toBe(collection.$defs.Role);
-        expect(hasRole.ref[0]).toBeInstanceOf(JSONSchemaEnumFragmentReflect);
-        expect(true satisfies AssertTypeEquality<typeof hasRole.ref, Array<JSONSchemaEnumFragmentReflect<_Schema, 'Role', _Schema['$defs']['Role']>>>).toBe(
-          true,
-        );
+        expect(hasRole.ref[0]).toBeInstanceOf(JSONSchemaEnumFragmentNode);
+        expect(true satisfies AssertTypeEquality<typeof hasRole.ref, Array<JSONSchemaEnumFragmentNode<_Schema, 'Role', _Schema['$defs']['Role']>>>).toBe(true);
       });
 
       it('Resolves a recursive reference', () => {
-        const collection = new JSONSchemaCollectionFragmentReflect(_schema);
+        const collection = new JSONSchemaCollectionFragmentNode(_schema);
         const node = collection.$defs.Node[0];
         expect(node.properties.next[0].ref[0]).toBe(node);
         expect(node.properties.next[0].ref[0].properties.next[0].ref[0]).toBe(node);
         expect(
-          true satisfies AssertTypeEquality<
-            (typeof node.properties.next)[0]['ref'][0],
-            JSONSchemaModelFragmentReflect<_Schema, 'Node', _Schema['$defs']['Node']>
-          >,
+          true satisfies AssertTypeEquality<(typeof node.properties.next)[0]['ref'][0], JSONSchemaModelFragmentNode<_Schema, 'Node', _Schema['$defs']['Node']>>,
         ).toBe(true);
       });
 
-      it('Resolves no reflections for an unresolved reference', () => {
-        const missing = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Missing[0];
+      it('Resolves no nodes for an unresolved reference', () => {
+        const missing = new JSONSchemaCollectionFragmentNode(_schema).$defs.Missing[0];
         expect(missing.ref).toBe(undefined);
         expect(true satisfies AssertTypeEquality<typeof missing.ref, undefined>).toBe(true);
       });
 
-      it('Resolves no reflections for a reference with no collection to resolve it against', () => {
-        const reference = new JSONSchemaReferenceFragmentReflect({ $ref: '#/$defs/Role' } as const);
+      it('Resolves no nodes for a reference with no collection to resolve it against', () => {
+        const reference = new JSONSchemaReferenceFragmentNode({ $ref: '#/$defs/Role' } as const);
         expect(reference.refName).toBe(undefined);
         expect(reference.ref).toBe(undefined);
       });
 
       it('Resolves any fragment of the collection for an unspecified reference', () => {
-        type Reference = JSONSchemaReferenceFragmentReflect<_Schema, undefined, JSONSchemaReferenceFragment>;
+        type Reference = JSONSchemaReferenceFragmentNode<_Schema, undefined, JSONSchemaReferenceFragment>;
         expect(true satisfies AssertTypeEquality<Reference['refName'], keyof _Schema['$defs'] | undefined>).toBe(true);
         type Ref = Reference['ref'];
         expect(true satisfies AssertTypeEquality<Extract<Ref, undefined>, undefined>).toBe(true);
         expect(
           true satisfies AssertTypeEquality<
-            Extract<Ref, Array<JSONSchemaFragmentReflection<_Schema, 'Role', _Schema['$defs']['Role']>>>,
-            Array<JSONSchemaFragmentReflection<_Schema, 'Role', _Schema['$defs']['Role']>>
+            Extract<Ref, Array<JSONSchemaFragmentNodeOf<_Schema, 'Role', _Schema['$defs']['Role']>>>,
+            Array<JSONSchemaFragmentNodeOf<_Schema, 'Role', _Schema['$defs']['Role']>>
           >,
         ).toBe(true);
-        type WideReference = JSONSchemaReferenceFragmentReflect<JSONSchemaCollection>;
+        type WideReference = JSONSchemaReferenceFragmentNode<JSONSchemaCollection>;
         expect(true satisfies AssertTypeEquality<WideReference['refName'], JSONSchemaFragmentName<JSONSchemaCollection> | undefined>).toBe(true);
       });
 
       it('Infers the type of a reference', () => {
-        const collection = new JSONSchemaCollectionFragmentReflect(_schema);
+        const collection = new JSONSchemaCollectionFragmentNode(_schema);
         const _hasRole = collection.$defs.HasRole[0];
         expect(true satisfies AssertTypeEquality<typeof _hasRole.Type, 'student' | 'teacher'>).toBe(true);
         const _missing = collection.$defs.Missing[0];

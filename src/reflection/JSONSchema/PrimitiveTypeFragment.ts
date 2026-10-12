@@ -1,21 +1,21 @@
 /**
- * Reflection of JSON schema primitive `type` fragments (`string`, `number`, `integer`, `boolean`; `null` has a fragment reflection of its own): the
+ * Nodes of JSON schema primitive `type` fragments (`string`, `number`, `integer`, `boolean`; `null` has a fragment node of its own): the
  * primitive type name(s).
  */
 
 import type { JSONSchema7, JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaPrimitiveTypeFragment } from '../../schema/JSONSchema/index.js';
-import { JSONSchemaFragmentReflect, type JSONSchemaFragmentReflectOptions } from './Fragment.js';
+import { JSONSchemaFragmentNode, type JSONSchemaFragmentNodeOptions } from './Fragment.js';
 import { isJSONSchemaPrimitiveTypeName } from './JSONSchema7.js';
 
 /**
- * Reflects a JSON schema primitive type definition, which is any schema fragment containing a `type` property naming a primitive type, or an array of
+ * Parses a JSON schema primitive type definition, which is any schema fragment containing a `type` property naming a primitive type, or an array of
  * primitive type names.
  */
-export class JSONSchemaPrimitiveTypeFragmentReflect<
+export class JSONSchemaPrimitiveTypeFragmentNode<
   TSchema extends JSONSchemaCollection,
   TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaPrimitiveTypeFragment = JSONSchemaPrimitiveTypeFragment,
-> extends JSONSchemaFragmentReflect<TSchema, TName, TFragment> {
+> extends JSONSchemaFragmentNode<TSchema, TName, TFragment> {
   /**
    * Determines if a JSON schema fragment is a primitive type definition (i.e., contains a `type` property naming a primitive type, or an array of
    * primitive type names only). The runtime counterpart of `JSONSchemaFragmentIsPrimitiveType`.
@@ -33,11 +33,11 @@ export class JSONSchemaPrimitiveTypeFragmentReflect<
   public readonly type: TFragment['type'];
 
   /**
-   * Reflects a JSON schema primitive type definition
-   * @param fragment JSON fragment to reflect on
-   * @param options Context and name of the reflected fragment (see `JSONSchemaFragmentReflectOptions`)
+   * Parses a JSON schema primitive type definition
+   * @param fragment JSON fragment to parse
+   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentNodeOptions`)
    */
-  public constructor(fragment: TFragment, options: JSONSchemaFragmentReflectOptions<TSchema, TName> = {}) {
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentNodeOptions<TSchema, TName> = {}) {
     super(fragment, options);
     this.type = fragment['type'];
   }

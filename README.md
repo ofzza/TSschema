@@ -257,7 +257,7 @@ or newer.
 - **Model generation** - generating TypeScript data model definitions from the JSON schema. Partly available: `tsschema generate --models` generates a
   named type per fragment, see [Schemas from JSON files](#schemas-from-json-files).
 - **Runtime reflection** - runtime utilities for inspecting the same model, property and path information the utility types infer. In progress:
-  the internal JSON schema reflection layer is built, but nothing is exported yet.
+  the internal JSON schema parsing layer (fragment nodes) is built, but nothing is exported yet.
 
 # Development
 

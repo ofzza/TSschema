@@ -1,18 +1,18 @@
 /**
- * Reflection of JSON schema `type: "null"` fragments.
+ * Nodes of JSON schema `type: "null"` fragments.
  */
 
 import type { JSONSchema7, JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaNullTypeFragment } from '../../schema/JSONSchema/index.js';
-import { JSONSchemaFragmentReflect, type JSONSchemaFragmentReflectOptions } from './Fragment.js';
+import { JSONSchemaFragmentNode, type JSONSchemaFragmentNodeOptions } from './Fragment.js';
 
 /**
- * Reflects a JSON schema null type definition, which is any schema fragment containing a `type="null"` property.
+ * Parses a JSON schema null type definition, which is any schema fragment containing a `type="null"` property.
  */
-export class JSONSchemaNullTypeFragmentReflect<
+export class JSONSchemaNullTypeFragmentNode<
   TSchema extends JSONSchemaCollection,
   TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaNullTypeFragment = JSONSchemaNullTypeFragment,
-> extends JSONSchemaFragmentReflect<TSchema, TName, TFragment> {
+> extends JSONSchemaFragmentNode<TSchema, TName, TFragment> {
   /**
    * Determines if a JSON schema fragment is a null type definition (i.e., contains a `type="null"` property). The runtime counterpart of
    * `JSONSchemaFragmentIsNullType`.
@@ -29,11 +29,11 @@ export class JSONSchemaNullTypeFragmentReflect<
   public readonly type: TFragment['type'];
 
   /**
-   * Reflects a JSON schema null type definition
-   * @param fragment JSON fragment to reflect on
-   * @param options Context and name of the reflected fragment (see `JSONSchemaFragmentReflectOptions`)
+   * Parses a JSON schema null type definition
+   * @param fragment JSON fragment to parse
+   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentNodeOptions`)
    */
-  public constructor(fragment: TFragment, options: JSONSchemaFragmentReflectOptions<TSchema, TName> = {}) {
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentNodeOptions<TSchema, TName> = {}) {
     super(fragment, options);
     this.type = fragment['type'];
   }

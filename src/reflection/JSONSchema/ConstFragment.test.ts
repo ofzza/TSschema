@@ -1,41 +1,41 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality } from '@ofzza/tsstd';
-import { JSONSchemaCollectionFragmentReflect, JSONSchemaConstFragmentReflect } from './index.js';
+import { JSONSchemaCollectionFragmentNode, JSONSchemaConstFragmentNode } from './index.js';
 
 import { default as constJsonSchema } from '../../../res/sidecar/const.json';
 
 describe('Reflection', () => {
-  describe('JSONSchema fragment reflections', () => {
+  describe('JSONSchema fragment nodes', () => {
     describe('Const fragment', () => {
       it('Detects a const', () => {
-        expect(JSONSchemaConstFragmentReflect.is({ const: 123 })).toBe(true);
-        expect(JSONSchemaConstFragmentReflect.is(constJsonSchema.$defs.Const)).toBe(true);
+        expect(JSONSchemaConstFragmentNode.is({ const: 123 })).toBe(true);
+        expect(JSONSchemaConstFragmentNode.is(constJsonSchema.$defs.Const)).toBe(true);
         // A `const` of any value, `null` and `undefined` included, is a const
-        expect(JSONSchemaConstFragmentReflect.is({ const: null })).toBe(true);
-        expect(JSONSchemaConstFragmentReflect.is({ const: undefined })).toBe(true);
+        expect(JSONSchemaConstFragmentNode.is({ const: null })).toBe(true);
+        expect(JSONSchemaConstFragmentNode.is({ const: undefined })).toBe(true);
       });
 
       it('Rejects a non-const', () => {
-        expect(JSONSchemaConstFragmentReflect.is({ type: 'number' })).toBe(false);
-        expect(JSONSchemaConstFragmentReflect.is({ enum: [123] })).toBe(false);
+        expect(JSONSchemaConstFragmentNode.is({ type: 'number' })).toBe(false);
+        expect(JSONSchemaConstFragmentNode.is({ enum: [123] })).toBe(false);
       });
 
-      it('Reflects the constant value of a const', () => {
-        const constant = new JSONSchemaCollectionFragmentReflect(constJsonSchema).$defs.Const[0];
-        expect(constant).toBeInstanceOf(JSONSchemaConstFragmentReflect);
+      it('Parses the constant value of a const', () => {
+        const constant = new JSONSchemaCollectionFragmentNode(constJsonSchema).$defs.Const[0];
+        expect(constant).toBeInstanceOf(JSONSchemaConstFragmentNode);
         expect(constant.const).toBe(123);
         expect(true satisfies AssertTypeEquality<typeof constant.const, 123>).toBe(true);
       });
 
-      it('Reflects an object constant as declared', () => {
-        const collection = new JSONSchemaCollectionFragmentReflect({ $defs: { Point: { const: { x: 1, y: 2 } } } } as const);
+      it('Parses an object constant as declared', () => {
+        const collection = new JSONSchemaCollectionFragmentNode({ $defs: { Point: { const: { x: 1, y: 2 } } } } as const);
         const point = collection.$defs.Point[0];
         expect(point.const).toEqual({ x: 1, y: 2 });
         expect(true satisfies AssertTypeEquality<typeof point.const, { readonly x: 1; readonly y: 2 }>).toBe(true);
       });
 
       it('Infers the type of a const', () => {
-        const _constant = new JSONSchemaCollectionFragmentReflect(constJsonSchema).$defs.Const[0];
+        const _constant = new JSONSchemaCollectionFragmentNode(constJsonSchema).$defs.Const[0];
         expect(true satisfies AssertTypeEquality<typeof _constant.Type, 123>).toBe(true);
       });
     });
