@@ -1,21 +1,21 @@
 /**
- * Nodes of JSON schema collections (schemas with `$defs`): each of the collection's fragments, parsed by name. A collection node is also the
- * context every other node of the same schema resolves its `$ref` against.
+ * Facets of JSON schema collections (schemas with `$defs`): each of the collection's fragments, parsed by name. A collection facet is also the
+ * context every other facet of the same schema resolves its `$ref` against.
  */
 
 import type { JSONSchema7, JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaNotCollectionFragment } from '../../schema/JSONSchema/index.js';
 import { isJSONSchemaObject } from './JSONSchema7.js';
-import { JSONSchemaFragmentNode } from './Fragment.js';
-import { createJSONSchemaFragmentNodes, type JSONSchemaFragmentNodeOf, type JSONSchemaParsedFragment } from './FragmentNodes.js';
+import { JSONSchemaFragmentFacet } from './Fragment.js';
+import { createJSONSchemaFragmentFacets, type JSONSchemaFragmentFacetOf, type JSONSchemaParsedFragment } from './FragmentFacets.js';
 
 /**
  * Parses a JSON schema collection, which is any schema fragment containing a `$defs` object. Parses each fragment of its `$defs` on construction.
  *
  * Only a schema's root can be a collection (`#/$defs/<name>` references always point into the root), so the router never parses one: it is parsed
- * by `parseJSONSchema`, next to the nodes of the root's other keywords, all of which (and everything nested in them) resolve their `$ref` against
+ * by `parseJSONSchema`, next to the facets of the root's other keywords, all of which (and everything nested in them) resolve their `$ref` against
  * it.
  */
-export class JSONSchemaCollectionFragmentNode<TSchema extends JSONSchemaCollection> extends JSONSchemaFragmentNode<TSchema, undefined, TSchema> {
+export class JSONSchemaCollectionFragmentFacet<TSchema extends JSONSchemaCollection> extends JSONSchemaFragmentFacet<TSchema, undefined, TSchema> {
   /**
    * Determines if a JSON schema fragment is a collection (i.e., contains a `$defs` object). The runtime counterpart of `JSONSchemaFragmentIsCollection`.
    * @param fragment JSON fragment to check
@@ -31,10 +31,10 @@ export class JSONSchemaCollectionFragmentNode<TSchema extends JSONSchemaCollecti
   public readonly names: Array<JSONSchemaFragmentName<TSchema>>;
 
   /**
-   * Nodes of each of the collection's fragments, by fragment name: the nodes of all fragment types each fragment matches, or an empty array if
+   * Facets of each of the collection's fragments, by fragment name: the facets of all fragment types each fragment matches, or an empty array if
    * it matches none
    */
-  public readonly $defs: _JSONSchemaCollectionFragmentsNodes<TSchema>;
+  public readonly $defs: _JSONSchemaCollectionFragmentsFacets<TSchema>;
 
   /**
    * Parses a JSON schema collection. The collection is the context its own fragments are parsed in.
@@ -46,13 +46,13 @@ export class JSONSchemaCollectionFragmentNode<TSchema extends JSONSchemaCollecti
     this._context = this;
     // Extract fragment names
     this.names = Object.keys(fragment['$defs']) as Array<JSONSchemaFragmentName<TSchema>>;
-    // Extract fragments' nodes
+    // Extract fragments' facets
     this.$defs = Object.fromEntries(
       this.names.map((name) => [
         name,
-        createJSONSchemaFragmentNodes((fragment['$defs'] as Record<PropertyKey, JSONSchemaNotCollectionFragment>)[name], { context: this, name }),
+        createJSONSchemaFragmentFacets((fragment['$defs'] as Record<PropertyKey, JSONSchemaNotCollectionFragment>)[name], { context: this, name }),
       ]),
-    ) as unknown as _JSONSchemaCollectionFragmentsNodes<TSchema>;
+    ) as unknown as _JSONSchemaCollectionFragmentsFacets<TSchema>;
   }
 }
 
@@ -64,8 +64,8 @@ export type JSONSchemaCollectionParsedFragment<TSchema extends JSONSchemaCollect
 >;
 
 /**
- * Infers the nodes of each of a JSON schema collection's fragments, by fragment name
+ * Infers the facets of each of a JSON schema collection's fragments, by fragment name
  */
-type _JSONSchemaCollectionFragmentsNodes<TSchema extends JSONSchemaCollection> = {
-  [TName in JSONSchemaFragmentName<TSchema>]: Array<JSONSchemaFragmentNodeOf<TSchema, TName, JSONSchemaCollectionParsedFragment<TSchema, TName>>>;
+type _JSONSchemaCollectionFragmentsFacets<TSchema extends JSONSchemaCollection> = {
+  [TName in JSONSchemaFragmentName<TSchema>]: Array<JSONSchemaFragmentFacetOf<TSchema, TName, JSONSchemaCollectionParsedFragment<TSchema, TName>>>;
 };

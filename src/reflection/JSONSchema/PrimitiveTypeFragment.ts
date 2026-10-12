@@ -1,21 +1,21 @@
 /**
- * Nodes of JSON schema primitive `type` fragments (`string`, `number`, `integer`, `boolean`; `null` has a fragment node of its own): the
+ * Facets of JSON schema primitive `type` fragments (`string`, `number`, `integer`, `boolean`; `null` has a fragment facet of its own): the
  * primitive type name(s).
  */
 
 import type { JSONSchema7, JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaPrimitiveTypeFragment } from '../../schema/JSONSchema/index.js';
-import { JSONSchemaFragmentNode, type JSONSchemaFragmentNodeOptions } from './Fragment.js';
+import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
 import { isJSONSchemaPrimitiveTypeName } from './JSONSchema7.js';
 
 /**
  * Parses a JSON schema primitive type definition, which is any schema fragment containing a `type` property naming a primitive type, or an array of
  * primitive type names.
  */
-export class JSONSchemaPrimitiveTypeFragmentNode<
+export class JSONSchemaPrimitiveTypeFragmentFacet<
   TSchema extends JSONSchemaCollection,
   TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaPrimitiveTypeFragment = JSONSchemaPrimitiveTypeFragment,
-> extends JSONSchemaFragmentNode<TSchema, TName, TFragment> {
+> extends JSONSchemaFragmentFacet<TSchema, TName, TFragment> {
   /**
    * Determines if a JSON schema fragment is a primitive type definition (i.e., contains a `type` property naming a primitive type, or an array of
    * primitive type names only). The runtime counterpart of `JSONSchemaFragmentIsPrimitiveType`.
@@ -35,9 +35,9 @@ export class JSONSchemaPrimitiveTypeFragmentNode<
   /**
    * Parses a JSON schema primitive type definition
    * @param fragment JSON fragment to parse
-   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentNodeOptions`)
+   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
    */
-  public constructor(fragment: TFragment, options: JSONSchemaFragmentNodeOptions<TSchema, TName> = {}) {
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     super(fragment, options);
     this.type = fragment['type'];
   }

@@ -1,20 +1,20 @@
 /**
- * Nodes of JSON schema `$ref` fragments: the name of the referenced fragment, and its nodes, resolved lazily against the collection.
+ * Facets of JSON schema `$ref` fragments: the name of the referenced fragment, and its facets, resolved lazily against the collection.
  */
 
 import type { JSONSchema7, JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaReferenceFragment } from '../../schema/JSONSchema/index.js';
 import type { JSONSchemaCollectionParsedFragment } from './CollectionFragment.js';
-import { JSONSchemaFragmentNode, type JSONSchemaFragmentNodeOptions } from './Fragment.js';
-import type { JSONSchemaFragmentNodeOf } from './FragmentNodes.js';
+import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
+import type { JSONSchemaFragmentFacetOf } from './FragmentFacets.js';
 
 /**
  * Parses a JSON schema reference definition, which is any schema fragment containing a `$ref` property.
  */
-export class JSONSchemaReferenceFragmentNode<
+export class JSONSchemaReferenceFragmentFacet<
   TSchema extends JSONSchemaCollection,
   TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaReferenceFragment = JSONSchemaReferenceFragment,
-> extends JSONSchemaFragmentNode<TSchema, TName, TFragment> {
+> extends JSONSchemaFragmentFacet<TSchema, TName, TFragment> {
   /**
    * Determines if a JSON schema fragment is a reference definition (i.e., contains a `$ref` string). The runtime counterpart of
    * `JSONSchemaFragmentIsReference`.
@@ -33,22 +33,22 @@ export class JSONSchemaReferenceFragmentNode<
   public readonly refName: _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>;
 
   /**
-   * Nodes of the referenced fragment, as held by the collection, or `undefined` if the reference can not be resolved. Resolved lazily on access,
+   * Facets of the referenced fragment, as held by the collection, or `undefined` if the reference can not be resolved. Resolved lazily on access,
    * unlike an array type fragment's `items`: the referenced fragment is shared, not owned by this fragment, and (in)directly recursive references would
-   * never finish constructing if resolved eagerly. Besides, the collection's nodes are not available yet while it is still constructing them.
+   * never finish constructing if resolved eagerly. Besides, the collection's facets are not available yet while it is still constructing them.
    */
-  public get ref(): _JSONSchemaReferenceFragmentRefNodes<TSchema, _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>> {
+  public get ref(): _JSONSchemaReferenceFragmentRefFacets<TSchema, _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>> {
     return (
       this.refName === undefined ? undefined : this._context?.$defs[this.refName as JSONSchemaFragmentName<TSchema>]
-    ) as _JSONSchemaReferenceFragmentRefNodes<TSchema, _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>>;
+    ) as _JSONSchemaReferenceFragmentRefFacets<TSchema, _JSONSchemaReferenceFragmentRefName<TSchema, TFragment>>;
   }
 
   /**
    * Parses a JSON schema reference definition
    * @param fragment JSON fragment to parse
-   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentNodeOptions`)
+   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
    */
-  public constructor(fragment: TFragment, options: JSONSchemaFragmentNodeOptions<TSchema, TName> = {}) {
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     super(fragment, options);
     const name = /^#\/\$defs\/(.+)$/.exec(fragment['$ref'])?.[1];
     this.refName = (
@@ -74,11 +74,11 @@ type _JSONSchemaReferenceFragmentRefName<TSchema extends JSONSchemaCollection, T
         undefined;
 
 /**
- * Infers the nodes of the fragment(s) referenced by name, distributing over a union of names, or `undefined` for an unresolved reference
+ * Infers the facets of the fragment(s) referenced by name, distributing over a union of names, or `undefined` for an unresolved reference
  */
-type _JSONSchemaReferenceFragmentRefNodes<TSchema extends JSONSchemaCollection, TRefName> =
+type _JSONSchemaReferenceFragmentRefFacets<TSchema extends JSONSchemaCollection, TRefName> =
   // Resolved reference
   TRefName extends JSONSchemaFragmentName<TSchema>
-    ? Array<JSONSchemaFragmentNodeOf<TSchema, TRefName, JSONSchemaCollectionParsedFragment<TSchema, TRefName>>>
+    ? Array<JSONSchemaFragmentFacetOf<TSchema, TRefName, JSONSchemaCollectionParsedFragment<TSchema, TRefName>>>
     : // Unresolved reference
       undefined;
