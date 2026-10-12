@@ -33,7 +33,7 @@ extension), plain comments state the same types for other editors, and `// Break
 - [`src/schema/_showcase.test.ts`](src/schema/_showcase.test.ts) - the wrapper types behind the public API, and how property paths are resolved.
 - [`src/schema/JSONSchema/_showcase.test.ts`](src/schema/JSONSchema/_showcase.test.ts) - the per-keyword JSON schema type utilities everything is built on.
 - [`src/reflection/_showcase.test.ts`](src/reflection/_showcase.test.ts) - the (internal, work in progress) runtime reflection module.
-- [`src/reflection/JSONSchema/_showcase.test.ts`](src/reflection/JSONSchema/_showcase.test.ts) - the runtime JSON schema fragment nodes (the parsed form of a schema), mirroring
+- [`src/reflection/JSONSchema/_showcase.test.ts`](src/reflection/JSONSchema/_showcase.test.ts) - the runtime JSON schema fragment facets (the parsed form of a schema), mirroring
   the type utilities.
 
 Only `src/_showcase.test.ts` covers public API. The others showcase internal types, classes and helpers, which are never exported from the package.

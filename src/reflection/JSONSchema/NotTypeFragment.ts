@@ -1,20 +1,20 @@
 /**
- * Nodes of JSON schema `not` fragments: the nodes of the negated fragment.
+ * Facets of JSON schema `not` fragments: the facets of the negated fragment.
  */
 
 import type { JSONSchema7, JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaNotTypeFragment } from '../../schema/JSONSchema/index.js';
-import { JSONSchemaFragmentNode, type JSONSchemaFragmentNodeOptions } from './Fragment.js';
-import { createJSONSchemaNestedFragmentNodes, type JSONSchemaNestedFragmentNodes } from './FragmentNodes.js';
+import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
+import { createJSONSchemaNestedFragmentFacets, type JSONSchemaNestedFragmentFacets } from './FragmentFacets.js';
 import { isJSONSchemaObject } from './JSONSchema7.js';
 
 /**
  * Parses a JSON schema not-type definition, which is any schema fragment containing a `not` property. Parses the negated fragment on construction.
  */
-export class JSONSchemaNotTypeFragmentNode<
+export class JSONSchemaNotTypeFragmentFacet<
   TSchema extends JSONSchemaCollection,
   TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaNotTypeFragment = JSONSchemaNotTypeFragment,
-> extends JSONSchemaFragmentNode<TSchema, TName, TFragment> {
+> extends JSONSchemaFragmentFacet<TSchema, TName, TFragment> {
   /**
    * Determines if a JSON schema fragment is a not-type definition (i.e., contains a `not` schema object). The runtime counterpart of
    * `JSONSchemaFragmentIsNotType`.
@@ -26,17 +26,17 @@ export class JSONSchemaNotTypeFragmentNode<
   }
 
   /**
-   * Nodes of the `not` fragment
+   * Facets of the `not` fragment
    */
-  public readonly not: JSONSchemaNestedFragmentNodes<TSchema, TFragment['not']>;
+  public readonly not: JSONSchemaNestedFragmentFacets<TSchema, TFragment['not']>;
 
   /**
    * Parses a JSON schema not-type definition
    * @param fragment JSON fragment to parse
-   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentNodeOptions`)
+   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
    */
-  public constructor(fragment: TFragment, options: JSONSchemaFragmentNodeOptions<TSchema, TName> = {}) {
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     super(fragment, options);
-    this.not = createJSONSchemaNestedFragmentNodes(fragment['not'], this._context) as JSONSchemaNestedFragmentNodes<TSchema, TFragment['not']>;
+    this.not = createJSONSchemaNestedFragmentFacets(fragment['not'], this._context) as JSONSchemaNestedFragmentFacets<TSchema, TFragment['not']>;
   }
 }

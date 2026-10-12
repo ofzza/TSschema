@@ -1,5 +1,5 @@
 /**
- * Nodes of JSON schema model fragments (`type: "object"` with `properties`): property names, the nodes of each property and the required
+ * Facets of JSON schema model fragments (`type: "object"` with `properties`): property names, the facets of each property and the required
  * property names.
  */
 
@@ -10,19 +10,19 @@ import type {
   JSONSchemaFragmentPropertyName,
   JSONSchemaModelFragment,
 } from '../../schema/JSONSchema/index.js';
-import { JSONSchemaFragmentNode, type JSONSchemaFragmentNodeOptions } from './Fragment.js';
-import { createJSONSchemaNestedFragmentNodes, type JSONSchemaNestedFragmentNodes } from './FragmentNodes.js';
+import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
+import { createJSONSchemaNestedFragmentFacets, type JSONSchemaNestedFragmentFacets } from './FragmentFacets.js';
 import { isJSONSchemaObject } from './JSONSchema7.js';
 
 /**
  * Parses a JSON schema model definition, which is any object schema fragment containing `properties`. Parses each property's fragment on
  * construction.
  */
-export class JSONSchemaModelFragmentNode<
+export class JSONSchemaModelFragmentFacet<
   TSchema extends JSONSchemaCollection,
   TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaModelFragment = JSONSchemaModelFragment,
-> extends JSONSchemaFragmentNode<TSchema, TName, TFragment> {
+> extends JSONSchemaFragmentFacet<TSchema, TName, TFragment> {
   /**
    * Determines if a JSON schema fragment is a model definition (i.e., an object with `properties`). The runtime counterpart of
    * `JSONSchemaFragmentIsModel`.
@@ -44,9 +44,9 @@ export class JSONSchemaModelFragmentNode<
   public readonly names: Array<JSONSchemaFragmentPropertyName<TFragment>>;
 
   /**
-   * Nodes of each property's fragment, by property name
+   * Facets of each property's fragment, by property name
    */
-  public readonly properties: _JSONSchemaModelFragmentPropertiesNodes<TSchema, TFragment>;
+  public readonly properties: _JSONSchemaModelFragmentPropertiesFacets<TSchema, TFragment>;
 
   /**
    * Names of the model's required properties, as listed by its `required` keyword (names of properties the model does not define are left out). The
@@ -57,15 +57,15 @@ export class JSONSchemaModelFragmentNode<
   /**
    * Parses a JSON schema model definition
    * @param fragment JSON fragment to parse
-   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentNodeOptions`)
+   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
    */
-  public constructor(fragment: TFragment, options: JSONSchemaFragmentNodeOptions<TSchema, TName> = {}) {
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     super(fragment, options);
     this.type = fragment['type'];
     this.names = Object.keys(fragment['properties']) as Array<JSONSchemaFragmentPropertyName<TFragment>>;
     this.properties = Object.fromEntries(
-      Object.entries(fragment['properties']).map(([name, property]) => [name, createJSONSchemaNestedFragmentNodes(property, this._context)]),
-    ) as _JSONSchemaModelFragmentPropertiesNodes<TSchema, TFragment>;
+      Object.entries(fragment['properties']).map(([name, property]) => [name, createJSONSchemaNestedFragmentFacets(property, this._context)]),
+    ) as _JSONSchemaModelFragmentPropertiesFacets<TSchema, TFragment>;
     const required = fragment['required'];
     this.required = (
       required instanceof Array ? required.filter((name) => typeof name === 'string' && (this.names as Array<string>).includes(name)) : []
@@ -89,9 +89,9 @@ type _JSONSchemaModelFragmentRequiredName<TFragment extends JSONSchemaModelFragm
       never;
 
 /**
- * Infers the nodes of each of a model fragment's properties, by property name. Every property is required and mutable, regardless of the modifiers
+ * Infers the facets of each of a model fragment's properties, by property name. Every property is required and mutable, regardless of the modifiers
  * the schema's own `properties` object was declared with.
  */
-type _JSONSchemaModelFragmentPropertiesNodes<TSchema extends JSONSchemaCollection, TFragment extends JSONSchemaModelFragment> = {
-  -readonly [K in keyof TFragment['properties']]-?: JSONSchemaNestedFragmentNodes<TSchema, Exclude<TFragment['properties'][K], undefined>>;
+type _JSONSchemaModelFragmentPropertiesFacets<TSchema extends JSONSchemaCollection, TFragment extends JSONSchemaModelFragment> = {
+  -readonly [K in keyof TFragment['properties']]-?: JSONSchemaNestedFragmentFacets<TSchema, Exclude<TFragment['properties'][K], undefined>>;
 };

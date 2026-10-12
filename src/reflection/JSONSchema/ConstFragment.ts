@@ -1,19 +1,19 @@
 /**
- * Nodes of JSON schema `const` fragments: the constant value.
+ * Facets of JSON schema `const` fragments: the constant value.
  */
 
 import type { JSONSchema7, JSONSchemaCollection, JSONSchemaConstFragment, JSONSchemaFragmentName } from '../../schema/JSONSchema/index.js';
-import { JSONSchemaFragmentNode, type JSONSchemaFragmentNodeOptions } from './Fragment.js';
+import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
 import { isJSONSchemaObject } from './JSONSchema7.js';
 
 /**
  * Parses a JSON schema const definition, which is any schema fragment containing a `const` property.
  */
-export class JSONSchemaConstFragmentNode<
+export class JSONSchemaConstFragmentFacet<
   TSchema extends JSONSchemaCollection,
   TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaConstFragment = JSONSchemaConstFragment,
-> extends JSONSchemaFragmentNode<TSchema, TName, TFragment> {
+> extends JSONSchemaFragmentFacet<TSchema, TName, TFragment> {
   /**
    * Determines if a JSON schema fragment is a const definition (i.e., contains a `const` property, of any value). The runtime counterpart of
    * `JSONSchemaFragmentIsConst`.
@@ -32,9 +32,9 @@ export class JSONSchemaConstFragmentNode<
   /**
    * Parses a JSON schema const definition
    * @param fragment JSON fragment to parse
-   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentNodeOptions`)
+   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
    */
-  public constructor(fragment: TFragment, options: JSONSchemaFragmentNodeOptions<TSchema, TName> = {}) {
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     super(fragment, options);
     this.const = fragment['const'];
   }

@@ -1,9 +1,9 @@
 /**
- * Base class of every JSON schema fragment node, and the runtime counterpart of `JSONSchemaFragmentTypeBranch`, splitting a fragment's `type`
+ * Base class of every JSON schema fragment facet, and the runtime counterpart of `JSONSchemaFragmentTypeBranch`, splitting a fragment's `type`
  * array into branches.
  *
- * Every per-keyword node class extends the base class defined here, so this file must never import any of them (or the router in
- * `FragmentNodes.ts`, which does) as a value: it is kept out of the node files' import cycle, so that it is always evaluated before any class
+ * Every per-keyword facet class extends the base class defined here, so this file must never import any of them (or the router in
+ * `FragmentFacets.ts`, which does) as a value: it is kept out of the facet files' import cycle, so that it is always evaluated before any class
  * extending it.
  */
 
@@ -15,24 +15,24 @@ import type {
   JSONSchemaFragmentTypeBranch,
   JSONSchemaNotCollectionFragment,
 } from '../../schema/JSONSchema/index.js';
-import type { JSONSchemaCollectionFragmentNode } from './CollectionFragment.js';
+import type { JSONSchemaCollectionFragmentFacet } from './CollectionFragment.js';
 import { isJSONSchemaPrimitiveTypeName } from './JSONSchema7.js';
 
 /**
- * Parses a JSON schema fragment. Base class of every per-keyword fragment node: a fragment carrying several keywords is parsed by an instance
- * of each matching node class (see `createJSONSchemaFragmentNodes`).
+ * Parses a JSON schema fragment. Base class of every per-keyword fragment facet: a fragment carrying several keywords is parsed by an instance
+ * of each matching facet class (see `createJSONSchemaFragmentFacets`).
  */
-export abstract class JSONSchemaFragmentNode<
+export abstract class JSONSchemaFragmentFacet<
   TSchema extends JSONSchemaCollection,
   TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchema7 = JSONSchemaNotCollectionFragment,
 > {
   /**
    * Value type inferred from the parsed fragment (see `JSONSchemaFragmentType`), or from its root fragment for a collection (see
-   * `JSONSchemaCollectionRootFragment`). Only meant for type inference, as `typeof node.Type`: it holds no value, and throws if accessed at runtime.
+   * `JSONSchemaCollectionRootFragment`). Only meant for type inference, as `typeof facet.Type`: it holds no value, and throws if accessed at runtime.
    */
   public get Type(): _JSONSchemaParsedFragmentType<TFragment, TSchema> {
-    throw new Error('This accessor should never be accessed, it is only meant to be used for type inference convenience: `typeof node.Type`');
+    throw new Error('This accessor should never be accessed, it is only meant to be used for type inference convenience: `typeof facet.Type`');
   }
 
   /**
@@ -55,10 +55,10 @@ export abstract class JSONSchemaFragmentNode<
   protected _fragment: TFragment;
 
   /**
-   * Node of the JSON schema collection the fragment belongs to, against which every `$ref` is resolved, or `undefined` if the parsed schema has
+   * Facet of the JSON schema collection the fragment belongs to, against which every `$ref` is resolved, or `undefined` if the parsed schema has
    * no `$defs`
    */
-  protected _context: JSONSchemaCollectionFragmentNode<TSchema> | undefined;
+  protected _context: JSONSchemaCollectionFragmentFacet<TSchema> | undefined;
 
   /**
    * Name of the fragment within its collection, or `undefined` for a nested (or root) fragment
@@ -68,9 +68,9 @@ export abstract class JSONSchemaFragmentNode<
   /**
    * Parses a JSON schema fragment
    * @param fragment JSON fragment to parse
-   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentNodeOptions`)
+   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
    */
-  public constructor(fragment: TFragment, { context, name }: JSONSchemaFragmentNodeOptions<TSchema, TName> = {}) {
+  public constructor(fragment: TFragment, { context, name }: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     this._fragment = fragment;
     this._context = context;
     this._name = name as TName;
@@ -80,14 +80,14 @@ export abstract class JSONSchemaFragmentNode<
 }
 
 /**
- * Options of a JSON schema fragment node, naming the context the fragment is parsed in
+ * Options of a JSON schema fragment facet, naming the context the fragment is parsed in
  */
-export type JSONSchemaFragmentNodeOptions<TSchema extends JSONSchemaCollection, TName extends JSONSchemaFragmentName<TSchema> | undefined> = {
+export type JSONSchemaFragmentFacetOptions<TSchema extends JSONSchemaCollection, TName extends JSONSchemaFragmentName<TSchema> | undefined> = {
   /**
-   * Node of the JSON schema collection the fragment belongs to, against which every `$ref` is resolved. Omitted if the parsed schema has no
+   * Facet of the JSON schema collection the fragment belongs to, against which every `$ref` is resolved. Omitted if the parsed schema has no
    * `$defs`, leaving every `$ref` unresolved.
    */
-  context?: JSONSchemaCollectionFragmentNode<TSchema>;
+  context?: JSONSchemaCollectionFragmentFacet<TSchema>;
   /**
    * Name of the fragment within the collection. Omitted for a nested (or root) fragment.
    */
