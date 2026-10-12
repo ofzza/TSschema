@@ -3,8 +3,7 @@
  */
 
 import type { JSONSchema7, JSONSchemaCollection, JSONSchemaConstFragment, JSONSchemaFragmentName } from '../../schema/JSONSchema/index.js';
-import type { JSONSchemaCollectionFragmentReflect } from './CollectionFragment.js';
-import { JSONSchemaFragmentReflect } from './Fragment.js';
+import { JSONSchemaFragmentReflect, type JSONSchemaFragmentReflectOptions } from './Fragment.js';
 import { isJSONSchemaObject } from './JSONSchema7.js';
 
 /**
@@ -12,7 +11,7 @@ import { isJSONSchemaObject } from './JSONSchema7.js';
  */
 export class JSONSchemaConstFragmentReflect<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema>,
+  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaConstFragment = JSONSchemaConstFragment,
 > extends JSONSchemaFragmentReflect<TSchema, TName, TFragment> {
   /**
@@ -21,7 +20,7 @@ export class JSONSchemaConstFragmentReflect<
    * @param fragment JSON fragment to check
    * @returns `true` if the fragment is a const definition
    */
-  public static check(fragment: JSONSchema7): fragment is JSONSchemaConstFragment {
+  public static is(fragment: JSONSchema7): fragment is JSONSchemaConstFragment {
     return isJSONSchemaObject(fragment) && 'const' in fragment;
   }
 
@@ -32,12 +31,11 @@ export class JSONSchemaConstFragmentReflect<
 
   /**
    * Reflects a JSON schema const definition
-   * @param _schema Reflection of the JSON schema collection the fragment belongs to, or `undefined` if the reflected schema has no `$defs`
-   * @param _fragmentName Name of the fragment within the collection, or `undefined` for a nested (or root) fragment
-   * @param _fragment JSON fragment to reflect on
+   * @param fragment JSON fragment to reflect on
+   * @param options Context and name of the reflected fragment (see `JSONSchemaFragmentReflectOptions`)
    */
-  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema> | undefined, _fragmentName: TName, _fragment: TFragment) {
-    super(_schema, _fragmentName, _fragment);
-    this.const = _fragment['const'];
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentReflectOptions<TSchema, TName> = {}) {
+    super(fragment, options);
+    this.const = fragment['const'];
   }
 }

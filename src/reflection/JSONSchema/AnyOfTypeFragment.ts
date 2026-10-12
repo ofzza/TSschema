@@ -3,8 +3,7 @@
  */
 
 import type { JSONSchema7, JSONSchemaAnyOfTypeFragment, JSONSchemaCollection, JSONSchemaFragmentName } from '../../schema/JSONSchema/index.js';
-import type { JSONSchemaCollectionFragmentReflect } from './CollectionFragment.js';
-import { JSONSchemaFragmentReflect } from './Fragment.js';
+import { JSONSchemaFragmentReflect, type JSONSchemaFragmentReflectOptions } from './Fragment.js';
 import { createJSONSchemaNestedFragmentReflections, type JSONSchemaNestedFragmentsReflections } from './FragmentReflections.js';
 
 /**
@@ -12,7 +11,7 @@ import { createJSONSchemaNestedFragmentReflections, type JSONSchemaNestedFragmen
  */
 export class JSONSchemaAnyOfTypeFragmentReflect<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema>,
+  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaAnyOfTypeFragment = JSONSchemaAnyOfTypeFragment,
 > extends JSONSchemaFragmentReflect<TSchema, TName, TFragment> {
   /**
@@ -21,7 +20,7 @@ export class JSONSchemaAnyOfTypeFragmentReflect<
    * @param fragment JSON fragment to check
    * @returns `true` if the fragment is an any-of-types definition
    */
-  public static check(fragment: JSONSchema7): fragment is JSONSchemaAnyOfTypeFragment {
+  public static is(fragment: JSONSchema7): fragment is JSONSchemaAnyOfTypeFragment {
     return fragment?.['anyOf'] instanceof Array;
   }
 
@@ -39,17 +38,16 @@ export class JSONSchemaAnyOfTypeFragmentReflect<
 
   /**
    * Reflects a JSON schema any-of-types definition
-   * @param _schema Reflection of the JSON schema collection the fragment belongs to, or `undefined` if the reflected schema has no `$defs`
-   * @param _fragmentName Name of the fragment within the collection, or `undefined` for a nested (or root) fragment
-   * @param _fragment JSON fragment to reflect on
-   * @param implicit Whether the fragment is an implicit `anyOf`, generated from the branches of a `type` array
+   * @param fragment JSON fragment to reflect on
+   * @param options Context and name of the reflected fragment (see `JSONSchemaFragmentReflectOptions`), and whether it is an `implicit` `anyOf`, generated
+   * from the branches of a `type` array
    */
-  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema> | undefined, _fragmentName: TName, _fragment: TFragment, implicit = false) {
-    super(_schema, _fragmentName, _fragment);
-    this.anyOf = _fragment['anyOf'].map((fragment) => createJSONSchemaNestedFragmentReflections(_schema, fragment)) as JSONSchemaNestedFragmentsReflections<
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentReflectOptions<TSchema, TName> & { implicit?: boolean } = {}) {
+    super(fragment, options);
+    this.anyOf = fragment['anyOf'].map((member) => createJSONSchemaNestedFragmentReflections(member, this._context)) as JSONSchemaNestedFragmentsReflections<
       TSchema,
       TFragment['anyOf']
     >;
-    this.implicit = implicit;
+    this.implicit = options.implicit ?? false;
   }
 }

@@ -24,13 +24,13 @@ describe('Reflection', () => {
   describe('JSONSchema fragment reflections', () => {
     describe('AllOf Type fragment', () => {
       it('Detects an all-of-types', () => {
-        expect(JSONSchemaAllOfTypeFragmentReflect.check({ allOf: [{ type: 'string' }] })).toBe(true);
-        expect(JSONSchemaAllOfTypeFragmentReflect.check({ allOf: [] })).toBe(true);
+        expect(JSONSchemaAllOfTypeFragmentReflect.is({ allOf: [{ type: 'string' }] })).toBe(true);
+        expect(JSONSchemaAllOfTypeFragmentReflect.is({ allOf: [] })).toBe(true);
       });
 
       it('Rejects a non-all-of-types', () => {
-        expect(JSONSchemaAllOfTypeFragmentReflect.check({ anyOf: [{ type: 'string' }] })).toBe(false);
-        expect(JSONSchemaAllOfTypeFragmentReflect.check({ allOf: { type: 'string' } } as any)).toBe(false);
+        expect(JSONSchemaAllOfTypeFragmentReflect.is({ anyOf: [{ type: 'string' }] })).toBe(false);
+        expect(JSONSchemaAllOfTypeFragmentReflect.is({ allOf: { type: 'string' } } as any)).toBe(false);
       });
 
       it('Reflects each fragment of an all-of-types, in order', () => {

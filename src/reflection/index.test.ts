@@ -13,9 +13,8 @@ describe('Reflection', () => {
     });
 
     it('Reflects a collection through the module entry', () => {
-      const [collection] = Reflection.reflectJSONSchema(jsonSchema);
+      const collection = Reflection.reflectJSONSchemaCollection(jsonSchema);
       expect(collection).toBeInstanceOf(Reflection.JSONSchemaCollectionFragmentReflect);
-      if (!(collection instanceof Reflection.JSONSchemaCollectionFragmentReflect)) return;
       const assessment = collection.$defs.Assessment[0];
       expect(assessment).toBeInstanceOf(Reflection.JSONSchemaModelFragmentReflect);
       expect(true satisfies AssertTypeEquality<(typeof assessment.Type)['weight'], number>).toBe(true);

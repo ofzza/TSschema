@@ -13,13 +13,13 @@ describe('Reflection', () => {
   describe('JSONSchema fragment reflections', () => {
     describe('OneOf Type fragment', () => {
       it('Detects a one-of-types', () => {
-        expect(JSONSchemaOneOfTypeFragmentReflect.check({ oneOf: [{ type: 'string' }] })).toBe(true);
-        expect(JSONSchemaOneOfTypeFragmentReflect.check(jsonSchema.$defs.AssessmentKind)).toBe(true);
+        expect(JSONSchemaOneOfTypeFragmentReflect.is({ oneOf: [{ type: 'string' }] })).toBe(true);
+        expect(JSONSchemaOneOfTypeFragmentReflect.is(jsonSchema.$defs.AssessmentKind)).toBe(true);
       });
 
       it('Rejects a non-one-of-types', () => {
-        expect(JSONSchemaOneOfTypeFragmentReflect.check({ anyOf: [{ type: 'string' }] })).toBe(false);
-        expect(JSONSchemaOneOfTypeFragmentReflect.check({ oneOf: { type: 'string' } } as any)).toBe(false);
+        expect(JSONSchemaOneOfTypeFragmentReflect.is({ anyOf: [{ type: 'string' }] })).toBe(false);
+        expect(JSONSchemaOneOfTypeFragmentReflect.is({ oneOf: { type: 'string' } } as any)).toBe(false);
       });
 
       it('Reflects each fragment of a one-of-types, in order', () => {

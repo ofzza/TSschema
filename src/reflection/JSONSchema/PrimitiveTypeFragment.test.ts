@@ -14,16 +14,16 @@ describe('Reflection', () => {
   describe('JSONSchema fragment reflections', () => {
     describe('Primitive Type fragment', () => {
       it('Detects a primitive type', () => {
-        expect(['string', 'number', 'integer', 'boolean'].every((type) => JSONSchemaPrimitiveTypeFragmentReflect.check({ type } as any))).toBe(true);
-        expect(JSONSchemaPrimitiveTypeFragmentReflect.check({ type: ['string', 'number'] })).toBe(true);
+        expect(['string', 'number', 'integer', 'boolean'].every((type) => JSONSchemaPrimitiveTypeFragmentReflect.is({ type } as any))).toBe(true);
+        expect(JSONSchemaPrimitiveTypeFragmentReflect.is({ type: ['string', 'number'] })).toBe(true);
       });
 
       it('Rejects a non-primitive type, including null', () => {
-        expect(JSONSchemaPrimitiveTypeFragmentReflect.check({ type: 'null' })).toBe(false);
-        expect(JSONSchemaPrimitiveTypeFragmentReflect.check({ type: 'object' })).toBe(false);
-        expect(JSONSchemaPrimitiveTypeFragmentReflect.check({ type: 'array' })).toBe(false);
-        expect(JSONSchemaPrimitiveTypeFragmentReflect.check({ type: ['string', 'null'] })).toBe(false);
-        expect(JSONSchemaPrimitiveTypeFragmentReflect.check({ enum: ['a'] })).toBe(false);
+        expect(JSONSchemaPrimitiveTypeFragmentReflect.is({ type: 'null' })).toBe(false);
+        expect(JSONSchemaPrimitiveTypeFragmentReflect.is({ type: 'object' })).toBe(false);
+        expect(JSONSchemaPrimitiveTypeFragmentReflect.is({ type: 'array' })).toBe(false);
+        expect(JSONSchemaPrimitiveTypeFragmentReflect.is({ type: ['string', 'null'] })).toBe(false);
+        expect(JSONSchemaPrimitiveTypeFragmentReflect.is({ enum: ['a'] })).toBe(false);
       });
 
       it('Reflects the type of a primitive type', () => {

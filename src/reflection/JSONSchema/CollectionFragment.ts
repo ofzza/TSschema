@@ -21,7 +21,7 @@ export class JSONSchemaCollectionFragmentReflect<TSchema extends JSONSchemaColle
    * @param fragment JSON fragment to check
    * @returns `true` if the fragment is a collection
    */
-  public static check(fragment: JSONSchema7): fragment is JSONSchemaCollection {
+  public static is(fragment: JSONSchema7): fragment is JSONSchemaCollection {
     return isJSONSchemaObject(fragment?.['$defs']);
   }
 
@@ -38,19 +38,19 @@ export class JSONSchemaCollectionFragmentReflect<TSchema extends JSONSchemaColle
 
   /**
    * Reflects a JSON schema collection. The collection is the context its own fragments are reflected in.
-   * @param _fragment JSON schema collection to reflect on
+   * @param fragment JSON schema collection to reflect on
    */
-  public constructor(_fragment: TSchema) {
+  public constructor(fragment: TSchema) {
     // The collection can not be passed to the base class as its own context before it is constructed, so it is set as one right after
-    super(undefined, undefined, _fragment);
-    this._schema = this;
+    super(fragment);
+    this._context = this;
     // Extract fragment names
-    this.names = Object.keys(_fragment['$defs']) as Array<JSONSchemaFragmentName<TSchema>>;
+    this.names = Object.keys(fragment['$defs']) as Array<JSONSchemaFragmentName<TSchema>>;
     // Extract fragments' reflections
     this.$defs = Object.fromEntries(
       this.names.map((name) => [
         name,
-        createJSONSchemaFragmentReflections(this, name, (_fragment['$defs'] as Record<PropertyKey, JSONSchemaNotCollectionFragment>)[name]),
+        createJSONSchemaFragmentReflections((fragment['$defs'] as Record<PropertyKey, JSONSchemaNotCollectionFragment>)[name], { context: this, name }),
       ]),
     ) as unknown as _JSONSchemaCollectionFragmentsReflect<TSchema>;
   }

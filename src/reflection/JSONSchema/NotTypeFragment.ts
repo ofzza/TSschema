@@ -3,8 +3,7 @@
  */
 
 import type { JSONSchema7, JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaNotTypeFragment } from '../../schema/JSONSchema/index.js';
-import type { JSONSchemaCollectionFragmentReflect } from './CollectionFragment.js';
-import { JSONSchemaFragmentReflect } from './Fragment.js';
+import { JSONSchemaFragmentReflect, type JSONSchemaFragmentReflectOptions } from './Fragment.js';
 import { createJSONSchemaNestedFragmentReflections, type JSONSchemaNestedFragmentReflections } from './FragmentReflections.js';
 import { isJSONSchemaObject } from './JSONSchema7.js';
 
@@ -13,7 +12,7 @@ import { isJSONSchemaObject } from './JSONSchema7.js';
  */
 export class JSONSchemaNotTypeFragmentReflect<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema>,
+  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaNotTypeFragment = JSONSchemaNotTypeFragment,
 > extends JSONSchemaFragmentReflect<TSchema, TName, TFragment> {
   /**
@@ -22,7 +21,7 @@ export class JSONSchemaNotTypeFragmentReflect<
    * @param fragment JSON fragment to check
    * @returns `true` if the fragment is a not-type definition
    */
-  public static check(fragment: JSONSchema7): fragment is JSONSchemaNotTypeFragment {
+  public static is(fragment: JSONSchema7): fragment is JSONSchemaNotTypeFragment {
     return isJSONSchemaObject(fragment?.['not']);
   }
 
@@ -33,12 +32,11 @@ export class JSONSchemaNotTypeFragmentReflect<
 
   /**
    * Reflects a JSON schema not-type definition
-   * @param _schema Reflection of the JSON schema collection the fragment belongs to, or `undefined` if the reflected schema has no `$defs`
-   * @param _fragmentName Name of the fragment within the collection, or `undefined` for a nested (or root) fragment
-   * @param _fragment JSON fragment to reflect on
+   * @param fragment JSON fragment to reflect on
+   * @param options Context and name of the reflected fragment (see `JSONSchemaFragmentReflectOptions`)
    */
-  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema> | undefined, _fragmentName: TName, _fragment: TFragment) {
-    super(_schema, _fragmentName, _fragment);
-    this.not = createJSONSchemaNestedFragmentReflections(_schema, _fragment['not']) as JSONSchemaNestedFragmentReflections<TSchema, TFragment['not']>;
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentReflectOptions<TSchema, TName> = {}) {
+    super(fragment, options);
+    this.not = createJSONSchemaNestedFragmentReflections(fragment['not'], this._context) as JSONSchemaNestedFragmentReflections<TSchema, TFragment['not']>;
   }
 }

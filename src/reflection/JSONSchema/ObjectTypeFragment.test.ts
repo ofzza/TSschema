@@ -12,12 +12,12 @@ describe('Reflection', () => {
   describe('JSONSchema fragment reflections', () => {
     describe('Object Type fragment', () => {
       it('Detects an object type', () => {
-        expect(JSONSchemaObjectTypeFragmentReflect.check({ type: 'object' })).toBe(true);
+        expect(JSONSchemaObjectTypeFragmentReflect.is({ type: 'object' })).toBe(true);
       });
 
       it('Rejects a non-object type, or a model', () => {
-        expect(JSONSchemaObjectTypeFragmentReflect.check({ type: 'array' })).toBe(false);
-        expect(JSONSchemaObjectTypeFragmentReflect.check({ type: 'object', properties: {} })).toBe(false);
+        expect(JSONSchemaObjectTypeFragmentReflect.is({ type: 'array' })).toBe(false);
+        expect(JSONSchemaObjectTypeFragmentReflect.is({ type: 'object', properties: {} })).toBe(false);
       });
 
       it('Reflects an object type', () => {

@@ -10,8 +10,7 @@ import type {
   JSONSchemaFragmentPropertyName,
   JSONSchemaModelFragment,
 } from '../../schema/JSONSchema/index.js';
-import type { JSONSchemaCollectionFragmentReflect } from './CollectionFragment.js';
-import { JSONSchemaFragmentReflect } from './Fragment.js';
+import { JSONSchemaFragmentReflect, type JSONSchemaFragmentReflectOptions } from './Fragment.js';
 import { createJSONSchemaNestedFragmentReflections, type JSONSchemaNestedFragmentReflections } from './FragmentReflections.js';
 import { isJSONSchemaObject } from './JSONSchema7.js';
 
@@ -21,7 +20,7 @@ import { isJSONSchemaObject } from './JSONSchema7.js';
  */
 export class JSONSchemaModelFragmentReflect<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema>,
+  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
   TFragment extends JSONSchemaModelFragment = JSONSchemaModelFragment,
 > extends JSONSchemaFragmentReflect<TSchema, TName, TFragment> {
   /**
@@ -30,7 +29,7 @@ export class JSONSchemaModelFragmentReflect<
    * @param fragment JSON fragment to check
    * @returns `true` if the fragment is a model definition
    */
-  public static check(fragment: JSONSchema7): fragment is JSONSchemaModelFragment {
+  public static is(fragment: JSONSchema7): fragment is JSONSchemaModelFragment {
     return fragment?.type === 'object' && isJSONSchemaObject(fragment?.['properties']);
   }
 
@@ -57,18 +56,17 @@ export class JSONSchemaModelFragmentReflect<
 
   /**
    * Reflects a JSON schema model definition
-   * @param _schema Reflection of the JSON schema collection the fragment belongs to, or `undefined` if the reflected schema has no `$defs`
-   * @param _fragmentName Name of the fragment within the collection, or `undefined` for a nested (or root) fragment
-   * @param _fragment JSON fragment to reflect on
+   * @param fragment JSON fragment to reflect on
+   * @param options Context and name of the reflected fragment (see `JSONSchemaFragmentReflectOptions`)
    */
-  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema> | undefined, _fragmentName: TName, _fragment: TFragment) {
-    super(_schema, _fragmentName, _fragment);
-    this.type = _fragment['type'];
-    this.names = Object.keys(_fragment['properties']) as Array<JSONSchemaFragmentPropertyName<TFragment>>;
+  public constructor(fragment: TFragment, options: JSONSchemaFragmentReflectOptions<TSchema, TName> = {}) {
+    super(fragment, options);
+    this.type = fragment['type'];
+    this.names = Object.keys(fragment['properties']) as Array<JSONSchemaFragmentPropertyName<TFragment>>;
     this.properties = Object.fromEntries(
-      Object.entries(_fragment['properties']).map(([name, property]) => [name, createJSONSchemaNestedFragmentReflections(_schema, property)]),
+      Object.entries(fragment['properties']).map(([name, property]) => [name, createJSONSchemaNestedFragmentReflections(property, this._context)]),
     ) as _JSONSchemaModelFragmentPropertiesReflect<TSchema, TFragment>;
-    const required = _fragment['required'];
+    const required = fragment['required'];
     this.required = (
       required instanceof Array ? required.filter((name) => typeof name === 'string' && (this.names as Array<string>).includes(name)) : []
     ) as Array<_JSONSchemaModelFragmentRequiredName<TFragment>>;

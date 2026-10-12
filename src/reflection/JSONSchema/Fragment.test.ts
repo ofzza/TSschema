@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality } from '@ofzza/tsstd';
-import type { JSONSchemaFragmentType, JSONSchemaFragmentTypeBranch } from '../../schema/JSONSchema/index.js';
+import type { JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaFragmentType, JSONSchemaFragmentTypeBranch } from '../../schema/JSONSchema/index.js';
 import { JSONSchemaCollectionFragmentReflect, JSONSchemaFragmentReflect, JSONSchemaModelFragmentReflect, getJSONSchemaFragmentTypeBranches } from './index.js';
 
 /**
@@ -48,9 +48,26 @@ describe('Reflection', () => {
         expect(() => person.Type).toThrow();
       });
 
+      it('Takes the context and name of a fragment as named options', () => {
+        const collection = new JSONSchemaCollectionFragmentReflect(_schema);
+        const person = new JSONSchemaModelFragmentReflect(_schema.$defs.Person, { context: collection, name: 'Person' });
+        expect(person.name).toBe('Person');
+        expect(person.properties.mentor[0].ref).toBe(collection.$defs.Person);
+        expect(true satisfies AssertTypeEquality<typeof person, JSONSchemaModelFragmentReflect<_Schema, 'Person', _Schema['$defs']['Person']>>).toBe(true);
+        // @ts-expect-error A name must name a fragment of the context collection
+        expect(new JSONSchemaModelFragmentReflect(_schema.$defs.Person, { context: collection, name: 'Nobody' }).name).toBe('Nobody');
+      });
+
+      it('Reflects a fragment with no context and no name when both are omitted', () => {
+        const person = new JSONSchemaModelFragmentReflect(_schema.$defs.Person);
+        expect(person.name).toBe(undefined);
+        expect(person.properties.mentor[0].ref).toBe(undefined);
+        expect(true satisfies AssertTypeEquality<typeof person.name, JSONSchemaFragmentName<JSONSchemaCollection> | undefined>).toBe(true);
+      });
+
       it('Can be extended by a reflection of its own', () => {
         class Custom extends JSONSchemaFragmentReflect<_Schema, undefined, { readonly title: 'Custom' }> {}
-        const custom = new Custom(new JSONSchemaCollectionFragmentReflect(_schema), undefined, { title: 'Custom' });
+        const custom = new Custom({ title: 'Custom' }, { context: new JSONSchemaCollectionFragmentReflect(_schema) });
         expect(custom.fragment.title).toBe('Custom');
         expect(custom).not.toBeInstanceOf(JSONSchemaModelFragmentReflect);
       });

@@ -28,13 +28,13 @@ describe('Reflection', () => {
   describe('JSONSchema fragment reflections', () => {
     describe('$Ref fragment', () => {
       it('Detects a reference', () => {
-        expect(JSONSchemaReferenceFragmentReflect.check({ $ref: '#/$defs/Role' })).toBe(true);
-        expect(JSONSchemaReferenceFragmentReflect.check({ $ref: 'https://example.com/schema.json' })).toBe(true);
+        expect(JSONSchemaReferenceFragmentReflect.is({ $ref: '#/$defs/Role' })).toBe(true);
+        expect(JSONSchemaReferenceFragmentReflect.is({ $ref: 'https://example.com/schema.json' })).toBe(true);
       });
 
       it('Rejects a non-reference', () => {
-        expect(JSONSchemaReferenceFragmentReflect.check({ type: 'string' })).toBe(false);
-        expect(JSONSchemaReferenceFragmentReflect.check({ $ref: 1 } as any)).toBe(false);
+        expect(JSONSchemaReferenceFragmentReflect.is({ type: 'string' })).toBe(false);
+        expect(JSONSchemaReferenceFragmentReflect.is({ $ref: 1 } as any)).toBe(false);
       });
 
       it('Gets the name of the referenced fragment', () => {
@@ -86,7 +86,7 @@ describe('Reflection', () => {
       });
 
       it('Resolves no reflections for a reference with no collection to resolve it against', () => {
-        const reference = new JSONSchemaReferenceFragmentReflect(undefined, undefined, { $ref: '#/$defs/Role' } as const);
+        const reference = new JSONSchemaReferenceFragmentReflect({ $ref: '#/$defs/Role' } as const);
         expect(reference.refName).toBe(undefined);
         expect(reference.ref).toBe(undefined);
       });

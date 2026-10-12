@@ -14,6 +14,7 @@ import {
   createJSONSchemaFragmentReflections,
   createJSONSchemaNestedFragmentReflections,
   reflectJSONSchema,
+  reflectJSONSchemaCollection,
   type JSONSchemaCollectionRootFragment,
   type JSONSchemaFragmentReflection,
   type JSONSchemaNestedFragmentReflections,
@@ -114,6 +115,25 @@ describe('Reflection', () => {
         expect(role.ref).toBe(undefined);
       });
 
+      it('Reflects a collection alone, through the collection shortcut', () => {
+        const schema = {
+          type: 'object',
+          properties: { people: { type: 'array', items: { $ref: '#/$defs/Person' } } },
+          $defs: { Person: { type: 'object', properties: { boss: { $ref: '#/$defs/Person' } } } },
+        } as const;
+        const collection = reflectJSONSchemaCollection(schema);
+        expect(collection).toBeInstanceOf(JSONSchemaCollectionFragmentReflect);
+        expect(collection.fragment).toBe(schema);
+        expect(collection.$defs.Person[0].properties.boss[0].ref).toBe(collection.$defs.Person);
+        expect(true satisfies AssertTypeEquality<typeof collection, JSONSchemaCollectionFragmentReflect<typeof schema>>).toBe(true);
+      });
+
+      it('Rejects a schema with no $defs, through the collection shortcut', () => {
+        expect(() => reflectJSONSchemaCollection({ type: 'string' } as any)).toThrow(TypeError);
+        // @ts-expect-error A schema with no `$defs` is not a collection
+        expect(() => reflectJSONSchemaCollection({ type: 'string' })).toThrow(TypeError);
+      });
+
       it('Reflects a schema matching no reflection type with no reflections', () => {
         const reflections = reflectJSONSchema({ title: 'Annotated' } as const);
         expect(reflections).toEqual([]);
@@ -154,7 +174,7 @@ describe('Reflection', () => {
         const collection = new JSONSchemaCollectionFragmentReflect(_schema);
         expect(collection.$defs.Empty).toEqual([]);
         expect(true satisfies AssertTypeEquality<typeof collection.$defs.Empty, never[]>).toBe(true);
-        expect(createJSONSchemaFragmentReflections(collection, undefined, { title: 'Annotated' })).toEqual([]);
+        expect(createJSONSchemaFragmentReflections({ title: 'Annotated' }, { context: collection })).toEqual([]);
       });
 
       it('Reflects a type array naming a single group of type names as if type named it directly', () => {
@@ -218,7 +238,7 @@ describe('Reflection', () => {
     describe('Nested fragment reflections', () => {
       it('Reflects a nested fragment, with no name', () => {
         const collection = new JSONSchemaCollectionFragmentReflect(_schema);
-        const reflections = createJSONSchemaNestedFragmentReflections(collection, { type: 'array', items: { type: 'string' } } as const);
+        const reflections = createJSONSchemaNestedFragmentReflections({ type: 'array', items: { type: 'string' } } as const, collection);
         expect(reflections[0]).toBeInstanceOf(JSONSchemaArrayTypeFragmentReflect);
         expect(reflections[0].name).toBe(undefined);
         expect(
@@ -231,8 +251,8 @@ describe('Reflection', () => {
 
       it('Reflects a nested boolean schema or array with no reflections', () => {
         const collection = new JSONSchemaCollectionFragmentReflect(_schema);
-        expect(createJSONSchemaNestedFragmentReflections(collection, true)).toEqual([]);
-        expect(createJSONSchemaNestedFragmentReflections(collection, [{ type: 'string' }])).toEqual([]);
+        expect(createJSONSchemaNestedFragmentReflections(true, collection)).toEqual([]);
+        expect(createJSONSchemaNestedFragmentReflections([{ type: 'string' }], collection)).toEqual([]);
         expect(true satisfies AssertTypeEquality<JSONSchemaNestedFragmentReflections<_Schema, true>, never[]>).toBe(true);
         expect(true satisfies AssertTypeEquality<JSONSchemaNestedFragmentReflections<_Schema, readonly [{ readonly type: 'string' }]>, never[]>).toBe(true);
       });

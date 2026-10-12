@@ -33,15 +33,15 @@ describe('Reflection', () => {
   describe('JSONSchema fragment reflections', () => {
     describe('Collection fragment', () => {
       it('Detects a collection', () => {
-        expect(JSONSchemaCollectionFragmentReflect.check(_schema)).toBe(true);
-        expect(JSONSchemaCollectionFragmentReflect.check(jsonSchema)).toBe(true);
-        expect(JSONSchemaCollectionFragmentReflect.check({ $defs: {} })).toBe(true);
+        expect(JSONSchemaCollectionFragmentReflect.is(_schema)).toBe(true);
+        expect(JSONSchemaCollectionFragmentReflect.is(jsonSchema)).toBe(true);
+        expect(JSONSchemaCollectionFragmentReflect.is({ $defs: {} })).toBe(true);
       });
 
       it('Rejects a non-collection', () => {
-        expect(JSONSchemaCollectionFragmentReflect.check({ type: 'object' })).toBe(false);
-        expect(JSONSchemaCollectionFragmentReflect.check({ $defs: [] } as any)).toBe(false);
-        expect(JSONSchemaCollectionFragmentReflect.check({ $defs: true } as any)).toBe(false);
+        expect(JSONSchemaCollectionFragmentReflect.is({ type: 'object' })).toBe(false);
+        expect(JSONSchemaCollectionFragmentReflect.is({ $defs: [] } as any)).toBe(false);
+        expect(JSONSchemaCollectionFragmentReflect.is({ $defs: true } as any)).toBe(false);
       });
 
       it('Gets the names of all fragments of the collection', () => {

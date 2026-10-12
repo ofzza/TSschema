@@ -27,13 +27,13 @@ describe('Reflection', () => {
   describe('JSONSchema fragment reflections', () => {
     describe('AnyOf Type fragment', () => {
       it('Detects an any-of-types', () => {
-        expect(JSONSchemaAnyOfTypeFragmentReflect.check({ anyOf: [{ type: 'string' }] })).toBe(true);
-        expect(JSONSchemaAnyOfTypeFragmentReflect.check(jsonSchema.$defs.Assessment.properties.class)).toBe(true);
+        expect(JSONSchemaAnyOfTypeFragmentReflect.is({ anyOf: [{ type: 'string' }] })).toBe(true);
+        expect(JSONSchemaAnyOfTypeFragmentReflect.is(jsonSchema.$defs.Assessment.properties.class)).toBe(true);
       });
 
       it('Rejects a non-any-of-types', () => {
-        expect(JSONSchemaAnyOfTypeFragmentReflect.check({ oneOf: [{ type: 'string' }] })).toBe(false);
-        expect(JSONSchemaAnyOfTypeFragmentReflect.check({ anyOf: { type: 'string' } } as any)).toBe(false);
+        expect(JSONSchemaAnyOfTypeFragmentReflect.is({ oneOf: [{ type: 'string' }] })).toBe(false);
+        expect(JSONSchemaAnyOfTypeFragmentReflect.is({ anyOf: { type: 'string' } } as any)).toBe(false);
       });
 
       it('Reflects each fragment of an any-of-types, in order', () => {
@@ -66,6 +66,11 @@ describe('Reflection', () => {
         const [[model], [nothing]] = nullable.anyOf;
         expect(model).toBeInstanceOf(JSONSchemaModelFragmentReflect);
         expect(nothing).toBeInstanceOf(JSONSchemaNullTypeFragmentReflect);
+      });
+
+      it('Reflects an any-of-types as explicit unless told it is implicit', () => {
+        expect(new JSONSchemaAnyOfTypeFragmentReflect({ anyOf: [{ type: 'string' }] }).implicit).toBe(false);
+        expect(new JSONSchemaAnyOfTypeFragmentReflect({ anyOf: [{ type: 'string' }] }, { implicit: true }).implicit).toBe(true);
       });
 
       it('Infers the type of an any-of-types', () => {
