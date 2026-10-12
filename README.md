@@ -24,7 +24,7 @@ $ npm install @ofzza/tsschema --save
 
 # Usage
 
-> **See it in action:** [`src/showcase.test.ts`](src/showcase.test.ts) walks through every example below as a runnable, type checked test file. Open it
+> **See it in action:** [`src/_showcase.test.ts`](src/_showcase.test.ts) walks through every example below as a runnable, type checked test file. Open it
 > in an editor with twoslash query support (e.g. VS Code with the `orta.vscode-twoslash-queries` extension) to see every inferred type live.
 
 `TSschema` currently exports type-only utilities for deep type inference from a JSON schema, all imported from `@ofzza/tsschema`. They work off of a

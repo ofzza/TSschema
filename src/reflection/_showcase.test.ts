@@ -2,7 +2,7 @@
  * Showcase of the internal runtime reflection module entry (`src/reflection/index.ts`). Never public: meant for understanding the inner workings of the
  * library before changing them (see CONTRIBUTE.md).
  *
- * For now the module entry only re-exports the JSON schema fragment reflections, showcased in depth in `./JSONSchema/showcase.test.ts`. The TSSchema*
+ * For now the module entry only re-exports the JSON schema fragment reflections, showcased in depth in `./JSONSchema/_showcase.test.ts`. The TSSchema*
  * reflection classes, which will wrap them as the public runtime reflection API, will be showcased here once they exist.
  *
  * - Hover any `// ^?` comment in an editor with twoslash query support (VS Code: the recommended `orta.vscode-twoslash-queries` extension) to see the

@@ -8,15 +8,15 @@ Guidance for coding agents when working in this repository.
 
 Concrete triggers:
 
-| A change that ...                                         | ... requires updating                                                             |
-| --------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| adds, removes or renames an export                        | `README.md` `# Usage` section, `src/showcase.test.ts`, and [Exports](#exports)    |
-| changes an exported type's or function's semantics        | `README.md` `# Usage` section, `src/showcase.test.ts`, and any example showing it |
-| changes what an internal layer does or how it is used     | that layer's internal `showcase.test.ts` (see [Layout](#layout))                  |
-| adds or changes an npm script, Vitest project or tsconfig | [Commands](#commands) / [Testing](#testing), and `# Development` in `README.md`   |
-| adds a source directory under `src/`                      | [Layout](#layout) below                                                           |
-| establishes a new convention, or hits a new gotcha        | [Code style](#code-style) / [Gotchas and known issues](#gotchas-and-known-issues) |
-| resolves one of the known issues listed below             | remove it from [Gotchas and known issues](#gotchas-and-known-issues)              |
+| A change that ...                                         | ... requires updating                                                              |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| adds, removes or renames an export                        | `README.md` `# Usage` section, `src/_showcase.test.ts`, and [Exports](#exports)    |
+| changes an exported type's or function's semantics        | `README.md` `# Usage` section, `src/_showcase.test.ts`, and any example showing it |
+| changes what an internal layer does or how it is used     | that layer's internal `_showcase.test.ts` (see [Layout](#layout))                  |
+| adds or changes an npm script, Vitest project or tsconfig | [Commands](#commands) / [Testing](#testing), and `# Development` in `README.md`    |
+| adds a source directory under `src/`                      | [Layout](#layout) below                                                            |
+| establishes a new convention, or hits a new gotcha        | [Code style](#code-style) / [Gotchas and known issues](#gotchas-and-known-issues)  |
+| resolves one of the known issues listed below             | remove it from [Gotchas and known issues](#gotchas-and-known-issues)               |
 
 Any code sample added to `README.md` must be verified against `tsc` before being committed — see [Verifying README samples](#verifying-readme-samples).
 
@@ -44,7 +44,7 @@ TSschema — helps generate TS data models, provides TS utility types for deep t
 ```
 src/
   index.ts                 Barrel, re-exports src/schema/ (type-only)
-  showcase.test.ts         Public showcase, linked from the README: every export, with `// ^?` twoslash queries, plain expected-type comments,
+  _showcase.test.ts        Public showcase, linked from the README: every export, with `// ^?` twoslash queries, plain expected-type comments,
                            AssertTypeEquality checks and `// Breakpoint:` comments. Imports only the public entry points (./index.js, ./codegen/index.js)
   schema/
     index.ts               Public type surface: re-exports the three wrappers and defines TSSchemaName / TSSchemaType, which dispatch to the
@@ -63,9 +63,9 @@ src/
     TSSchemaProperty.ts    Wrapper and value type (TSSchemaPropertyType) utilities for a single property of a JSON schema model fragment, addressed by
                            name or by dot-separated path into nested models
     *.test.ts              Compile-time (and runtime) assertions for each of the above (including index.test.ts for the barrel's own types)
-    showcase.test.ts       Internal showcase of the wrapper internals (likewise src/schema/JSONSchema/, src/reflection/ and
+    _showcase.test.ts      Internal showcase of the wrapper internals (likewise src/schema/JSONSchema/, src/reflection/ and
                            src/reflection/JSONSchema/ each have one for their layer). Never public, not linked from the README - linked from
-                           CONTRIBUTE.md as reading before changing the library. Same conventions as src/showcase.test.ts, importing internals
+                           CONTRIBUTE.md as reading before changing the library. Same conventions as src/_showcase.test.ts, importing internals
   reflection/              Runtime reflection of JSON schemas. INTERNAL: not re-exported from src/index.ts, and no `exports` subpath
     index.ts               Module barrel, re-exporting ./JSONSchema/ until the TSSchema* reflection classes wrapping it are built here
     JSONSchema/            Runtime mirror of src/schema/JSONSchema/: one file per fragment kind, each with a `*.test.ts` beside it
@@ -225,8 +225,8 @@ Enforced by `ci:prettier` and `ci:eslint`, both of which only look at `src` — 
 - **Codegen output must stay deterministic** (key order as in the JSON, `\n` line endings, no timestamps) — `--check` and the fixture freshness test compare file contents byte for byte. Every generated file starts with `// Generated by TSschema`, which `generate` requires before it overwrites an existing file.
 - **`module` / `types` mode names drop a doubled `schema` suffix.** A JSON file whose name (without `.json`) is `schema` or ends with `.schema` generates `<name>.ts`, any other `<name>.schema.ts` — so `schema.json` → `schema.ts`, `user.schema.json` → `user.schema.ts`. This lets `user.json` and `user.schema.json` collide, so `generate` collects every output path first and refuses (writing nothing) when two sources produce the same one; that also catches same-named files from different directories into one `--out-dir`.
 - The recommended VS Code extension set includes `orta.vscode-twoslash-queries`, which powers the `// ^?` type-inspection comments used in sibling repos.
-- **Showcases are tests like any other, and must stay current.** Every `showcase.test.ts` runs in the `unit` project, so its assertions keep it honest, but prose comments and the plain `// X: <type>` comments are not checked — update them with the code they describe.
-- **`src/showcase.test.ts` is the executable counterpart of the README `# Usage` section** (like the sibling `ts-std` repo's `src/readme.spec.ts`): its `describe` tree follows the Usage headings and it repeats their examples, asserted. It does not replace verifying the README samples themselves (see [Verifying README samples](#verifying-readme-samples)) — keep both in step. In it, each `type X = …;` is followed by a `//   ^?` line whose caret sits under the first character of `X` (twoslash queries break silently when misaligned), then a `// X: <type>` comment for editors without them, then an `AssertTypeEquality` `expect`; each runtime result goes into a named `const` followed by a `// Breakpoint:` comment.
+- **Showcases are tests like any other, and must stay current.** Every `_showcase.test.ts` (`_`-prefixed to mark it as private, just for show and never exported, and to sort it to the top of its directory) runs in the `unit` project, so its assertions keep it honest, but prose comments and the plain `// X: <type>` comments are not checked — update them with the code they describe.
+- **`src/_showcase.test.ts` is the executable counterpart of the README `# Usage` section** (like the sibling `ts-std` repo's `src/readme.spec.ts`): its `describe` tree follows the Usage headings and it repeats their examples, asserted. It does not replace verifying the README samples themselves (see [Verifying README samples](#verifying-readme-samples)) — keep both in step. In it, each `type X = …;` is followed by a `//   ^?` line whose caret sits under the first character of `X` (twoslash queries break silently when misaligned), then a `// X: <type>` comment for editors without them, then an `AssertTypeEquality` `expect`; each runtime result goes into a named `const` followed by a `// Breakpoint:` comment.
 
 ## Continuous integration
 
