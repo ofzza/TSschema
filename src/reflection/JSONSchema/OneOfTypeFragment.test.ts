@@ -23,7 +23,7 @@ describe('Reflection', () => {
       });
 
       it('Reflects each fragment of a one-of-types, in order', () => {
-        const kind = new JSONSchemaCollectionFragmentReflect(jsonSchema).fragment('AssessmentKind');
+        const kind = new JSONSchemaCollectionFragmentReflect(jsonSchema).$defs.AssessmentKind;
         expect(kind.map((reflection) => reflection.constructor)).toEqual([JSONSchemaPrimitiveTypeFragmentReflect, JSONSchemaOneOfTypeFragmentReflect]);
         const oneOf = kind[1];
         if (!(oneOf instanceof JSONSchemaOneOfTypeFragmentReflect)) throw new Error('Expected a one-of-types reflection');
@@ -35,9 +35,9 @@ describe('Reflection', () => {
 
       it('Infers the type of a one-of-types', () => {
         const collection = new JSONSchemaCollectionFragmentReflect({ $defs: { A: { oneOf: [{ type: 'string' }, { type: 'number' }] } } } as const);
-        const _a = collection.fragment('A')[0];
+        const _a = collection.$defs.A[0];
         expect(true satisfies AssertTypeEquality<typeof _a.Type, string | number>).toBe(true);
-        const _kind = new JSONSchemaCollectionFragmentReflect(jsonSchema).fragment('AssessmentKind')[1];
+        const _kind = new JSONSchemaCollectionFragmentReflect(jsonSchema).$defs.AssessmentKind[1];
         expect(true satisfies AssertTypeEquality<typeof _kind.Type, 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>).toBe(true);
       });
     });

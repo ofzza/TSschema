@@ -44,20 +44,20 @@ describe('Reflection', () => {
       });
 
       it('Reflects a model', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Person')[0];
+        const person = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0];
         expect(person).toBeInstanceOf(JSONSchemaModelFragmentReflect);
         expect(person.type).toBe('object');
         expect(true satisfies AssertTypeEquality<typeof person, JSONSchemaModelFragmentReflect<_Schema, 'Person', _Person>>).toBe(true);
       });
 
       it('Gets the names of all properties of a model', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Person')[0];
+        const person = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0];
         expect(person.names).toEqual(['name', 'age', 'mentor', 'anything']);
         expect(true satisfies AssertTypeEquality<typeof person.names, Array<'name' | 'age' | 'mentor' | 'anything'>>).toBe(true);
       });
 
       it('Reflects each property of a model, by property name', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Person')[0];
+        const person = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0];
         expect(person.properties.name[0]).toBeInstanceOf(JSONSchemaPrimitiveTypeFragmentReflect);
         expect(person.properties.name[0].type).toBe('string');
         expect(person.properties.mentor[0]).toBeInstanceOf(JSONSchemaReferenceFragmentReflect);
@@ -71,7 +71,7 @@ describe('Reflection', () => {
       });
 
       it('Reflects a boolean schema property with no reflections', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Person')[0];
+        const person = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0];
         expect(person.properties.anything).toEqual([]);
         expect(true satisfies AssertTypeEquality<(typeof person.properties)['anything'], never[]>).toBe(true);
       });
@@ -83,20 +83,20 @@ describe('Reflection', () => {
       });
 
       it('Gets the names of the required properties of a model, leaving out names the model does not define', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Person')[0];
+        const person = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0];
         expect(person.required).toEqual(['name', 'age']);
         expect(true satisfies AssertTypeEquality<typeof person.required, Array<'name' | 'age'>>).toBe(true);
       });
 
       it('Gets no required properties of a model with no required keyword', () => {
         const collection = new JSONSchemaCollectionFragmentReflect({ $defs: { A: { type: 'object', properties: { a: { type: 'string' } } } } } as const);
-        const a = collection.fragment('A')[0];
+        const a = collection.$defs.A[0];
         expect(a.required).toEqual([]);
         expect(true satisfies AssertTypeEquality<typeof a.required, never[]>).toBe(true);
       });
 
       it('Infers the type of a model', () => {
-        const _assessment = new JSONSchemaCollectionFragmentReflect(jsonSchema).fragment('Assessment')[0];
+        const _assessment = new JSONSchemaCollectionFragmentReflect(jsonSchema).$defs.Assessment[0];
         type Assessment = typeof _assessment.Type;
         //   ^?
         expect(true satisfies AssertTypeEquality<Assessment['weight'], number>).toBe(true);

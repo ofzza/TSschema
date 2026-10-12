@@ -33,11 +33,11 @@ export class JSONSchemaNotTypeFragmentReflect<
 
   /**
    * Reflects a JSON schema not-type definition
-   * @param _schema Reflection of the JSON schema collection the fragment belongs to
+   * @param _schema Reflection of the JSON schema collection the fragment belongs to, or `undefined` if the reflected schema has no `$defs`
    * @param _fragmentName Name of the fragment within the collection, or `undefined` for a nested (or root) fragment
    * @param _fragment JSON fragment to reflect on
    */
-  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment) {
+  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema> | undefined, _fragmentName: TName, _fragment: TFragment) {
     super(_schema, _fragmentName, _fragment);
     this.not = createJSONSchemaNestedFragmentReflections(_schema, _fragment['not']) as JSONSchemaNestedFragmentReflections<TSchema, TFragment['not']>;
   }

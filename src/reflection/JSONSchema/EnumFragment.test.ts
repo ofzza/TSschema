@@ -20,14 +20,14 @@ describe('Reflection', () => {
       });
 
       it('Reflects the enumerated values of an enum', () => {
-        const enumeration = new JSONSchemaCollectionFragmentReflect(enumJsonSchema).fragment('Enum')[0];
+        const enumeration = new JSONSchemaCollectionFragmentReflect(enumJsonSchema).$defs.Enum[0];
         expect(enumeration).toBeInstanceOf(JSONSchemaEnumFragmentReflect);
         expect(enumeration.enum).toEqual(['Aaa', 'Bbb', 'Ccc']);
         expect(true satisfies AssertTypeEquality<(typeof enumeration.enum)[number], 'Aaa' | 'Bbb' | 'Ccc'>).toBe(true);
       });
 
       it('Infers the type of an enum', () => {
-        const _enumeration = new JSONSchemaCollectionFragmentReflect(enumJsonSchema).fragment('Enum')[0];
+        const _enumeration = new JSONSchemaCollectionFragmentReflect(enumJsonSchema).$defs.Enum[0];
         expect(true satisfies AssertTypeEquality<typeof _enumeration.Type, 'Aaa' | 'Bbb' | 'Ccc'>).toBe(true);
       });
     });

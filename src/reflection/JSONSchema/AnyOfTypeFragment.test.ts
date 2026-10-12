@@ -37,7 +37,7 @@ describe('Reflection', () => {
       });
 
       it('Reflects each fragment of an any-of-types, in order', () => {
-        const maybeNamed = new JSONSchemaCollectionFragmentReflect(_schema).fragment('MaybeNamed')[0];
+        const maybeNamed = new JSONSchemaCollectionFragmentReflect(_schema).$defs.MaybeNamed[0];
         expect(maybeNamed).toBeInstanceOf(JSONSchemaAnyOfTypeFragmentReflect);
         expect(maybeNamed.implicit).toBe(false);
         expect(maybeNamed.anyOf[0][0]).toBeInstanceOf(JSONSchemaReferenceFragmentReflect);
@@ -54,7 +54,7 @@ describe('Reflection', () => {
       });
 
       it('Reflects the branches of a type array naming several groups of type names as an implicit any-of-types', () => {
-        const nullable = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Nullable')[0];
+        const nullable = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Nullable[0];
         expect(nullable).toBeInstanceOf(JSONSchemaAnyOfTypeFragmentReflect);
         expect(nullable.implicit).toBe(true);
         expect(nullable.fragment).toEqual({
@@ -70,9 +70,9 @@ describe('Reflection', () => {
 
       it('Infers the type of an any-of-types', () => {
         const collection = new JSONSchemaCollectionFragmentReflect(_schema);
-        const _maybeNamed = collection.fragment('MaybeNamed')[0];
+        const _maybeNamed = collection.$defs.MaybeNamed[0];
         expect(true satisfies AssertTypeEquality<typeof _maybeNamed.Type, { name: string } | null>).toBe(true);
-        const _nullable = collection.fragment('Nullable')[0];
+        const _nullable = collection.$defs.Nullable[0];
         expect(true satisfies AssertTypeEquality<typeof _nullable.Type, { name: string } | null>).toBe(true);
       });
     });

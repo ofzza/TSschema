@@ -21,7 +21,7 @@ describe('Reflection', () => {
       });
 
       it('Reflects the constant value of a const', () => {
-        const constant = new JSONSchemaCollectionFragmentReflect(constJsonSchema).fragment('Const')[0];
+        const constant = new JSONSchemaCollectionFragmentReflect(constJsonSchema).$defs.Const[0];
         expect(constant).toBeInstanceOf(JSONSchemaConstFragmentReflect);
         expect(constant.const).toBe(123);
         expect(true satisfies AssertTypeEquality<typeof constant.const, 123>).toBe(true);
@@ -29,13 +29,13 @@ describe('Reflection', () => {
 
       it('Reflects an object constant as declared', () => {
         const collection = new JSONSchemaCollectionFragmentReflect({ $defs: { Point: { const: { x: 1, y: 2 } } } } as const);
-        const point = collection.fragment('Point')[0];
+        const point = collection.$defs.Point[0];
         expect(point.const).toEqual({ x: 1, y: 2 });
         expect(true satisfies AssertTypeEquality<typeof point.const, { readonly x: 1; readonly y: 2 }>).toBe(true);
       });
 
       it('Infers the type of a const', () => {
-        const _constant = new JSONSchemaCollectionFragmentReflect(constJsonSchema).fragment('Const')[0];
+        const _constant = new JSONSchemaCollectionFragmentReflect(constJsonSchema).$defs.Const[0];
         expect(true satisfies AssertTypeEquality<typeof _constant.Type, 123>).toBe(true);
       });
     });

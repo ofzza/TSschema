@@ -17,30 +17,30 @@ describe('Reflection', () => {
   describe('JSONSchema fragment reflections', () => {
     describe('Any fragment', () => {
       it('Reflects any fragment with a common base class', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Person')[0];
+        const person = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0];
         expect(person).toBeInstanceOf(JSONSchemaFragmentReflect);
       });
 
       it('Gets the name of a fragment of the collection', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Person')[0];
+        const person = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0];
         expect(person.name).toBe('Person');
         expect(true satisfies AssertTypeEquality<typeof person.name, 'Person'>).toBe(true);
       });
 
       it('Gets no name for a nested fragment', () => {
-        const name = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Person')[0].properties.name[0];
+        const name = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0].properties.name[0];
         expect(name.name).toBe(undefined);
         expect(true satisfies AssertTypeEquality<typeof name.name, undefined>).toBe(true);
       });
 
       it('Gets the reflected JSON fragment', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Person')[0];
+        const person = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0];
         expect(person.fragment).toBe(_schema.$defs.Person);
         expect(true satisfies AssertTypeEquality<typeof person.fragment, _Schema['$defs']['Person']>).toBe(true);
       });
 
       it('Infers the type of the reflected fragment, but holds no value for it', () => {
-        const person = new JSONSchemaCollectionFragmentReflect(_schema).fragment('Person')[0];
+        const person = new JSONSchemaCollectionFragmentReflect(_schema).$defs.Person[0];
         type Person = typeof person.Type;
         //   ^?
         expect(true satisfies AssertTypeEquality<Person, JSONSchemaFragmentType<_Schema['$defs']['Person'], _Schema>>).toBe(true);

@@ -2,14 +2,17 @@
  * Runtime reflection of JSON schema fragments, mirroring the type utilities in `src/schema/JSONSchema/`: a reflection class per fragment kind, each
  * parsing its fragment's contents on construction, and a router reflecting a fragment of any kind by every reflection class matching it.
  *
- * Reflection starts from a collection (`JSONSchemaCollectionFragmentReflect`), which reflects each of its fragments by name, and against which every
- * `$ref` is resolved.
+ * Reflection starts from `reflectJSONSchema`, which reflects any schema as an array of reflections, one per fragment kind its root matches. A schema
+ * with `$defs` is reflected as a collection (`JSONSchemaCollectionFragmentReflect`) among them, which reflects each of its fragments by name, and against
+ * which every `$ref` is resolved.
  */
 
 export { JSONSchemaPrimitiveTypeNames, isJSONSchemaPrimitiveTypeName, isJSONSchemaObject } from './JSONSchema7.js';
 export { JSONSchemaCollectionFragmentReflect, type JSONSchemaCollectionReflectedFragment } from './CollectionFragment.js';
-export { JSONSchemaFragmentReflect, getJSONSchemaFragmentTypeBranches } from './Fragment.js';
+export { JSONSchemaFragmentReflect, getJSONSchemaFragmentTypeBranches, type JSONSchemaCollectionRootFragment } from './Fragment.js';
 export {
+  reflectJSONSchema,
+  type JSONSchemaReflection,
   createJSONSchemaFragmentReflections,
   createJSONSchemaNestedFragmentReflections,
   type JSONSchemaFragmentReflection,

@@ -39,12 +39,12 @@ export class JSONSchemaAnyOfTypeFragmentReflect<
 
   /**
    * Reflects a JSON schema any-of-types definition
-   * @param _schema Reflection of the JSON schema collection the fragment belongs to
+   * @param _schema Reflection of the JSON schema collection the fragment belongs to, or `undefined` if the reflected schema has no `$defs`
    * @param _fragmentName Name of the fragment within the collection, or `undefined` for a nested (or root) fragment
    * @param _fragment JSON fragment to reflect on
    * @param implicit Whether the fragment is an implicit `anyOf`, generated from the branches of a `type` array
    */
-  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema>, _fragmentName: TName, _fragment: TFragment, implicit = false) {
+  public constructor(_schema: JSONSchemaCollectionFragmentReflect<TSchema> | undefined, _fragmentName: TName, _fragment: TFragment, implicit = false) {
     super(_schema, _fragmentName, _fragment);
     this.anyOf = _fragment['anyOf'].map((fragment) => createJSONSchemaNestedFragmentReflections(_schema, fragment)) as JSONSchemaNestedFragmentsReflections<
       TSchema,
