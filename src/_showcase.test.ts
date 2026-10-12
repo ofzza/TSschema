@@ -1,5 +1,6 @@
 /**
- * Showcase of everything TSschema exports, as a runnable test file.
+ * Showcase of everything TSschema exports, as a runnable test file, in the three sections of the README's Usage: runtime reflection, code generation
+ * (schemas from JSON files) and type inference.
  *
  * - Hover any `// ^?` comment in an editor with twoslash query support (VS Code: the recommended `orta.vscode-twoslash-queries` extension) to see the
  *   type inferred for the identifier above it, live. Every `// ^?` is followed by a plain comment stating the same type, for editors without it.
@@ -13,14 +14,22 @@
 
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality } from '@ofzza/tsstd';
-import type { TSSchemaCollection, TSSchemaFragment, TSSchemaProperty, TSSchemaName, TSSchemaType, TSSchemaJSONCollection } from './index.js';
+import {
+  reflect,
+  type TSSchemaCollection,
+  type TSSchemaFragment,
+  type TSSchemaProperty,
+  type TSSchemaName,
+  type TSSchemaType,
+  type TSSchemaJSONCollection,
+} from './index.js';
 import { generateFiles } from './codegen/index.js';
 
 // #region The schema
 
 /**
  * The schema every example below works with: a collection defining its fragments in `$defs`, which reference one another as `#/$defs/<name>`. It is
- * declared `as const`, so its literal types are kept for inference (for a schema kept in a `.json` file, see "Schemas from JSON files" below).
+ * declared `as const`, so its literal types are kept for inference (for a schema kept in a `.json` file, see "Code generation" below).
  */
 const schema = {
   $defs: {
@@ -41,10 +50,133 @@ type Schema = typeof schema;
 
 // #endregion
 
-describe('Showcase', () => {
+describe('Runtime reflection', () => {
+  describe('reflect', () => {
+    it('Reflects a schema, and the names of its definitions', () => {
+      const root = reflect(schema);
+      const definitionNames = root.definitionNames;
+      // Breakpoint: inspect `root`, the reflection of the schema's root, and its `collection`, the facet holding every definition
+      expect(definitionNames).toEqual(['Person', 'Role']);
+      type DefinitionName = (typeof definitionNames)[number];
+      //   ^?
+      // DefinitionName: 'Person' | 'Role'
+      expect(true satisfies AssertTypeEquality<DefinitionName, 'Person' | 'Role'>).toBe(true);
+    });
+  });
+
+  describe('Definitions', () => {
+    it('Reflects a definition by name, typed by its value type', () => {
+      const root = reflect(schema);
+      const person = root.getDefinition('Person');
+      // Breakpoint: inspect `person`, and the `facets` its definition was parsed into
+      expect(person.name).toBe('Person');
+      type PersonValue = typeof person.Type;
+      //   ^?
+      // PersonValue: { name: string; age: number; role: 'student' | 'teacher'; mentor?: PersonValue | null }
+      expect(true satisfies AssertTypeEquality<PersonValue, TSSchemaType<TSSchemaFragment<Schema, 'Person'>>>).toBe(true);
+
+      // @ts-expect-error This will fail at compile time: the collection has no 'Teacher' definition
+      root.getDefinition('Teacher');
+    });
+  });
+
+  describe('Properties and paths', () => {
+    it('Reflects a property by name, with its parent and whether it is required', () => {
+      const person = reflect(schema).getDefinition('Person');
+      const propertyNames = person.propertyNames;
+      expect(propertyNames).toEqual(['name', 'age', 'role', 'mentor']);
+      const personAge = person.getProperty('age');
+      // Breakpoint: inspect `personAge`, its `parent` (the very same `person`) and its `facets`
+      expect(personAge.name).toBe('age');
+      expect(personAge.parent).toBe(person);
+      expect(personAge.required).toBe(true);
+      type AgeValue = typeof personAge.Type;
+      //   ^?
+      // AgeValue: number
+      expect(true satisfies AssertTypeEquality<AgeValue, number>).toBe(true);
+
+      // @ts-expect-error This will fail at compile time: Person has no 'email' property
+      person.getProperty('email');
+    });
+
+    it('Reflects a property of a nested model by a dot-separated path', () => {
+      const person = reflect(schema).getDefinition('Person');
+      // The path goes through the nullable `mentor` reference (an `anyOf` of a `$ref` to Person and `null`)
+      const mentorAge = person.getProperty('mentor.age');
+      const mentor = mentorAge.parent;
+      // Breakpoint: inspect `mentorAge`, and its `parent`: the `mentor` property, whose own `parent` is `person`
+      expect([mentor.name, mentor.required, mentor.parent]).toEqual(['mentor', false, person]);
+      type MentorAgeValue = typeof mentorAge.Type;
+      //   ^?
+      // MentorAgeValue: number
+      expect(true satisfies AssertTypeEquality<MentorAgeValue, number>).toBe(true);
+
+      // Only a path's first segment is checked at compile time; a path which leads to no property reflects `undefined`
+      const nameLength = person.getProperty('name.length');
+      // Breakpoint: inspect `nameLength`, undefined as `name` is not a model
+      expect(nameLength).toBe(undefined);
+      type NameLength = typeof nameLength;
+      //   ^?
+      // NameLength: undefined
+      expect(true satisfies AssertTypeEquality<NameLength, undefined>).toBe(true);
+    });
+  });
+
+  describe('Coming next', () => {
+    it.todo('Describes a reflected type at runtime');
+    it.todo('Validates values against a reflected schema');
+    it.todo('Supports the readOnly and writeOnly keywords');
+  });
+});
+
+describe('Code generation: Schemas from JSON files', () => {
+  describe('Schemas declared as const', () => {
+    it('Checks a schema declared as const, without losing its literal types', () => {
+      // Apply `satisfies` to the declared constant rather than to the literal, so keywords these types do not know are not rejected as excess properties
+      const people = { $defs: { Person: { type: 'object', properties: { name: { type: 'string' } } } } } as const;
+      const checkedPeople = people satisfies TSSchemaJSONCollection;
+      // Breakpoint: inspect `checkedPeople`, the very same object as `people`
+      expect(checkedPeople).toBe(people);
+      expect(true satisfies AssertTypeEquality<TSSchemaType<TSSchemaFragment<typeof checkedPeople, 'Person'>>, { name?: string }>).toBe(true);
+
+      const invalid = { $defs: { Person: { type: 'text' } } } as const;
+      // @ts-expect-error This will fail at compile time: 'text' is not a JSON schema type
+      const _checkedInvalid = invalid satisfies TSSchemaJSONCollection;
+    });
+  });
+
+  describe('Programmatic use', () => {
+    it('Generates a sidecar declaration file, keeping the literal types of a JSON schema file', () => {
+      // `generateFiles` is the pure core of the `tsschema` command (generating the very same files): JSON in, files out, no file system access
+      const files = generateFiles('src/people.json', schema);
+      // Breakpoint: inspect `files`, a single `src/people.d.json.ts` declaring the JSON file's content with its literal types
+      expect(files.map((file) => file.path)).toEqual(['src/people.d.json.ts']);
+      expect(files[0].content.startsWith('// Generated by TSschema')).toBe(true);
+    });
+
+    it('Generates model types for every fragment of a collection', () => {
+      const files = generateFiles('src/people.json', schema, { models: true });
+      // Breakpoint: inspect `files`, now also `src/people.models.ts`, with a `Models` map type and a `Person` / `Role` type alias each
+      expect(files.map((file) => file.path)).toEqual(['src/people.d.json.ts', 'src/people.models.ts']);
+      expect(files[1].content).toContain('export type Person = ');
+    });
+
+    it('Generates an as const module, or a types-only module, instead', () => {
+      const moduleFiles = generateFiles('src/people.json', schema, { mode: 'module' });
+      // Breakpoint: inspect `moduleFiles`, a `src/people.schema.ts` exporting the schema `as const`, checked with `satisfies`
+      expect(moduleFiles[0].content).toContain('as const');
+      const typesFiles = generateFiles('src/people.json', schema, { mode: 'types', importFrom: './index.js' });
+      // Breakpoint: inspect `typesFiles`, a `src/people.schema.ts` exporting only the schema's type, as `Schema`
+      expect(typesFiles[0].path).toBe('src/people.schema.ts');
+      expect(typesFiles[0].content).toContain('export type Schema');
+    });
+  });
+});
+
+describe('Type inference', () => {
   describe('TSSchemaCollection', () => {
     it('Wraps a collection', () => {
-      // A wrapped collection is the context every other wrapper carries along, so that `$ref`s can be resolved later
+      // A wrapped collection is what every other wrapper carries along, so that `$ref`s can be resolved later
       type People = TSSchemaCollection<Schema>;
       //   ^?
       // People: { __collection: Schema }
@@ -58,7 +190,7 @@ describe('Showcase', () => {
       //   ^?
       // Person: a wrapper of Schema['$defs']['Person'], remembering its collection and its name
       expect(true satisfies AssertTypeEquality<Person['__fragment'], Schema['$defs']['Person']>).toBe(true);
-      expect(true satisfies AssertTypeEquality<Person['__fragmentName'], 'Person'>).toBe(true);
+      expect(true satisfies AssertTypeEquality<Person['__definitionName'], 'Person'>).toBe(true);
     });
 
     it('Wraps several fragments, or every fragment, as a union of wrappers', () => {
@@ -72,7 +204,7 @@ describe('Showcase', () => {
       expect(true satisfies AssertTypeEquality<AnyFragment, PersonOrRole>).toBe(true);
     });
 
-    it('Checks fragment names against the collection', () => {
+    it('Checks definition names against the collection', () => {
       // @ts-expect-error This will fail at compile time: the collection has no 'Teacher' fragment
       type _Teacher = TSSchemaFragment<Schema, 'Teacher'>;
     });
@@ -131,10 +263,10 @@ describe('Showcase', () => {
   describe('TSSchemaName', () => {
     it('Infers the names addressable within a collection, a model or a wrapper', () => {
       // Direct names only, never dot-separated paths: a recursive schema (Person.mentor -> Person) has infinitely many of them
-      type FragmentName = TSSchemaName<Schema>;
+      type DefinitionName = TSSchemaName<Schema>;
       //   ^?
-      // FragmentName: 'Person' | 'Role'
-      expect(true satisfies AssertTypeEquality<FragmentName, 'Person' | 'Role'>).toBe(true);
+      // DefinitionName: 'Person' | 'Role'
+      expect(true satisfies AssertTypeEquality<DefinitionName, 'Person' | 'Role'>).toBe(true);
       type PropertyName = TSSchemaName<TSSchemaFragment<Schema, 'Person'>>;
       //   ^?
       // PropertyName: 'name' | 'age' | 'role' | 'mentor'
@@ -161,9 +293,9 @@ describe('Showcase', () => {
       // `mentor` is not listed in `required`, so it is optional
       expect(true satisfies AssertTypeEquality<Pick<PersonType, 'mentor'>, { mentor?: PersonType | null }>).toBe(true);
 
-      const person: PersonType = { name: 'Ada', age: 36, role: 'teacher', mentor: { name: 'Charles', age: 45, role: 'teacher' } };
-      // Breakpoint: inspect `person`, a value checked against the inferred type
-      expect(person.mentor?.name).toBe('Charles');
+      const ada: PersonType = { name: 'Ada', age: 36, role: 'teacher', mentor: { name: 'Charles', age: 45, role: 'teacher' } };
+      // Breakpoint: inspect `ada`, a value checked against the inferred type
+      expect(ada.mentor?.name).toBe('Charles');
 
       // @ts-expect-error This will fail at compile time: `name` is listed in `required`
       const _nameless: PersonType = { age: 36, role: 'teacher' };
@@ -196,48 +328,6 @@ describe('Showcase', () => {
       //   ^?
       // ResolvedRoleType: 'student' | 'teacher'
       expect(true satisfies AssertTypeEquality<ResolvedRoleType, 'student' | 'teacher'>).toBe(true);
-    });
-  });
-
-  describe('TSSchemaJSONSchema and TSSchemaJSONCollection', () => {
-    it('Checks a schema declared as const, without losing its literal types', () => {
-      // Apply `satisfies` to the declared constant rather than to the literal, so keywords these types do not know are not rejected as excess properties
-      const people = { $defs: { Person: { type: 'object', properties: { name: { type: 'string' } } } } } as const;
-      const checkedPeople = people satisfies TSSchemaJSONCollection;
-      // Breakpoint: inspect `checkedPeople`, the very same object as `people`
-      expect(checkedPeople).toBe(people);
-      expect(true satisfies AssertTypeEquality<TSSchemaType<TSSchemaFragment<typeof checkedPeople, 'Person'>>, { name?: string }>).toBe(true);
-
-      const invalid = { $defs: { Person: { type: 'text' } } } as const;
-      // @ts-expect-error This will fail at compile time: 'text' is not a JSON schema type
-      const _checkedInvalid = invalid satisfies TSSchemaJSONCollection;
-    });
-  });
-
-  describe('Schemas from JSON files', () => {
-    it('Generates a sidecar declaration file, keeping the literal types of a JSON schema file', () => {
-      // `generateFiles` is the pure core of the `tsschema` command: JSON in, files out, no file system access
-      const files = generateFiles('src/people.json', schema);
-      // Breakpoint: inspect `files`, a single `src/people.d.json.ts` declaring the JSON file's content with its literal types
-      expect(files.map((file) => file.path)).toEqual(['src/people.d.json.ts']);
-      expect(files[0].content.startsWith('// Generated by TSschema')).toBe(true);
-    });
-
-    it('Generates model types for every fragment of a collection', () => {
-      const files = generateFiles('src/people.json', schema, { models: true });
-      // Breakpoint: inspect `files`, now also `src/people.models.ts`, with a `Models` map type and a `Person` / `Role` type alias each
-      expect(files.map((file) => file.path)).toEqual(['src/people.d.json.ts', 'src/people.models.ts']);
-      expect(files[1].content).toContain('export type Person = ');
-    });
-
-    it('Generates an as const module, or a types-only module, instead', () => {
-      const moduleFiles = generateFiles('src/people.json', schema, { mode: 'module' });
-      // Breakpoint: inspect `moduleFiles`, a `src/people.schema.ts` exporting the schema `as const`, checked with `satisfies`
-      expect(moduleFiles[0].content).toContain('as const');
-      const typesFiles = generateFiles('src/people.json', schema, { mode: 'types', importFrom: './index.js' });
-      // Breakpoint: inspect `typesFiles`, a `src/people.schema.ts` exporting only the schema's type, as `Schema`
-      expect(typesFiles[0].path).toBe('src/people.schema.ts');
-      expect(typesFiles[0].content).toContain('export type Schema');
     });
   });
 });

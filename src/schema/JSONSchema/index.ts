@@ -9,7 +9,7 @@ export type { JSONSchema7, JSONSchemaPrimitiveTypeName, JSONSchemaPrimitiveType,
 export type {
   JSONSchemaFragmentIsCollection,
   JSONSchemaCollection,
-  JSONSchemaFragmentName,
+  JSONSchemaDefinitionName,
   JSONSchemaFragmentIsNotCollection,
   JSONSchemaNotCollectionFragment,
 } from './CollectionFragment.js';

@@ -5,7 +5,7 @@
  * that any `$ref` between fragments of the collection can later be resolved when inferring their value types.
  */
 
-import type { JSONSchemaCollection, JSONSchemaFragmentName } from './JSONSchema/index.js';
+import type { JSONSchemaCollection, JSONSchemaDefinitionName } from './JSONSchema/index.js';
 
 /**
  * Wrapper type for a JSON schema collection, holding on to the collection as `__collection`.
@@ -24,11 +24,11 @@ export type UnwrapJSONSchemaCollectionWrapper<T extends JSONSchemaCollection | J
   : T;
 
 /**
- * Gets the names of all fragments defined in a JSON schema collection or a JSON schema collection wrapper. As every wrapper is also a collection wrapper,
- * a fragment or model property wrapper infers the fragment names of its parent collection. The default, unspecified collection infers `string | number`.
+ * Gets the names of all definitions in a JSON schema collection or a JSON schema collection wrapper. As every wrapper is also a collection wrapper,
+ * a fragment or model property wrapper infers the definition names of its parent collection. The default, unspecified collection infers `string | number`.
  */
-export type TSSchemaFragmentName<T extends JSONSchemaCollection | JSONSchemaCollectionWrapper = JSONSchemaCollection> =
-  UnwrapJSONSchemaCollectionWrapper<T> extends infer C extends JSONSchemaCollection ? JSONSchemaFragmentName<C> : JSONSchemaFragmentName;
+export type TSSchemaDefinitionName<T extends JSONSchemaCollection | JSONSchemaCollectionWrapper = JSONSchemaCollection> =
+  UnwrapJSONSchemaCollectionWrapper<T> extends infer C extends JSONSchemaCollection ? JSONSchemaDefinitionName<C> : JSONSchemaDefinitionName;
 
 /**
  * Wraps a JSON schema collection, so that its fragments can be addressed by name and their value types inferred with every `$ref` between them resolved.

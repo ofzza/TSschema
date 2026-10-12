@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/tsstd';
-import type { JSONSchemaCollection, JSONSchemaFragmentName } from './JSONSchema/index.js';
-import type { TSSchemaCollection, TSSchemaFragmentName, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection.js';
+import type { JSONSchemaCollection, JSONSchemaDefinitionName } from './JSONSchema/index.js';
+import type { TSSchemaCollection, TSSchemaDefinitionName, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection.js';
 import type { TSSchemaFragment } from './TSSchemaFragment.js';
 import type { TSSchemaProperty } from './TSSchemaProperty.js';
 
@@ -44,9 +44,9 @@ describe('TSSchemaCollection', () => {
     });
   });
 
-  describe('TSSchemaFragmentName', () => {
-    it('Gets the fragment names of a collection or a collection wrapper', () => {
-      type SchemaFragmentName = TSSchemaFragmentName<TSSchemaCollection<JSONSchemaFixtureCollection>>;
+  describe('TSSchemaDefinitionName', () => {
+    it('Gets the definition names of a collection or a collection wrapper', () => {
+      type SchemaFragmentName = TSSchemaDefinitionName<TSSchemaCollection<JSONSchemaFixtureCollection>>;
       //   ^?
       expect(
         true satisfies AssertTypeEquality<
@@ -80,20 +80,20 @@ describe('TSSchemaCollection', () => {
           | 'Term'
         >,
       ).toBe(true);
-      expect(true satisfies AssertTypeEquality<TSSchemaFragmentName<JSONSchemaFixtureCollection>, SchemaFragmentName>).toBe(true);
-      expect(true satisfies AssertTypeEquality<SchemaFragmentName, JSONSchemaFragmentName<JSONSchemaFixtureCollection>>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaDefinitionName<JSONSchemaFixtureCollection>, SchemaFragmentName>).toBe(true);
+      expect(true satisfies AssertTypeEquality<SchemaFragmentName, JSONSchemaDefinitionName<JSONSchemaFixtureCollection>>).toBe(true);
     });
 
-    it('Gets the fragment names of the parent collection of a fragment or model property wrapper', () => {
+    it('Gets the definition names of the parent collection of a fragment or model property wrapper', () => {
       type FragmentWrapper = TSSchemaFragment<JSONSchemaFixtureCollection, 'Assessment'>;
       type PropertyWrapper = TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'title'>;
-      expect(true satisfies AssertTypeEquality<TSSchemaFragmentName<FragmentWrapper>, TSSchemaFragmentName<JSONSchemaFixtureCollection>>).toBe(true);
-      expect(true satisfies AssertTypeEquality<TSSchemaFragmentName<PropertyWrapper>, TSSchemaFragmentName<JSONSchemaFixtureCollection>>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaDefinitionName<FragmentWrapper>, TSSchemaDefinitionName<JSONSchemaFixtureCollection>>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaDefinitionName<PropertyWrapper>, TSSchemaDefinitionName<JSONSchemaFixtureCollection>>).toBe(true);
     });
 
-    it('Gets string | number fragment names from the default collection', () => {
-      expect(true satisfies AssertTypeEquality<TSSchemaFragmentName, string | number>).toBe(true);
-      expect(true satisfies AssertTypeEquality<TSSchemaFragmentName<TSSchemaCollection>, string | number>).toBe(true);
+    it('Gets string | number definition names from the default collection', () => {
+      expect(true satisfies AssertTypeEquality<TSSchemaDefinitionName, string | number>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TSSchemaDefinitionName<TSSchemaCollection>, string | number>).toBe(true);
     });
   });
 });

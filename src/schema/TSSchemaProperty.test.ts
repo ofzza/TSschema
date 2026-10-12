@@ -63,7 +63,7 @@ describe('TSSchemaProperty', () => {
       expect(true satisfies AssertTypeEquality<TitleWrapper['__property'], JSONSchemaAssessmentTitleProperty>).toBe(true);
       expect(true satisfies AssertTypeEquality<TitleWrapper['__propertyName'], string | number>).toBe(true);
       expect(true satisfies AssertTypeEquality<TitleWrapper['__fragment'], JSONSchemaModelFragment>).toBe(true);
-      expect(true satisfies AssertTypeEquality<TitleWrapper['__fragmentName'], string | number>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TitleWrapper['__definitionName'], string | number>).toBe(true);
       expect(true satisfies AssertTypeEquality<TitleWrapper['__collection'], JSONSchemaCollection>).toBe(true);
     });
 
@@ -73,7 +73,7 @@ describe('TSSchemaProperty', () => {
       expect(true satisfies AssertTypeEquality<TitleWrapper['__property'], JSONSchemaAssessmentTitleProperty>).toBe(true);
       expect(true satisfies AssertTypeEquality<TitleWrapper['__propertyName'], 'title'>).toBe(true);
       expect(true satisfies AssertTypeEquality<TitleWrapper['__fragment'], JSONSchemaAssessmentModel>).toBe(true);
-      expect(true satisfies AssertTypeEquality<TitleWrapper['__fragmentName'], string | number>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TitleWrapper['__definitionName'], string | number>).toBe(true);
       expect(true satisfies AssertTypeEquality<TitleWrapper['__collection'], JSONSchemaCollection>).toBe(true);
     });
 
@@ -87,7 +87,7 @@ describe('TSSchemaProperty', () => {
       expect(true satisfies AssertTypeEquality<CollectionTitleWrapper['__property'], JSONSchemaAssessmentTitleProperty>).toBe(true);
       expect(true satisfies AssertTypeEquality<CollectionTitleWrapper['__propertyName'], 'title'>).toBe(true);
       expect(true satisfies AssertTypeEquality<CollectionTitleWrapper['__fragment'], JSONSchemaAssessmentModel>).toBe(true);
-      expect(true satisfies AssertTypeEquality<CollectionTitleWrapper['__fragmentName'], 'Assessment'>).toBe(true);
+      expect(true satisfies AssertTypeEquality<CollectionTitleWrapper['__definitionName'], 'Assessment'>).toBe(true);
       expect(true satisfies AssertTypeEquality<CollectionTitleWrapper['__collection'], JSONSchemaFixtureCollection>).toBe(true);
     });
 
@@ -97,7 +97,7 @@ describe('TSSchemaProperty', () => {
       expect(true satisfies AssertTypeEquality<TitleWrapper['__property'], JSONSchemaAssessmentTitleProperty>).toBe(true);
       expect(true satisfies AssertTypeEquality<TitleWrapper['__propertyName'], 'title'>).toBe(true);
       expect(true satisfies AssertTypeEquality<TitleWrapper['__fragment'], JSONSchemaAssessmentModel>).toBe(true);
-      expect(true satisfies AssertTypeEquality<TitleWrapper['__fragmentName'], 'Assessment'>).toBe(true);
+      expect(true satisfies AssertTypeEquality<TitleWrapper['__definitionName'], 'Assessment'>).toBe(true);
       expect(true satisfies AssertTypeEquality<TitleWrapper['__collection'], JSONSchemaFixtureCollection>).toBe(true);
 
       type CollectionWrapperTitleWrapper = TSSchemaProperty<TSSchemaCollection<JSONSchemaFixtureCollection>, 'Assessment', 'title'>;
@@ -141,10 +141,10 @@ describe('TSSchemaProperty', () => {
     it('Wraps every property of every model of a collection when no name is given', () => {
       type Wrappers = TSSchemaProperty<JSONSchemaFixtureCollection>;
       // Fragments which are not models (e.g. `AssessmentKind`) have no properties to wrap
-      expect(true satisfies AssertTypeEquality<Extract<Wrappers['__fragmentName'], 'AssessmentKind'>, never>).toBe(true);
+      expect(true satisfies AssertTypeEquality<Extract<Wrappers['__definitionName'], 'AssessmentKind'>, never>).toBe(true);
       expect(
         true satisfies AssertTypeEquality<
-          Extract<Wrappers, { __fragmentName: 'Assessment'; __propertyName: 'title' }>,
+          Extract<Wrappers, { __definitionName: 'Assessment'; __propertyName: 'title' }>,
           TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'title'>
         >,
       ).toBe(true);
@@ -192,7 +192,7 @@ describe('TSSchemaProperty', () => {
       expect(true satisfies AssertTypeEquality<NameWrapper['__property'], JSONSchemaFixtureCollection['$defs']['Class']['properties']['name']>).toBe(true);
       expect(true satisfies AssertTypeEquality<NameWrapper['__propertyName'], 'name'>).toBe(true);
       expect(true satisfies AssertTypeEquality<NameWrapper['__fragment'], JSONSchemaFixtureCollection['$defs']['Class']>).toBe(true);
-      expect(true satisfies AssertTypeEquality<NameWrapper['__fragmentName'], 'Class'>).toBe(true);
+      expect(true satisfies AssertTypeEquality<NameWrapper['__definitionName'], 'Class'>).toBe(true);
       expect(true satisfies AssertTypeEquality<NameWrapper['__collection'], JSONSchemaFixtureCollection>).toBe(true);
       expect(true satisfies AssertTypeEquality<NameWrapper, TSSchemaProperty<JSONSchemaFixtureCollection, 'Class', 'name'>>).toBe(true);
 

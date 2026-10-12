@@ -7,7 +7,7 @@ import type {
   JSONSchemaFragmentIsNotCollection,
   JSONSchemaFragmentIsPrimitiveType,
   JSONSchemaFragmentIsReference,
-  JSONSchemaFragmentName,
+  JSONSchemaDefinitionName,
   JSONSchemaNotCollectionFragment,
 } from './index.js';
 
@@ -53,15 +53,15 @@ describe('JSONSchema', () => {
         expect(true satisfies AssertTypeEquality<JSONSchemaFragmentIsPrimitiveType<{ $defs: {}; type: 'string' }>, false>).toBe(true);
       });
 
-      it('Gets the names of all fragments of a collection', () => {
-        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentName<_JSONSchemaTreeCollection>, 'Node'>).toBe(true);
-        expect(true satisfies AssertTypeAssignable<'Assessment' | 'Class' | 'Term', JSONSchemaFragmentName<JSONSchemaFixtureCollection>>).toBe(true);
-        expect(true satisfies AssertTypeUnassignable<'Unknown' | number, JSONSchemaFragmentName<JSONSchemaFixtureCollection>>).toBe(true);
-        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentName<{ $defs: {} }>, never>).toBe(true);
+      it('Gets the names of all definitions of a collection', () => {
+        expect(true satisfies AssertTypeEquality<JSONSchemaDefinitionName<_JSONSchemaTreeCollection>, 'Node'>).toBe(true);
+        expect(true satisfies AssertTypeAssignable<'Assessment' | 'Class' | 'Term', JSONSchemaDefinitionName<JSONSchemaFixtureCollection>>).toBe(true);
+        expect(true satisfies AssertTypeUnassignable<'Unknown' | number, JSONSchemaDefinitionName<JSONSchemaFixtureCollection>>).toBe(true);
+        expect(true satisfies AssertTypeEquality<JSONSchemaDefinitionName<{ $defs: {} }>, never>).toBe(true);
       });
 
-      it('Gets string | number fragment names from the default collection', () => {
-        expect(true satisfies AssertTypeEquality<JSONSchemaFragmentName, string | number>).toBe(true);
+      it('Gets string | number definition names from the default collection', () => {
+        expect(true satisfies AssertTypeEquality<JSONSchemaDefinitionName, string | number>).toBe(true);
       });
     });
   });

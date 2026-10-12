@@ -1,6 +1,6 @@
 /**
  * Typescript utilities for telling JSON schema collections (schemas containing `$defs`) apart from other JSON schema fragments, and for getting the
- * names of a collection's fragments.
+ * names of a collection's definitions.
  */
 
 import type { JSONSchema7 } from './JSONSchema7.js';
@@ -18,9 +18,9 @@ export type JSONSchemaFragmentIsCollection<T extends JSONSchema7> = T extends { 
  */
 export type JSONSchemaCollection = JSONSchema7 & { $defs: Record<string, JSONSchema7> };
 /**
- * Gets the names of all fragments defined in a JSON schema collection's `$defs`. The default, unspecified collection infers `string | number`.
+ * Gets the names of all definitions in a JSON schema collection's `$defs`. The default, unspecified collection infers `string | number`.
  */
-export type JSONSchemaFragmentName<T extends JSONSchemaCollection = JSONSchemaCollection> = keyof T['$defs'];
+export type JSONSchemaDefinitionName<T extends JSONSchemaCollection = JSONSchemaCollection> = keyof T['$defs'];
 /**
  * Determines if a JSON schema fragment is a definition (i.e., not a collection).
  */

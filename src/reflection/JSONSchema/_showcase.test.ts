@@ -80,7 +80,7 @@ describe('Showcase', () => {
 
       it('Parses every fragment of a collection on construction', () => {
         // `parseJSONSchemaCollection` is the shortcut for a schema used as a collection of definitions: it parses the collection alone, leaving out
-        // the root's other keywords. The collection facet parses every `$defs` fragment up front, and is the context every `$ref` in the schema
+        // the root's other keywords. The collection facet parses every `$defs` fragment up front, and is the collection every `$ref` in the schema
         // is resolved against
         const collection = parseJSONSchemaCollection(schema);
         // Breakpoint: inspect `collection`, holding the facets of every fragment in `$defs`
@@ -186,9 +186,9 @@ describe('Showcase', () => {
       it('Parses any fragment, by every facet class it matches', () => {
         // Every facet class has a static `is` type guard, the runtime counterpart of `JSONSchemaFragmentIs*`, which the router tries in turn. The
         // router is internal to parsing a schema: like every facet class, it takes the fragment, then optionally the collection facet to
-        // resolve references against (`context`) and the fragment's name within it (`name`)
+        // resolve references against (`collection`) and the fragment's name within it (`name`)
         const collection = parseJSONSchemaCollection(schema);
-        const facets = createJSONSchemaFragmentFacets({ type: 'array', items: { type: 'integer' } } as const, { context: collection });
+        const facets = createJSONSchemaFragmentFacets({ type: 'array', items: { type: 'integer' } } as const, { collection: collection });
         // Breakpoint: inspect `facets`, a single array type facet, its `items` parsed in turn
         expect(facets[0]).toBeInstanceOf(JSONSchemaArrayTypeFragmentFacet);
         expect(JSONSchemaArrayTypeFragmentFacet.is({ type: 'array' })).toBe(true);

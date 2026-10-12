@@ -19,7 +19,7 @@ import type {
   JSONSchemaFragmentIsCollection,
   JSONSchemaFragmentIsModel,
   JSONSchemaFragmentIsPrimitiveType,
-  JSONSchemaFragmentName,
+  JSONSchemaDefinitionName,
   JSONSchemaFragmentPropertyName,
   JSONSchemaFragmentType,
   JSONSchemaFragmentTypeBranch,
@@ -52,12 +52,12 @@ type Schema = typeof schema;
 describe('Showcase', () => {
   describe('JSONSchema type utilities', () => {
     describe('Collections and their fragments', () => {
-      it('Tells a collection (a schema with $defs) apart from a fragment, and gets its fragment names', () => {
+      it('Tells a collection (a schema with $defs) apart from a fragment, and gets its definition names', () => {
         type IsCollection = JSONSchemaFragmentIsCollection<Schema>;
         //   ^?
         // IsCollection: true
         expect(true satisfies AssertTypeEquality<IsCollection, true>).toBe(true);
-        type FragmentName = JSONSchemaFragmentName<Schema>;
+        type FragmentName = JSONSchemaDefinitionName<Schema>;
         //   ^?
         // FragmentName: 'Person' | 'Role'
         expect(true satisfies AssertTypeEquality<FragmentName, 'Person' | 'Role'>).toBe(true);

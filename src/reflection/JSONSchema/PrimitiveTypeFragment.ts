@@ -3,7 +3,7 @@
  * primitive type name(s).
  */
 
-import type { JSONSchema7, JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaPrimitiveTypeFragment } from '../../schema/JSONSchema/index.js';
+import type { JSONSchema7, JSONSchemaCollection, JSONSchemaDefinitionName, JSONSchemaPrimitiveTypeFragment } from '../../schema/JSONSchema/index.js';
 import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
 import { isJSONSchemaPrimitiveTypeName } from './JSONSchema7.js';
 
@@ -13,7 +13,7 @@ import { isJSONSchemaPrimitiveTypeName } from './JSONSchema7.js';
  */
 export class JSONSchemaPrimitiveTypeFragmentFacet<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
+  TName extends JSONSchemaDefinitionName<TSchema> | undefined = JSONSchemaDefinitionName<TSchema> | undefined,
   TFragment extends JSONSchemaPrimitiveTypeFragment = JSONSchemaPrimitiveTypeFragment,
 > extends JSONSchemaFragmentFacet<TSchema, TName, TFragment> {
   /**
@@ -35,7 +35,7 @@ export class JSONSchemaPrimitiveTypeFragmentFacet<
   /**
    * Parses a JSON schema primitive type definition
    * @param fragment JSON fragment to parse
-   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
+   * @param options Collection and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
    */
   public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     super(fragment, options);

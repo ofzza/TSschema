@@ -80,7 +80,7 @@ describe('codegen', () => {
       expect(models.content).toContain('export type A = Models["A"];');
     });
 
-    it('Generates a type alias only for fragment names which are valid, unreserved and not already declared', () => {
+    it('Generates a type alias only for definition names which are valid, unreserved and not already declared', () => {
       const $defs = { Valid: {}, 'kebab-name': {}, string: {}, default: {}, Schema: {}, Models: {}, TSSchemaType: {} };
       const [, models] = generateFiles('a.json', { $defs }, { models: true });
       expect(models.content.match(/^export type \w+ = Models\[/gm)).toEqual(['export type Valid = Models[']);

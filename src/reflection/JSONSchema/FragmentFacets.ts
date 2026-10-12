@@ -17,7 +17,7 @@ import type {
   JSONSchemaCollection,
   JSONSchemaConstFragment,
   JSONSchemaEnumFragment,
-  JSONSchemaFragmentName,
+  JSONSchemaDefinitionName,
   JSONSchemaFragmentTypeBranch,
   JSONSchemaModelFragment,
   JSONSchemaNotCollectionFragment,
@@ -55,8 +55,8 @@ import { JSONSchemaReferenceFragmentFacet } from './ReferenceFragment.js';
  * Parses a JSON schema, by every facet class its root fragment matches. The default way to parse a schema.
  *
  * A collection (a schema with `$defs`) is parsed as a collection facet, parsing every `$defs` fragment by name, followed by the facets of
- * the root's other keywords (the schema with its `$defs` left out). The collection facet is the context every `$ref` in the schema is resolved
- * against. Any other schema is parsed with no such context, so none of its `$ref` can be resolved.
+ * the root's other keywords (the schema with its `$defs` left out). The collection facet is the collection every `$ref` in the schema is resolved
+ * against. Any other schema is parsed with no such collection, so none of its `$ref` can be resolved.
  * @param fragment JSON schema to parse
  * @returns Facets of all fragment types the schema's root fragment matches, or an empty array if it matches none
  */
@@ -65,7 +65,7 @@ export function parseJSONSchema<TFragment extends JSONSchema7>(fragment: TFragme
   if (JSONSchemaCollectionFragmentFacet.is(fragment)) {
     const collection = new JSONSchemaCollectionFragmentFacet(fragment);
     const { $defs: _defs, ...root } = fragment;
-    return [collection, ...createJSONSchemaFragmentFacets(root as JSONSchemaNotCollectionFragment, { context: collection })] as Array<
+    return [collection, ...createJSONSchemaFragmentFacets(root as JSONSchemaNotCollectionFragment, { collection: collection })] as Array<
       JSONSchemaFacet<TFragment>
     >;
   }
@@ -100,13 +100,13 @@ export function parseJSONSchemaCollection<TFragment extends JSONSchemaCollection
  * `anyOf`: the type independent keywords (`const`, `enum`, `$ref`, `allOf`, `anyOf`, `oneOf`, `not`) are parsed on the fragment itself, and one more
  * (`implicit`) any-of-types facet holds the branches, each with the type independent keywords left out.
  * @param fragment JSON fragment to parse
- * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
+ * @param options Collection and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
  * @returns Facets of all fragment types the fragment matches, or an empty array if it matches none
  */
 export function createJSONSchemaFragmentFacets<
   TSchema extends JSONSchemaCollection,
   TFragment extends JSONSchemaNotCollectionFragment,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = undefined,
+  TName extends JSONSchemaDefinitionName<TSchema> | undefined = undefined,
 >(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}): Array<JSONSchemaFragmentFacetOf<TSchema, TName, TFragment>> {
   // Parse a single type array branch as is
   const branches = getJSONSchemaFragmentTypeBranches(fragment);
@@ -141,15 +141,15 @@ export function createJSONSchemaFragmentFacets<
 /**
  * Parses a fragment nested in, and owned by, another fragment (e.g. a model property or an `allOf` member). Nested fragments have no name.
  * @param fragment Nested JSON fragment to parse
- * @param context Facet of the JSON schema collection the parent fragment belongs to, or `undefined` if the parsed schema has no `$defs`
+ * @param collection Facet of the JSON schema collection the parent fragment belongs to, or `undefined` if the parsed schema has no `$defs`
  * @returns Facets of all fragment types the nested fragment matches, or an empty array if it is not a schema object (e.g. a boolean schema)
  */
 export function createJSONSchemaNestedFragmentFacets<TSchema extends JSONSchemaCollection, TFragment>(
   fragment: TFragment,
-  context: JSONSchemaCollectionFragmentFacet<TSchema> | undefined,
+  collection: JSONSchemaCollectionFragmentFacet<TSchema> | undefined,
 ): JSONSchemaNestedFragmentFacets<TSchema, TFragment> {
   return (
-    isJSONSchemaObject(fragment) ? createJSONSchemaFragmentFacets(fragment as JSONSchemaNotCollectionFragment, { context }) : []
+    isJSONSchemaObject(fragment) ? createJSONSchemaFragmentFacets(fragment as JSONSchemaNotCollectionFragment, { collection }) : []
   ) as JSONSchemaNestedFragmentFacets<TSchema, TFragment>;
 }
 
@@ -187,7 +187,7 @@ export type JSONSchemaFacet<TFragment extends JSONSchema7> =
  */
 export type JSONSchemaFragmentFacetOf<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined,
+  TName extends JSONSchemaDefinitionName<TSchema> | undefined,
   TFragment extends JSONSchemaNotCollectionFragment,
 > =
   // Distribute over a union of fragments up front
@@ -212,7 +212,7 @@ export type JSONSchemaFragmentFacetOf<
  */
 type _JSONSchemaFragmentFacetOf<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined,
+  TName extends JSONSchemaDefinitionName<TSchema> | undefined,
   TFragment extends JSONSchemaNotCollectionFragment,
 > =
   // Model facet
@@ -245,7 +245,7 @@ type _JSONSchemaFragmentFacetOf<
  */
 type _JSONSchemaAnyFragmentFacet<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined,
+  TName extends JSONSchemaDefinitionName<TSchema> | undefined,
   TFragment extends JSONSchemaNotCollectionFragment,
 > =
   | JSONSchemaModelFragmentFacet<TSchema, TName, TFragment & JSONSchemaModelFragment>
@@ -267,7 +267,7 @@ type _JSONSchemaAnyFragmentFacet<
  */
 type _JSONSchemaImplicitAnyOfTypeFragmentFacet<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined,
+  TName extends JSONSchemaDefinitionName<TSchema> | undefined,
   TBranch extends JSONSchemaNotCollectionFragment,
 > = JSONSchemaAnyOfTypeFragmentFacet<
   TSchema,

@@ -7,7 +7,7 @@
  */
 
 import type { JSONSchema7, JSONSchemaCollection, JSONSchemaModelFragment, JSONSchemaNotCollectionFragment } from './JSONSchema/index.js';
-import type { JSONSchemaCollectionWrapper, TSSchemaFragmentName } from './TSSchemaCollection.js';
+import type { JSONSchemaCollectionWrapper, TSSchemaDefinitionName } from './TSSchemaCollection.js';
 import type { JSONSchemaFragmentWrapper, TSSchemaFragmentPropertyName, TSSchemaFragmentType } from './TSSchemaFragment.js';
 import type { JSONSchemaModelPropertyWrapper, TSSchemaPropertyType } from './TSSchemaProperty.js';
 
@@ -39,9 +39,9 @@ export type TSSchemaName<T extends JSONSchemaCollection | JSONSchemaCollectionWr
   // Model fragment, or fragment / model property wrapper (checked first, as every wrapper is also a collection wrapper): property names
   T extends JSONSchemaModelFragment | JSONSchemaFragmentWrapper
     ? TSSchemaFragmentPropertyName<T>
-    : // Collection or collection wrapper: fragment names
+    : // Collection or collection wrapper: definition names
       T extends JSONSchemaCollection | JSONSchemaCollectionWrapper
-      ? TSSchemaFragmentName<T>
+      ? TSSchemaDefinitionName<T>
       : never;
 
 /**

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality } from '@ofzza/tsstd';
-import type { JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaReferenceFragment } from '../../schema/JSONSchema/index.js';
+import type { JSONSchemaCollection, JSONSchemaDefinitionName, JSONSchemaReferenceFragment } from '../../schema/JSONSchema/index.js';
 import {
   JSONSchemaCollectionFragmentFacet,
   JSONSchemaEnumFragmentFacet,
@@ -101,7 +101,7 @@ describe('Reflection', () => {
           >,
         ).toBe(true);
         type WideReference = JSONSchemaReferenceFragmentFacet<JSONSchemaCollection>;
-        expect(true satisfies AssertTypeEquality<WideReference['refName'], JSONSchemaFragmentName<JSONSchemaCollection> | undefined>).toBe(true);
+        expect(true satisfies AssertTypeEquality<WideReference['refName'], JSONSchemaDefinitionName<JSONSchemaCollection> | undefined>).toBe(true);
       });
 
       it('Infers the type of a reference', () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { AssertTypeEquality, AssertTypeInequality } from '@ofzza/tsstd';
 import type { JSONSchemaFragmentType } from './JSONSchema/index.js';
-import type { TSSchemaFragmentName } from './TSSchemaCollection.js';
+import type { TSSchemaDefinitionName } from './TSSchemaCollection.js';
 import type { TSSchemaFragmentType } from './TSSchemaFragment.js';
 import type { TSSchemaCollection, TSSchemaFragment, TSSchemaName, TSSchemaProperty, TSSchemaType } from './index.js';
 
@@ -27,10 +27,10 @@ describe('index', () => {
   });
 
   describe('TSSchemaName', () => {
-    it('Gets the fragment names of a collection or a collection wrapper', () => {
-      expect(true satisfies AssertTypeEquality<TSSchemaName<JSONSchemaFixtureCollection>, TSSchemaFragmentName<JSONSchemaFixtureCollection>>).toBe(true);
+    it('Gets the definition names of a collection or a collection wrapper', () => {
+      expect(true satisfies AssertTypeEquality<TSSchemaName<JSONSchemaFixtureCollection>, TSSchemaDefinitionName<JSONSchemaFixtureCollection>>).toBe(true);
       expect(
-        true satisfies AssertTypeEquality<TSSchemaName<TSSchemaCollection<JSONSchemaFixtureCollection>>, TSSchemaFragmentName<JSONSchemaFixtureCollection>>,
+        true satisfies AssertTypeEquality<TSSchemaName<TSSchemaCollection<JSONSchemaFixtureCollection>>, TSSchemaDefinitionName<JSONSchemaFixtureCollection>>,
       ).toBe(true);
     });
 

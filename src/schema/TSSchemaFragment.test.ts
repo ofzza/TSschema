@@ -54,7 +54,7 @@ describe('TSSchemaFragment', () => {
       //   ^?
       expect(true satisfies AssertTypeEquality<AssessmentWrapper['__fragment'], JSONSchemaAssessmentModel>).toBe(true);
       expect(true satisfies AssertTypeEquality<AssessmentWrapper['__collection'], JSONSchemaCollection>).toBe(true);
-      expect(true satisfies AssertTypeEquality<AssessmentWrapper['__fragmentName'], string | number>).toBe(true);
+      expect(true satisfies AssertTypeEquality<AssessmentWrapper['__definitionName'], string | number>).toBe(true);
     });
 
     it('Wraps a fragment addressed by name from a collection, with the collection and name', () => {
@@ -62,7 +62,7 @@ describe('TSSchemaFragment', () => {
       //   ^?
       expect(true satisfies AssertTypeEquality<AssessmentWrapper['__fragment'], JSONSchemaAssessmentModel>).toBe(true);
       expect(true satisfies AssertTypeEquality<AssessmentWrapper['__collection'], JSONSchemaFixtureCollection>).toBe(true);
-      expect(true satisfies AssertTypeEquality<AssessmentWrapper['__fragmentName'], 'Assessment'>).toBe(true);
+      expect(true satisfies AssertTypeEquality<AssessmentWrapper['__definitionName'], 'Assessment'>).toBe(true);
     });
 
     it('Wraps a fragment addressed by name from a collection wrapper', () => {
@@ -73,7 +73,7 @@ describe('TSSchemaFragment', () => {
     it('Wraps a fragment which is not a model', () => {
       type AssessmentKindWrapper = TSSchemaFragment<JSONSchemaFixtureCollection, 'AssessmentKind'>;
       expect(true satisfies AssertTypeEquality<AssessmentKindWrapper['__fragment'], JSONSchemaAssessmentKindFragment>).toBe(true);
-      expect(true satisfies AssertTypeEquality<AssessmentKindWrapper['__fragmentName'], 'AssessmentKind'>).toBe(true);
+      expect(true satisfies AssertTypeEquality<AssessmentKindWrapper['__definitionName'], 'AssessmentKind'>).toBe(true);
     });
 
     it('Wraps each fragment addressed by a union of names, as a union of wrappers', () => {
@@ -88,9 +88,9 @@ describe('TSSchemaFragment', () => {
 
     it('Wraps every fragment of a collection when no name is given, as a union of wrappers', () => {
       type Wrappers = TSSchemaFragment<JSONSchemaFixtureCollection>;
-      expect(true satisfies AssertTypeEquality<Wrappers['__fragmentName'], keyof JSONSchemaFixtureCollection['$defs']>).toBe(true);
+      expect(true satisfies AssertTypeEquality<Wrappers['__definitionName'], keyof JSONSchemaFixtureCollection['$defs']>).toBe(true);
       expect(
-        true satisfies AssertTypeEquality<Extract<Wrappers, { __fragmentName: 'Address' }>, TSSchemaFragment<JSONSchemaFixtureCollection, 'Address'>>,
+        true satisfies AssertTypeEquality<Extract<Wrappers, { __definitionName: 'Address' }>, TSSchemaFragment<JSONSchemaFixtureCollection, 'Address'>>,
       ).toBe(true);
     });
 

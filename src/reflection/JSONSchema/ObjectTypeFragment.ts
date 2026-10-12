@@ -2,7 +2,7 @@
  * Facets of JSON schema `type: "object"` fragments without `properties`.
  */
 
-import type { JSONSchema7, JSONSchemaCollection, JSONSchemaFragmentName, JSONSchemaObjectTypeFragment } from '../../schema/JSONSchema/index.js';
+import type { JSONSchema7, JSONSchemaCollection, JSONSchemaDefinitionName, JSONSchemaObjectTypeFragment } from '../../schema/JSONSchema/index.js';
 import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
 
 /**
@@ -11,7 +11,7 @@ import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './
  */
 export class JSONSchemaObjectTypeFragmentFacet<
   TSchema extends JSONSchemaCollection,
-  TName extends JSONSchemaFragmentName<TSchema> | undefined = JSONSchemaFragmentName<TSchema> | undefined,
+  TName extends JSONSchemaDefinitionName<TSchema> | undefined = JSONSchemaDefinitionName<TSchema> | undefined,
   TFragment extends JSONSchemaObjectTypeFragment = JSONSchemaObjectTypeFragment,
 > extends JSONSchemaFragmentFacet<TSchema, TName, TFragment> {
   /**
@@ -32,7 +32,7 @@ export class JSONSchemaObjectTypeFragmentFacet<
   /**
    * Parses a JSON schema object type definition
    * @param fragment JSON fragment to parse
-   * @param options Context and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
+   * @param options Collection and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
    */
   public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     super(fragment, options);

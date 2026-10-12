@@ -8,7 +8,7 @@
 
 import type {
   JSONSchemaCollection,
-  JSONSchemaFragmentName,
+  JSONSchemaDefinitionName,
   JSONSchemaFragmentPropertyName,
   JSONSchemaFragmentType,
   JSONSchemaFragmentTypeBranch,
@@ -16,19 +16,19 @@ import type {
   JSONSchemaNotCollectionFragment,
   JSONSchemaObjectTypeFragment,
 } from './JSONSchema/index.js';
-import type { JSONSchemaCollectionWrapper, TSSchemaFragmentName, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection.js';
+import type { JSONSchemaCollectionWrapper, TSSchemaDefinitionName, UnwrapJSONSchemaCollectionWrapper } from './TSSchemaCollection.js';
 import type { JSONSchemaFragmentWrapper, TSSchemaFragmentPropertyName } from './TSSchemaFragment.js';
 
 /**
  * Wrapper type for a JSON schema model property, holding on to the property fragment as `__property` and its name as `__propertyName`. It extends the
- * fragment wrapper of its parent model, so it also holds the parent model as `__fragment`, the model's name as `__fragmentName` and the parent collection
+ * fragment wrapper of its parent model, so it also holds the parent model as `__fragment`, the model's name as `__definitionName` and the parent collection
  * as `__collection`. A property wrapped directly carries the default, unspecified model, collection and names.
  */
 export type JSONSchemaModelPropertyWrapper<
   T extends JSONSchemaNotCollectionFragment = JSONSchemaNotCollectionFragment,
   TModel extends JSONSchemaModelFragment = JSONSchemaModelFragment,
   TCollection extends JSONSchemaCollection = JSONSchemaCollection,
-  TModelName extends JSONSchemaFragmentName<TCollection> = JSONSchemaFragmentName<TCollection>,
+  TModelName extends JSONSchemaDefinitionName<TCollection> = JSONSchemaDefinitionName<TCollection>,
   TName extends JSONSchemaFragmentPropertyName<TModel> = JSONSchemaFragmentPropertyName<TModel>,
 > = JSONSchemaFragmentWrapper<TModel, TCollection, TModelName> & {
   __property: T;
@@ -47,7 +47,7 @@ export type UnwrapJSONSchemaModelPropertyWrapper<T extends JSONSchemaNotCollecti
 type _TSCollectionPropertyName<T extends JSONSchemaCollection | JSONSchemaCollectionWrapper, TName> =
   UnwrapJSONSchemaCollectionWrapper<T> extends infer C extends JSONSchemaCollection
     ? // Distribute over a union of names, and narrow each against the unwrapped collection
-      TName extends JSONSchemaFragmentName<C>
+      TName extends JSONSchemaDefinitionName<C>
       ? // Distribute over the branches of a type array, and narrow each to a model
         JSONSchemaFragmentTypeBranch<C['$defs'][TName]> extends infer M
         ? M extends JSONSchemaModelFragment
@@ -80,9 +80,9 @@ export type TSSchemaProperty<
   // Model or fragment wrapper (checked first, as a fragment wrapper is also a collection wrapper): property name
   TName extends (T extends JSONSchemaModelFragment | JSONSchemaFragmentWrapper
     ? TSSchemaFragmentPropertyName<T> | `${TSSchemaFragmentPropertyName<T>}.${string}`
-    : // Collection or collection wrapper: model fragment name
+    : // Collection or collection wrapper: model definition name
       T extends JSONSchemaCollection | JSONSchemaCollectionWrapper
-      ? TSSchemaFragmentName<T>
+      ? TSSchemaDefinitionName<T>
       : // Property fragment: not used
         never) = never,
   // Fragment wrapper: not used, as the property name is passed as `TName`
@@ -96,7 +96,7 @@ export type TSSchemaProperty<
 > =
   // Fragment wrapper (checked before collection wrapper, which it also is): wrap the named property(ies) of the wrapped model, with its context
   T extends JSONSchemaFragmentWrapper
-    ? T extends { __collection: infer C extends JSONSchemaCollection; __fragment: infer F; __fragmentName: infer N }
+    ? T extends { __collection: infer C extends JSONSchemaCollection; __fragment: infer F; __definitionName: infer N }
       ? // Distribute over the branches of a type array, and narrow each to a model
         JSONSchemaFragmentTypeBranch<F> extends infer M
         ? M extends JSONSchemaModelFragment
@@ -107,13 +107,13 @@ export type TSSchemaProperty<
     : // Collection or collection wrapper: wrap the named property(ies) of the named model(s)
       T extends JSONSchemaCollection | JSONSchemaCollectionWrapper
       ? UnwrapJSONSchemaCollectionWrapper<T> extends infer C extends JSONSchemaCollection
-        ? _TSSchemaCollectionModelProperty<C, [TName] extends [never] ? JSONSchemaFragmentName<C> : TName, TKey>
+        ? _TSSchemaCollectionModelProperty<C, [TName] extends [never] ? JSONSchemaDefinitionName<C> : TName, TKey>
         : never
       : // Model fragment: wrap the named property(ies), or with no name wrap the model itself as a property
         T extends JSONSchemaModelFragment
         ? [TName] extends [never]
           ? JSONSchemaModelPropertyWrapper<T>
-          : _TSSchemaProperty<T, JSONSchemaCollection, JSONSchemaFragmentName, TName>
+          : _TSSchemaProperty<T, JSONSchemaCollection, JSONSchemaDefinitionName, TName>
         : // Property fragment: wrap the fragment as given, with no parent model
           T extends JSONSchemaNotCollectionFragment
           ? JSONSchemaModelPropertyWrapper<T>
@@ -124,7 +124,7 @@ export type TSSchemaProperty<
  */
 type _TSSchemaCollectionModelProperty<TCollection extends JSONSchemaCollection, TModelName, TKey> =
   // Distribute over a union of model names, and narrow each against the collection
-  TModelName extends JSONSchemaFragmentName<TCollection>
+  TModelName extends JSONSchemaDefinitionName<TCollection>
     ? // Distribute over the branches of a type array, and narrow each to a model
       JSONSchemaFragmentTypeBranch<TCollection['$defs'][TModelName]> extends infer M
       ? M extends JSONSchemaModelFragment
@@ -141,7 +141,7 @@ type _TSSchemaProperty<TModel extends JSONSchemaModelFragment, TCollection exten
   // Distribute over a union of property names, and narrow each against the model
   TName extends JSONSchemaFragmentPropertyName<TModel>
     ? Exclude<TModel['properties'][TName], undefined> extends infer P extends JSONSchemaNotCollectionFragment
-      ? JSONSchemaModelPropertyWrapper<P, TModel, TCollection, TModelName & JSONSchemaFragmentName<TCollection>, TName>
+      ? JSONSchemaModelPropertyWrapper<P, TModel, TCollection, TModelName & JSONSchemaDefinitionName<TCollection>, TName>
       : never
     : // Path: resolve the remainder of the path within the property named by its first segment
       TName extends `${infer H}.${infer R}`
@@ -187,7 +187,7 @@ type _TSSchemaPathPropertyOfReference<TFragment, TCollection extends JSONSchemaC
       ? _TSSchemaPathPropertyOfUnknown<TCollection, TPath>
       : // Reference to a fragment of the collection: path into the referenced fragment, as named by the reference
         P extends `#/$defs/${infer N}`
-        ? N extends JSONSchemaFragmentName<TCollection>
+        ? N extends JSONSchemaDefinitionName<TCollection>
           ? _TSSchemaPathProperty<TCollection['$defs'][N], TCollection, N, TPath>
           : _TSSchemaPathPropertyOfUnknown<TCollection, TPath>
         : // Any other reference: can not be resolved
@@ -232,7 +232,7 @@ type _TSSchemaPathPropertyOfUnknown<TCollection extends JSONSchemaCollection, TP
   TPath extends '' | `.${string}` | `${string}.` | `${string}..${string}`
     ? never
     : // Well formed path: property of unknown type
-      JSONSchemaModelPropertyWrapper<{}, JSONSchemaModelFragment, TCollection, JSONSchemaFragmentName<TCollection>, TPath>;
+      JSONSchemaModelPropertyWrapper<{}, JSONSchemaModelFragment, TCollection, JSONSchemaDefinitionName<TCollection>, TPath>;
 
 /**
  * Infers a value type from a JSON schema property fragment or a JSON schema model property wrapper, resolving `$ref`s against a JSON schema collection.
