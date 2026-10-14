@@ -5,7 +5,7 @@ import { JSONSchemaCollectionFragmentFacet, JSONSchemaObjectTypeFragmentFacet } 
 /**
  * Small collection, used in the tests below
  */
-const _schema = { $defs: { Anything: { type: 'object' }, Few: { type: 'object', maxProperties: 3 } } } as const;
+const _schema = { $defs: { Anything: { type: 'object' }, Few: { type: 'object', maxProperties: 3, format: 'dictionary' } } } as const;
 type _Schema = typeof _schema;
 
 describe('Reflection', () => {
@@ -14,7 +14,7 @@ describe('Reflection', () => {
   describe('JSONSchema fragment facets', () => {
     // Each file in this directory holds the tests of one facet class under this describe.
     describe('Object Type fragment', () => {
-      // JSONSchemaObjectTypeFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsObjectType), the `type` and the validation keywords of objects it parses,
+      // JSONSchemaObjectTypeFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsObjectType), the `type` and the validation keywords of objects (and `format`, applying to values of any type) it parses,
       // and the type-only `Type`. Facets
       // are taken from a JSONSchemaCollectionFragmentFacet parsing the small inline collection above. Each runtime `expect` on a parsed value is paired with an
       // AssertTypeEquality on its static type.
@@ -43,6 +43,8 @@ describe('Reflection', () => {
         expect([few.minProperties, few.maxProperties]).toEqual([undefined, 3]);
         expect(true satisfies AssertTypeEquality<typeof few.maxProperties, 3>).toBe(true);
         expect(true satisfies AssertTypeEquality<typeof few.minProperties, undefined>).toBe(true);
+        expect(few.format).toBe('dictionary');
+        expect(true satisfies AssertTypeEquality<typeof few.format, 'dictionary'>).toBe(true);
       });
 
       it('Infers the type of an object type', () => {

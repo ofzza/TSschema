@@ -21,6 +21,7 @@ export type {
   TSSchemaAllOfTypeDescriptor,
   TSSchemaOneOfTypeDescriptor,
   TSSchemaNotTypeDescriptor,
+  TSSchemaConstraints,
   TSSchemaPrimitiveConstraints,
   TSSchemaNumberConstraints,
   TSSchemaStringConstraints,

@@ -22,6 +22,7 @@ declare const _4: {
       };
       readonly countryCode: {
         readonly type: "string";
+        readonly format: "iso3166-1-alpha-2";
         readonly pattern: "^(?:[A-Z]{2})$";
         readonly "x-decorators": readonly [
           {
@@ -203,6 +204,11 @@ declare const _4: {
         readonly type: "string";
         readonly format: "uuid";
       };
+      readonly catalogueId: {
+        readonly type: "string";
+        readonly format: "uuid";
+        readonly $comment: "DotNetSchema.Fixtures.Schema.CatalogueId<DotNetSchema.Fixtures.Schema.Book>, described inline as declared by [DotNetSchemaType] rather than by its shape. Nothing checks that it is serialised this way.";
+      };
       readonly name: {
         readonly $ref: "#/$defs/BookName";
       };
@@ -211,6 +217,8 @@ declare const _4: {
           "string",
           "null",
         ];
+        readonly format: "isbn";
+        readonly pattern: "^978-\\d-\\d{3}-\\d{5}-\\d$";
         readonly title: "ISBN-13";
         readonly description: "ISBN-13, formatted with separators.";
         readonly "x-decorators": readonly [
@@ -255,6 +263,7 @@ declare const _4: {
       readonly price: {
         readonly type: "number";
         readonly $comment: "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly.";
+        readonly format: "decimal";
       };
       readonly publishedOn: {
         readonly type: "string";
@@ -312,6 +321,7 @@ declare const _4: {
     };
     readonly required: readonly [
       "id",
+      "catalogueId",
       "name",
       "isbn",
       "edition",
@@ -849,6 +859,7 @@ declare const _4: {
       };
       readonly costCentre: {
         readonly type: "string";
+        readonly pattern: "^(?:CC-\\d{3})?$";
       };
       readonly annualBudget: {
         readonly type: readonly [
@@ -1843,6 +1854,14 @@ declare const _4: {
       };
       readonly role: {
         readonly $ref: "#/$defs/PersonRole";
+      };
+      readonly studentNumber: {
+        readonly type: readonly [
+          "string",
+          "null",
+        ];
+        readonly pattern: "^S\\d{7}$";
+        readonly $comment: "DotNetSchema.Fixtures.Schema.StudentNumber, described inline as declared by [DotNetSchemaType] rather than by its shape. Nothing checks that it is serialised this way.";
       };
       readonly bornOn: {
         readonly type: "string";

@@ -10,7 +10,7 @@ const _schema = {
     Text: { type: 'string', format: 'email', maxLength: 64 },
     Count: { type: 'integer' },
     Scalar: { type: ['string', 'number', 'boolean'] },
-    Bounded: { type: 'number', minimum: 0, exclusiveMaximum: 10, multipleOf: 0.5 },
+    Bounded: { type: 'number', minimum: 0, exclusiveMaximum: 10, multipleOf: 0.5, format: 'decimal' },
   },
 } as const;
 type _Schema = typeof _schema;
@@ -22,7 +22,7 @@ describe('Reflection', () => {
     // Each file in this directory holds the tests of one facet class under this describe.
     describe('Primitive Type fragment', () => {
       // JSONSchemaPrimitiveTypeFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsPrimitiveType), the `type` it parses (a name or an array of
-      // names), the validation keywords of numbers and strings it parses, and the type-only `Type`. Facets are taken from a JSONSchemaCollectionFragmentFacet parsing the small inline collection above. Each runtime
+      // names), the validation keywords of numbers and strings (and `format`, applying to values of any type) it parses, and the type-only `Type`. Facets are taken from a JSONSchemaCollectionFragmentFacet parsing the small inline collection above. Each runtime
       // `expect` on a parsed value is paired with an AssertTypeEquality on its static type.
       it('Detects a primitive type', () => {
         expect(['string', 'number', 'integer', 'boolean'].every((type) => JSONSchemaPrimitiveTypeFragmentFacet.is({ type } as any))).toBe(true);
@@ -66,6 +66,8 @@ describe('Reflection', () => {
         ]);
         expect(true satisfies AssertTypeEquality<typeof bounded.minimum, 0>).toBe(true);
         expect(true satisfies AssertTypeEquality<typeof bounded.maximum, undefined>).toBe(true);
+        expect(bounded.format).toBe('decimal');
+        expect(true satisfies AssertTypeEquality<typeof bounded.format, 'decimal'>).toBe(true);
         const text = collection.$defs.Text[0];
         expect([text.format, text.maxLength, text.minLength, text.pattern, text.contentEncoding]).toEqual(['email', 64, undefined, undefined, undefined]);
         expect(true satisfies AssertTypeEquality<typeof text.format, 'email'>).toBe(true);

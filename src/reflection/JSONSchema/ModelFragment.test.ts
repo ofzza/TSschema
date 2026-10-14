@@ -22,6 +22,7 @@ const _schema = {
       properties: { name: { type: 'string' }, age: { type: 'integer' }, mentor: { $ref: '#/$defs/Person' }, anything: true },
       required: ['name', 'age', 'email'],
       minProperties: 2,
+      format: 'entity',
     },
   },
 } as const;
@@ -35,7 +36,7 @@ describe('Reflection', () => {
     // Each file in this directory holds the tests of one facet class under this describe.
     describe('Model fragment', () => {
       // JSONSchemaModelFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsModel), the property `names`, the facets of each property (parsed on
-      // construction), the `required` names, the validation keywords of objects and the type-only `Type`. Facets are taken from a JSONSchemaCollectionFragmentFacet parsing the small inline
+      // construction), the `required` names, the validation keywords of objects (and `format`, applying to values of any type) and the type-only `Type`. Facets are taken from a JSONSchemaCollectionFragmentFacet parsing the small inline
       // collection above (a recursive Person with a boolean schema property and a `required` naming an undefined property) and the res/schema.json fixture.
       // Each runtime `expect` on a parsed value is paired with an AssertTypeEquality on its static type.
       it('Detects a model', () => {
@@ -111,6 +112,8 @@ describe('Reflection', () => {
         expect([person.minProperties, person.maxProperties]).toEqual([2, undefined]);
         expect(true satisfies AssertTypeEquality<typeof person.minProperties, 2>).toBe(true);
         expect(true satisfies AssertTypeEquality<typeof person.maxProperties, undefined>).toBe(true);
+        expect(person.format).toBe('entity');
+        expect(true satisfies AssertTypeEquality<typeof person.format, 'entity'>).toBe(true);
       });
 
       it('Infers the type of a model', () => {

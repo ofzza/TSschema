@@ -25,6 +25,7 @@ const schema = {
         },
         "countryCode": {
           "type": "string",
+          "format": "iso3166-1-alpha-2",
           "pattern": "^(?:[A-Z]{2})$",
           "x-decorators": [
             {
@@ -206,6 +207,11 @@ const schema = {
           "type": "string",
           "format": "uuid"
         },
+        "catalogueId": {
+          "type": "string",
+          "format": "uuid",
+          "$comment": "DotNetSchema.Fixtures.Schema.CatalogueId<DotNetSchema.Fixtures.Schema.Book>, described inline as declared by [DotNetSchemaType] rather than by its shape. Nothing checks that it is serialised this way."
+        },
         "name": {
           "$ref": "#/$defs/BookName"
         },
@@ -214,6 +220,8 @@ const schema = {
             "string",
             "null"
           ],
+          "format": "isbn",
+          "pattern": "^978-\\d-\\d{3}-\\d{5}-\\d$",
           "title": "ISBN-13",
           "description": "ISBN-13, formatted with separators.",
           "x-decorators": [
@@ -257,7 +265,8 @@ const schema = {
         },
         "price": {
           "type": "number",
-          "$comment": "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly."
+          "$comment": "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly.",
+          "format": "decimal"
         },
         "publishedOn": {
           "type": "string",
@@ -315,6 +324,7 @@ const schema = {
       },
       "required": [
         "id",
+        "catalogueId",
         "name",
         "isbn",
         "edition",
@@ -851,7 +861,8 @@ const schema = {
           "$ref": "#/$defs/DepartmentName"
         },
         "costCentre": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(?:CC-\\d{3})?$"
         },
         "annualBudget": {
           "type": [
@@ -1846,6 +1857,14 @@ const schema = {
         },
         "role": {
           "$ref": "#/$defs/PersonRole"
+        },
+        "studentNumber": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^S\\d{7}$",
+          "$comment": "DotNetSchema.Fixtures.Schema.StudentNumber, described inline as declared by [DotNetSchemaType] rather than by its shape. Nothing checks that it is serialised this way."
         },
         "bornOn": {
           "type": "string",

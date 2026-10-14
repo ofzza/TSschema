@@ -25,6 +25,7 @@ import {
   type TSSchemaTypeDescriptor,
   type TSSchemaPrimitiveTypeDescriptor,
   type TSSchemaDecoratorDescriptor,
+  type TSSchemaConstraints,
 } from './index.js';
 import { generateFiles } from './codegen/index.js';
 
@@ -40,7 +41,7 @@ const schema = {
       type: 'object',
       properties: {
         name: { type: 'string', title: 'Full name', minLength: 1, 'x-decorators': [{ name: 'Required' }] },
-        age: { type: 'integer', minimum: 0 },
+        age: { type: 'integer', minimum: 0, format: 'int32' },
         role: { $ref: '#/$defs/Role' },
         mentor: { anyOf: [{ $ref: '#/$defs/Person' }, { type: 'null' }] },
       },
@@ -200,8 +201,15 @@ describe('Runtime reflection', () => {
     it('Describes the constraints of a type', () => {
       const personType = reflect(schema).getDefinition('Person').typeDescriptor;
       const ageConstraints = personType.properties.age.type.constraints;
-      // Breakpoint: inspect `ageConstraints`, every number keyword, `undefined` where the schema has none
-      expect(ageConstraints).toStrictEqual({ minimum: 0, maximum: undefined, exclusiveMinimum: undefined, exclusiveMaximum: undefined, multipleOf: undefined });
+      // Breakpoint: inspect `ageConstraints`, every number keyword and `format`, `undefined` where the schema has none
+      expect(ageConstraints).toStrictEqual({
+        minimum: 0,
+        maximum: undefined,
+        exclusiveMinimum: undefined,
+        exclusiveMaximum: undefined,
+        multipleOf: undefined,
+        format: 'int32',
+      });
       type AgeMinimum = typeof ageConstraints.minimum;
       //   ^?
       // AgeMinimum: 0
@@ -217,6 +225,22 @@ describe('Runtime reflection', () => {
 
       // @ts-expect-error This will fail at compile time, a number has no `maxLength`
       expect(ageConstraints.maxLength).toBe(undefined);
+    });
+
+    it('Describes the format of a type of any kind', () => {
+      // `format` applies to values of any type, so every kind holding constraints has it, typed by TSSchemaConstraints
+      function formatOf(descriptor: TSSchemaTypeDescriptor): string | undefined {
+        const constraints: TSSchemaConstraints | undefined = 'constraints' in descriptor ? descriptor.constraints : undefined;
+        return constraints?.format;
+      }
+      const personType = reflect(schema).getDefinition('Person').typeDescriptor;
+      const formats = Object.values(personType.properties).map((property) => formatOf(property.type));
+      // Breakpoint: inspect `formats`, by property
+      expect(formats).toEqual([undefined, 'int32', undefined, undefined]);
+      type AgeFormat = typeof personType.properties.age.type.constraints.format;
+      //   ^?
+      // AgeFormat: 'int32'
+      expect(true satisfies AssertTypeEquality<AgeFormat, 'int32'>).toBe(true);
     });
 
     it('Reads the annotations and decorators of a reflection, and of each property of a model descriptor', () => {

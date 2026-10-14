@@ -41,6 +41,7 @@ type _NoNumberConstraints = {
   readonly exclusiveMinimum: undefined;
   readonly exclusiveMaximum: undefined;
   readonly multipleOf: undefined;
+  readonly format: undefined;
 };
 
 describe('Reflection', () => {

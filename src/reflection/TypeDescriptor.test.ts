@@ -47,19 +47,22 @@ const _schema = {
 type _Schema = typeof _schema;
 
 /**
- * Constraints of a number, a string, an array and an object with none, at runtime (where `toEqual` ignores keys with an `undefined` value) and at type
- * level
+ * Constraints of a boolean, a number, a string, an array and an object with none, at runtime (where `toEqual` ignores keys with an `undefined` value) and
+ * at type level
  */
+const _noBooleanConstraints = {};
 const _noNumberConstraints = {};
 const _noStringConstraints = {};
 const _noArrayConstraints = {};
 const _noObjectConstraints = {};
+type _NoBooleanConstraints = { readonly format: undefined };
 type _NoNumberConstraints = {
   readonly minimum: undefined;
   readonly maximum: undefined;
   readonly exclusiveMinimum: undefined;
   readonly exclusiveMaximum: undefined;
   readonly multipleOf: undefined;
+  readonly format: undefined;
 };
 type _NoStringConstraints = {
   readonly minLength: undefined;
@@ -68,8 +71,8 @@ type _NoStringConstraints = {
   readonly format: undefined;
   readonly contentEncoding: undefined;
 };
-type _NoArrayConstraints = { readonly minItems: undefined; readonly maxItems: undefined; readonly uniqueItems: undefined };
-type _NoObjectConstraints = { readonly minProperties: undefined; readonly maxProperties: undefined };
+type _NoArrayConstraints = { readonly minItems: undefined; readonly maxItems: undefined; readonly uniqueItems: undefined; readonly format: undefined };
+type _NoObjectConstraints = { readonly minProperties: undefined; readonly maxProperties: undefined; readonly format: undefined };
 
 /**
  * Annotations of a fragment with none, at runtime (where `toEqual` ignores keys with an `undefined` value) and at type level
@@ -276,7 +279,7 @@ describe('Reflection', () => {
           kind: 'anyOf',
           members: [
             { kind: 'primitive', type: 'string', constraints: _noStringConstraints, nullable: false },
-            { kind: 'primitive', type: 'boolean', constraints: {}, nullable: false },
+            { kind: 'primitive', type: 'boolean', constraints: _noBooleanConstraints, nullable: false },
           ],
           implicit: false,
           nullable: true,
@@ -284,7 +287,7 @@ describe('Reflection', () => {
         expect(
           true satisfies AssertTypeEquality<
             typeof several,
-            TSSchemaAnyOfTypeDescriptor<readonly [_String, TSSchemaPrimitiveTypeDescriptor<'boolean', false, {}>], false, true>
+            TSSchemaAnyOfTypeDescriptor<readonly [_String, TSSchemaPrimitiveTypeDescriptor<'boolean', false, _NoBooleanConstraints>], false, true>
           >,
         ).toBe(true);
 
@@ -387,10 +390,13 @@ describe('Reflection', () => {
         expect(true satisfies AssertTypeEquality<typeof nullableAllOf.nullable, true>).toBe(true);
 
         const not = _describe({ not: { type: 'boolean' } });
-        expect(not).toEqual({ kind: 'not', not: { kind: 'primitive', type: 'boolean', constraints: {}, nullable: false }, nullable: false });
-        expect(true satisfies AssertTypeEquality<typeof not, TSSchemaNotTypeDescriptor<TSSchemaPrimitiveTypeDescriptor<'boolean', false, {}>, false>>).toBe(
-          true,
-        );
+        expect(not).toEqual({ kind: 'not', not: { kind: 'primitive', type: 'boolean', constraints: _noBooleanConstraints, nullable: false }, nullable: false });
+        expect(
+          true satisfies AssertTypeEquality<
+            typeof not,
+            TSSchemaNotTypeDescriptor<TSSchemaPrimitiveTypeDescriptor<'boolean', false, _NoBooleanConstraints>, false>
+          >,
+        ).toBe(true);
       });
 
       it('Absorbs the type alongside an enum or const', () => {
@@ -483,11 +489,25 @@ describe('Reflection', () => {
 
       it('Describes the constraints of a number and a string, every keyword always present', () => {
         const number = _describe({ type: 'number', minimum: 1, exclusiveMaximum: 5, multipleOf: 0.5 });
-        expect(number.constraints).toStrictEqual({ minimum: 1, maximum: undefined, exclusiveMinimum: undefined, exclusiveMaximum: 5, multipleOf: 0.5 });
+        expect(number.constraints).toStrictEqual({
+          minimum: 1,
+          maximum: undefined,
+          exclusiveMinimum: undefined,
+          exclusiveMaximum: 5,
+          multipleOf: 0.5,
+          format: undefined,
+        });
         expect(
           true satisfies AssertTypeEquality<
             typeof number.constraints,
-            { readonly minimum: 1; readonly maximum: undefined; readonly exclusiveMinimum: undefined; readonly exclusiveMaximum: 5; readonly multipleOf: 0.5 }
+            {
+              readonly minimum: 1;
+              readonly maximum: undefined;
+              readonly exclusiveMinimum: undefined;
+              readonly exclusiveMaximum: 5;
+              readonly multipleOf: 0.5;
+              readonly format: undefined;
+            }
           >,
         ).toBe(true);
 
@@ -495,10 +515,39 @@ describe('Reflection', () => {
         expect(string.constraints).toStrictEqual({ minLength: 2, maxLength: 32, pattern: '^a', format: 'email', contentEncoding: 'base64' });
         expect(true satisfies AssertTypeEquality<typeof string.constraints.format, 'email'>).toBe(true);
 
-        // A boolean has no constraints
+        // A boolean has only the constraints applying to values of any type
         const boolean = _describe({ type: 'boolean' });
-        expect(boolean.constraints).toStrictEqual({});
-        expect(true satisfies AssertTypeEquality<typeof boolean.constraints, {}>).toBe(true);
+        expect(boolean.constraints).toStrictEqual({ format: undefined });
+        expect(true satisfies AssertTypeEquality<typeof boolean.constraints, { readonly format: undefined }>).toBe(true);
+      });
+
+      it('Describes the format of a value of any type', () => {
+        // JSON Schema predefines string formats only, but allows custom formats of any type, so `format` is a constraint of every kind of value holding
+        // constraints (see AGENTS.md › Constraints live on the descriptor of the kind of values they apply to)
+        const number = _describe({ type: 'number', format: 'decimal' });
+        expect(number.constraints.format).toBe('decimal');
+        expect(true satisfies AssertTypeEquality<typeof number.constraints.format, 'decimal'>).toBe(true);
+
+        const boolean = _describe({ type: 'boolean', format: 'flag' });
+        expect(boolean.constraints).toStrictEqual({ format: 'flag' });
+        expect(true satisfies AssertTypeEquality<typeof boolean.constraints, { readonly format: 'flag' }>).toBe(true);
+
+        const array = _describe({ type: 'array', items: { type: 'string' }, format: 'csv' });
+        expect(array.constraints.format).toBe('csv');
+        expect(true satisfies AssertTypeEquality<typeof array.constraints.format, 'csv'>).toBe(true);
+
+        const record = _describe({ type: 'object', format: 'dictionary' });
+        expect(record.constraints.format).toBe('dictionary');
+        expect(true satisfies AssertTypeEquality<typeof record.constraints.format, 'dictionary'>).toBe(true);
+
+        const model = _describe({ type: 'object', properties: { id: { type: 'string' } }, format: 'entity' });
+        expect(model.constraints.format).toBe('entity');
+        expect(true satisfies AssertTypeEquality<typeof model.constraints.format, 'entity'>).toBe(true);
+
+        // Unlike the other validation keywords, `format` applies to every member of a type array
+        const several = _describe({ type: ['string', 'integer', 'boolean'], format: 'code' });
+        expect(several.members.map((member) => member.constraints.format)).toEqual(['code', 'code', 'code']);
+        expect(true satisfies AssertTypeEquality<(typeof several.members)[number]['constraints']['format'], 'code'>).toBe(true);
       });
 
       it('Describes each primitive type of a type array with only the constraints applying to it', () => {
@@ -521,17 +570,20 @@ describe('Reflection', () => {
 
       it('Describes the constraints of an array, a record and a model', () => {
         const array = _describe({ type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 64, uniqueItems: true });
-        expect(array.constraints).toStrictEqual({ minItems: 1, maxItems: 64, uniqueItems: true });
-        expect(true satisfies AssertTypeEquality<typeof array.constraints, { readonly minItems: 1; readonly maxItems: 64; readonly uniqueItems: true }>).toBe(
-          true,
-        );
+        expect(array.constraints).toStrictEqual({ minItems: 1, maxItems: 64, uniqueItems: true, format: undefined });
+        expect(
+          true satisfies AssertTypeEquality<
+            typeof array.constraints,
+            { readonly minItems: 1; readonly maxItems: 64; readonly uniqueItems: true; readonly format: undefined }
+          >,
+        ).toBe(true);
 
         const record = _describe({ type: 'object', maxProperties: 3 });
-        expect(record.constraints).toStrictEqual({ minProperties: undefined, maxProperties: 3 });
+        expect(record.constraints).toStrictEqual({ minProperties: undefined, maxProperties: 3, format: undefined });
         expect(true satisfies AssertTypeEquality<typeof record.constraints.maxProperties, 3>).toBe(true);
 
         const model = _describe({ type: 'object', properties: { id: { type: 'string' } }, minProperties: 1 });
-        expect(model.constraints).toStrictEqual({ minProperties: 1, maxProperties: undefined });
+        expect(model.constraints).toStrictEqual({ minProperties: 1, maxProperties: undefined, format: undefined });
         expect(true satisfies AssertTypeEquality<typeof model.constraints.minProperties, 1>).toBe(true);
       });
 
@@ -563,6 +615,11 @@ describe('Reflection', () => {
         const email = person.properties.email;
         expect([email.type.nullable, email.type.constraints.format]).toEqual([true, 'email']);
         expect(true satisfies AssertTypeEquality<typeof email.type.constraints.format, 'email'>).toBe(true);
+
+        // dotnetschema writes a custom `format` for a .NET `decimal`
+        const price = getTSSchemaTypeDescriptor(parseJSONSchemaCollection(jsonSchema).$defs.Book).properties.price;
+        expect(price.type).toEqual({ kind: 'primitive', type: 'number', constraints: { format: 'decimal' }, nullable: false });
+        expect(true satisfies AssertTypeEquality<typeof price.type.constraints.format, 'decimal'>).toBe(true);
       });
 
       it('Returns the same descriptor for the same facets', () => {

@@ -55,7 +55,7 @@ const schema = {
       type: 'object',
       properties: {
         name: { type: 'string', title: 'Full name', minLength: 1, 'x-decorators': [{ name: 'Required' }] },
-        age: { type: 'integer', minimum: 0 },
+        age: { type: 'integer', minimum: 0, format: 'int32' },
         role: { $ref: '#/$defs/Role' },
         mentor: { anyOf: [{ $ref: '#/$defs/Person' }, { type: 'null' }] },
       },
@@ -168,13 +168,15 @@ them. Tuples are not described yet (an array of `unknown` items), nor `additiona
 
 ### Constraints and annotations
 
-Validation keywords are kept as the `constraints` of the type descriptors they apply to, as JSON Schema applies each of them only to values of one type:
+Validation keywords are kept as the `constraints` of the type descriptors they apply to, as JSON Schema applies most of them only to values of one type:
 a `primitive` number (`minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`) or string (`minLength`, `maxLength`, `pattern`,
-`format`, `contentEncoding`), an `array` (`minItems`, `maxItems`, `uniqueItems`), and a `record` or `model` (`minProperties`, `maxProperties`). Every
-keyword is always there, `undefined` if the schema has none, and a `type` array naming several types gives each of them only its own:
+`contentEncoding`), an `array` (`minItems`, `maxItems`, `uniqueItems`), and a `record` or `model` (`minProperties`, `maxProperties`). `format` applies
+to values of any type (JSON Schema predefines string formats only, but allows custom ones, e.g. `int32` or `decimal` for a number), so every one of
+these holds it, a `boolean` nothing else. Every keyword is always there, `undefined` if the schema has none, and a `type` array naming several types
+gives each of them only its own (and `format`):
 
 ```ts
-const ageConstraints = personType.properties.age.type.constraints; // { minimum: 0, maximum: undefined, exclusiveMinimum: undefined, … }
+const ageConstraints = personType.properties.age.type.constraints; // { minimum: 0, maximum: undefined, …, format: 'int32' }
 const nameConstraints = personType.properties.name.type.constraints; // { minLength: 1, maxLength: undefined, pattern: undefined, … }
 const ageMaxLength = ageConstraints.maxLength; // This will fail at compile time, a number has no `maxLength`
 ```
@@ -212,7 +214,8 @@ Reflection currently navigates and describes a schema. Still to come:
 The reflection classes (`TSSchemaFragmentReflection`, `TSSchemaDefinitionReflection` and `TSSchemaPropertyReflection`) are exported as types only, for
 annotating your own code: create reflections with `reflect`, and check what a reflection is by its properties rather than with `instanceof`. The type
 descriptor types (`TSSchemaTypeDescriptor`, one per kind, e.g. `TSSchemaModelTypeDescriptor`, and `TSSchemaModelPropertyDescriptor`) are exported as
-types too.
+types too, and so are their constraints (`TSSchemaConstraints`, the `format` every kind of constraints extends, and one per kind of values, e.g.
+`TSSchemaNumberConstraints`).
 
 ## Code generation: Schemas from JSON files
 

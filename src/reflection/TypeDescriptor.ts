@@ -118,7 +118,8 @@ export interface TSSchemaPrimitiveTypeDescriptor<
   readonly kind: 'primitive';
   readonly type: TType;
   /**
-   * Validation keywords applying to the type: those of a string for `string`, of a number for `number` and `integer`, and none for `boolean`
+   * Validation keywords applying to the type: those of a string for `string`, of a number for `number` and `integer`, and only those applying to
+   * values of any type (`format`) for `boolean`
    */
   readonly constraints: TConstraints;
   readonly nullable: TNullable;
@@ -299,9 +300,17 @@ export interface TSSchemaNotTypeDescriptor<TNot = TSSchemaTypeDescriptor, TNulla
 }
 
 /**
+ * Validation keywords applying to values of any type, each `undefined` if the fragment has none. Only `format`: JSON Schema predefines string formats
+ * only, but allows custom formats of any type (e.g. `"decimal"` for a number)
+ */
+export interface TSSchemaConstraints {
+  readonly format: string | undefined;
+}
+
+/**
  * Validation keywords applying to a number (`number` or `integer`), each `undefined` if the fragment has none
  */
-export interface TSSchemaNumberConstraints {
+export interface TSSchemaNumberConstraints extends TSSchemaConstraints {
   readonly minimum: number | undefined;
   readonly maximum: number | undefined;
   readonly exclusiveMinimum: number | undefined;
@@ -312,18 +321,17 @@ export interface TSSchemaNumberConstraints {
 /**
  * Validation keywords applying to a string, each `undefined` if the fragment has none
  */
-export interface TSSchemaStringConstraints {
+export interface TSSchemaStringConstraints extends TSSchemaConstraints {
   readonly minLength: number | undefined;
   readonly maxLength: number | undefined;
   readonly pattern: string | undefined;
-  readonly format: string | undefined;
   readonly contentEncoding: string | undefined;
 }
 
 /**
  * Validation keywords applying to an array, each `undefined` if the fragment has none
  */
-export interface TSSchemaArrayConstraints {
+export interface TSSchemaArrayConstraints extends TSSchemaConstraints {
   readonly minItems: number | undefined;
   readonly maxItems: number | undefined;
   readonly uniqueItems: boolean | undefined;
@@ -332,14 +340,14 @@ export interface TSSchemaArrayConstraints {
 /**
  * Validation keywords applying to an object, each `undefined` if the fragment has none
  */
-export interface TSSchemaObjectConstraints {
+export interface TSSchemaObjectConstraints extends TSSchemaConstraints {
   readonly minProperties: number | undefined;
   readonly maxProperties: number | undefined;
 }
 
 /**
- * Gets the validation keywords applying to a primitive type: those of a string for `string`, of a number for `number` and `integer`, and none for
- * `boolean`
+ * Gets the validation keywords applying to a primitive type: those of a string for `string`, of a number for `number` and `integer`, and only those
+ * applying to values of any type for `boolean`
  */
 export type TSSchemaPrimitiveConstraints<TType extends JSONSchemaPrimitiveTypeName = JSONSchemaPrimitiveTypeName> =
   // String
@@ -349,16 +357,21 @@ export type TSSchemaPrimitiveConstraints<TType extends JSONSchemaPrimitiveTypeNa
       TType extends 'number' | 'integer'
       ? TSSchemaNumberConstraints
       : // Boolean
-        {};
+        TSSchemaConstraints;
 
 // #endregion
 
 // #region Runtime
 
 /**
+ * Validation keywords applying to values of any type, as held by a primitive type, array type, object type or model facet
+ */
+const _anyConstraints = ['format'] as const satisfies ReadonlyArray<keyof TSSchemaConstraints>;
+
+/**
  * Validation keywords applying to a number, as held by a primitive type facet
  */
-const _numberConstraints = ['minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf'] as const satisfies ReadonlyArray<
+const _numberConstraints = ['minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf', 'format'] as const satisfies ReadonlyArray<
   keyof TSSchemaNumberConstraints
 >;
 
@@ -370,12 +383,12 @@ const _stringConstraints = ['minLength', 'maxLength', 'pattern', 'format', 'cont
 /**
  * Validation keywords applying to an array, as held by an array type facet
  */
-const _arrayConstraints = ['minItems', 'maxItems', 'uniqueItems'] as const satisfies ReadonlyArray<keyof TSSchemaArrayConstraints>;
+const _arrayConstraints = ['minItems', 'maxItems', 'uniqueItems', 'format'] as const satisfies ReadonlyArray<keyof TSSchemaArrayConstraints>;
 
 /**
  * Validation keywords applying to an object, as held by an object type or model facet
  */
-const _objectConstraints = ['minProperties', 'maxProperties'] as const satisfies ReadonlyArray<keyof TSSchemaObjectConstraints>;
+const _objectConstraints = ['minProperties', 'maxProperties', 'format'] as const satisfies ReadonlyArray<keyof TSSchemaObjectConstraints>;
 
 /**
  * Descriptors already built, by the facets array they describe, so that every reference to a definition describes it by the same descriptor
@@ -543,8 +556,10 @@ function _describeMembers(members: Array<Array<JSONSchemaFragmentFacet<any, any,
  * @returns Descriptor of the primitive type
  */
 function _describePrimitive(facet: JSONSchemaPrimitiveTypeFragmentFacet<any, any, any>, type: JSONSchemaPrimitiveTypeName): TSSchemaTypeDescriptor {
-  const constraints =
-    type === 'string' ? _getConstraints(facet, _stringConstraints) : type === 'number' || type === 'integer' ? _getConstraints(facet, _numberConstraints) : {};
+  const constraints = _getConstraints(
+    facet,
+    type === 'string' ? _stringConstraints : type === 'number' || type === 'integer' ? _numberConstraints : _anyConstraints,
+  );
   return { kind: 'primitive', type, constraints, nullable: false } as TSSchemaTypeDescriptor;
 }
 
@@ -715,7 +730,7 @@ type _TSSchemaFacetTypeDescriptor<TSchema extends JSONSchemaCollection, TFacet> 
             },
             ReadonlyArray<R>,
             false,
-            _TSSchemaConstraints<TFacet, keyof TSSchemaObjectConstraints>
+            _TSSchemaFacetConstraints<TFacet, keyof TSSchemaObjectConstraints>
           >
         : never
       : // Const: a `null` constant is the null type
@@ -727,13 +742,13 @@ type _TSSchemaFacetTypeDescriptor<TSchema extends JSONSchemaCollection, TFacet> 
           : // Array type
             TFacet extends { items: unknown }
             ? F extends { items: infer I }
-              ? TSSchemaArrayTypeDescriptor<_TSSchemaNestedTypeDescriptor<TSchema, I>, false, _TSSchemaConstraints<TFacet, keyof TSSchemaArrayConstraints>>
+              ? TSSchemaArrayTypeDescriptor<_TSSchemaNestedTypeDescriptor<TSchema, I>, false, _TSSchemaFacetConstraints<TFacet, keyof TSSchemaArrayConstraints>>
               : TSSchemaArrayTypeDescriptor<
                   F extends { items?: infer I }
                     ? _TSSchemaNestedTypeDescriptor<TSchema, Exclude<I, undefined>> | _TSSchemaUnknownTypeDescriptor
                     : _TSSchemaUnknownTypeDescriptor,
                   false,
-                  _TSSchemaConstraints<TFacet, keyof TSSchemaArrayConstraints>
+                  _TSSchemaFacetConstraints<TFacet, keyof TSSchemaArrayConstraints>
                 >
             : // AllOf type: nullable only if every member is
               TFacet extends { allOf: unknown }
@@ -765,7 +780,11 @@ type _TSSchemaFacetTypeDescriptor<TSchema extends JSONSchemaCollection, TFacet> 
                         ? T extends 'null'
                           ? TSSchemaNullTypeDescriptor
                           : T extends 'object'
-                            ? TSSchemaRecordTypeDescriptor<_TSSchemaUnknownTypeDescriptor, false, _TSSchemaConstraints<TFacet, keyof TSSchemaObjectConstraints>>
+                            ? TSSchemaRecordTypeDescriptor<
+                                _TSSchemaUnknownTypeDescriptor,
+                                false,
+                                _TSSchemaFacetConstraints<TFacet, keyof TSSchemaObjectConstraints>
+                              >
                             : _TSSchemaPrimitiveTypeDescriptor<T, TFacet>
                         : never
     : never;
@@ -934,18 +953,18 @@ type _TSSchemaPrimitiveTypeDescriptorOf<TType extends JSONSchemaPrimitiveTypeNam
   false,
   // String
   TType extends 'string'
-    ? _TSSchemaConstraints<TFacet, keyof TSSchemaStringConstraints>
+    ? _TSSchemaFacetConstraints<TFacet, keyof TSSchemaStringConstraints>
     : // Number
       TType extends 'number' | 'integer'
-      ? _TSSchemaConstraints<TFacet, keyof TSSchemaNumberConstraints>
+      ? _TSSchemaFacetConstraints<TFacet, keyof TSSchemaNumberConstraints>
       : // Boolean
-        {}
+        _TSSchemaFacetConstraints<TFacet, keyof TSSchemaConstraints>
 >;
 
 /**
  * Infers the constraints of a facet: the type of each of the given validation keywords, as parsed by the facet (see `_getConstraints`)
  */
-type _TSSchemaConstraints<TFacet, TKeyword extends string> = { readonly [K in TKeyword]: K extends keyof TFacet ? TFacet[K] : undefined };
+type _TSSchemaFacetConstraints<TFacet, TKeyword extends string> = { readonly [K in TKeyword]: K extends keyof TFacet ? TFacet[K] : undefined };
 
 /**
  * Infers the descriptor of a reference, by the name of the referenced definition, or `unknown` for a reference which can not be resolved

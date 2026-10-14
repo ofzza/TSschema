@@ -41,6 +41,11 @@ export class JSONSchemaObjectTypeFragmentFacet<
   public readonly maxProperties: JSONSchemaKeyword<TFragment, 'maxProperties', number>;
 
   /**
+   * The fragment's `format` (a custom format, as JSON Schema predefines string formats only), or `undefined` if it has none
+   */
+  public readonly format: JSONSchemaKeyword<TFragment, 'format', string>;
+
+  /**
    * Parses a JSON schema object type definition
    * @param fragment JSON fragment to parse
    * @param options Collection and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
@@ -50,6 +55,7 @@ export class JSONSchemaObjectTypeFragmentFacet<
     this.type = fragment['type'];
     this.minProperties = getJSONSchemaKeyword(fragment, 'minProperties', 'number') as JSONSchemaKeyword<TFragment, 'minProperties', number>;
     this.maxProperties = getJSONSchemaKeyword(fragment, 'maxProperties', 'number') as JSONSchemaKeyword<TFragment, 'maxProperties', number>;
+    this.format = getJSONSchemaKeyword(fragment, 'format', 'string') as JSONSchemaKeyword<TFragment, 'format', string>;
   }
 
   // TODO: Not implemented yet (as in the type layer): `propertyNames`, `patternProperties`, `additionalProperties`, `required`

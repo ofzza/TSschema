@@ -54,6 +54,11 @@ export class JSONSchemaArrayTypeFragmentFacet<
   public readonly uniqueItems: JSONSchemaKeyword<TFragment, 'uniqueItems', boolean>;
 
   /**
+   * The fragment's `format` (a custom format, as JSON Schema predefines string formats only), or `undefined` if it has none
+   */
+  public readonly format: JSONSchemaKeyword<TFragment, 'format', string>;
+
+  /**
    * Parses a JSON schema array type definition
    * @param fragment JSON fragment to parse
    * @param options Collection and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
@@ -64,6 +69,7 @@ export class JSONSchemaArrayTypeFragmentFacet<
     this.minItems = getJSONSchemaKeyword(fragment, 'minItems', 'number') as JSONSchemaKeyword<TFragment, 'minItems', number>;
     this.maxItems = getJSONSchemaKeyword(fragment, 'maxItems', 'number') as JSONSchemaKeyword<TFragment, 'maxItems', number>;
     this.uniqueItems = getJSONSchemaKeyword(fragment, 'uniqueItems', 'boolean') as JSONSchemaKeyword<TFragment, 'uniqueItems', boolean>;
+    this.format = getJSONSchemaKeyword(fragment, 'format', 'string') as JSONSchemaKeyword<TFragment, 'format', string>;
     const items = fragment['items'];
     this.items = (items === undefined ? undefined : createJSONSchemaNestedFragmentFacets(items, this._collection)) as _JSONSchemaArrayTypeFragmentItemsFacets<
       TSchema,

@@ -74,7 +74,7 @@ export class JSONSchemaPrimitiveTypeFragmentFacet<
   public readonly pattern: JSONSchemaKeyword<TFragment, 'pattern', string>;
 
   /**
-   * The fragment's `format` (e.g. `"date"`, `"uuid"`, `"email"`), or `undefined` if it has none
+   * The fragment's `format` (e.g. `"date"`, `"uuid"` for a string, or a custom format like `"decimal"` for a number), or `undefined` if it has none
    */
   public readonly format: JSONSchemaKeyword<TFragment, 'format', string>;
 

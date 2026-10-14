@@ -7,7 +7,7 @@ import { JSONSchemaArrayTypeFragmentFacet, JSONSchemaCollectionFragmentFacet, JS
  */
 const _schema = {
   $defs: {
-    Names: { type: 'array', items: { type: 'string' }, minItems: 1, uniqueItems: true },
+    Names: { type: 'array', items: { type: 'string' }, minItems: 1, uniqueItems: true, format: 'csv' },
     Anything: { type: 'array' },
     Booleans: { type: 'array', items: true },
     Tuple: { type: 'array', items: [{ type: 'string' }, { type: 'number' }] },
@@ -22,7 +22,7 @@ describe('Reflection', () => {
     // Each file in this directory holds the tests of one facet class under this describe.
     describe('Array Type fragment', () => {
       // JSONSchemaArrayTypeFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsArrayType), the facets of its `items` (parsed on construction), the
-      // validation keywords of arrays it parses, and the type-only `Type`. Facets are taken from a JSONSchemaCollectionFragmentFacet parsing the small inline collection above, which covers a single
+      // validation keywords of arrays (and `format`, applying to values of any type) it parses, and the type-only `Type`. Facets are taken from a JSONSchemaCollectionFragmentFacet parsing the small inline collection above, which covers a single
       // schema, absent, boolean schema and tuple `items`. Each runtime `expect` on a parsed value is paired with an AssertTypeEquality on its static type.
       it('Detects an array type', () => {
         expect(JSONSchemaArrayTypeFragmentFacet.is({ type: 'array' })).toBe(true);
@@ -70,6 +70,8 @@ describe('Reflection', () => {
         expect(true satisfies AssertTypeEquality<typeof names.minItems, 1>).toBe(true);
         expect(true satisfies AssertTypeEquality<typeof names.maxItems, undefined>).toBe(true);
         expect(true satisfies AssertTypeEquality<typeof names.uniqueItems, true>).toBe(true);
+        expect(names.format).toBe('csv');
+        expect(true satisfies AssertTypeEquality<typeof names.format, 'csv'>).toBe(true);
       });
 
       it('Infers the type of an array type', () => {

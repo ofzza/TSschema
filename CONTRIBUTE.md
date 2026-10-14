@@ -53,8 +53,10 @@ Terms are listed in the order they build on each other. Use them as defined here
   JSON schema does not define, prefixed `x-` (`x-enumNames`, `x-decorators`); the `JSONSchema7` type does not declare them, so they are read with
   `getJSONSchemaKeyword` and never added to the type layer's fragment types.
 - **Constraint** - a validation keyword which limits the values of one type of values only: a number (`minimum`, `maximum`, `exclusiveMinimum`,
-  `exclusiveMaximum`, `multipleOf`), a string (`minLength`, `maxLength`, `pattern`, `format`, `contentEncoding`), an array (`minItems`, `maxItems`,
-  `uniqueItems`) or an object (`minProperties`, `maxProperties`). Parsed by the facet of that type, and held by its type descriptor's `constraints`.
+  `exclusiveMaximum`, `multipleOf`), a string (`minLength`, `maxLength`, `pattern`, `contentEncoding`), an array (`minItems`, `maxItems`,
+  `uniqueItems`) or an object (`minProperties`, `maxProperties`) - except `format`, which applies to values of any type (JSON Schema predefines string
+  formats only, but allows custom ones of any type), so every kind of constraints has it. Parsed by the facet of that type, and held by its type
+  descriptor's `constraints`.
   Never used by value type inference (see AGENTS.md › Constraints and annotations never change inferred value types).
 - **Annotation** - a keyword describing a fragment rather than constraining its values (`title`, `description`, `default`, `deprecated`, `examples`,
   and the decorators; `$comment` is not exposed). Belongs to the position the fragment is used at, so it is read from the fragment itself, never
