@@ -32,6 +32,17 @@ const _schema = {
 } as const;
 type _Schema = typeof _schema;
 
+/**
+ * Constraints of a number with none
+ */
+type _NoNumberConstraints = {
+  readonly minimum: undefined;
+  readonly maximum: undefined;
+  readonly exclusiveMinimum: undefined;
+  readonly exclusiveMaximum: undefined;
+  readonly multipleOf: undefined;
+};
+
 describe('Reflection', () => {
   // `reflect` and the reflection classes (TSSchemaReflection.ts). Every case reflects either the `_schema` collection above (a model root, with models reached
   // through references, an `anyOf`, array items and a nullable model, plus a property named with a dot and an object of unknown shape) or the
@@ -207,15 +218,18 @@ describe('Reflection', () => {
         expect(cat.typeDescriptor).toEqual({
           kind: 'model',
           properties: {
-            name: { required: true, type: { kind: 'primitive', type: 'string', nullable: false } },
-            lives: { required: true, type: { kind: 'primitive', type: 'integer', nullable: false } },
+            name: { required: true, type: { kind: 'primitive', type: 'string', constraints: {}, nullable: false }, annotations: { decorators: [] } },
+            lives: { required: true, type: { kind: 'primitive', type: 'integer', constraints: {}, nullable: false }, annotations: { decorators: [] } },
           },
           required: ['name', 'lives'],
+          constraints: {},
           nullable: false,
         });
         const lives = cat.getProperty('lives');
         expect(lives.typeDescriptor).toBe(cat.typeDescriptor.properties.lives.type);
-        expect(true satisfies AssertTypeEquality<typeof lives.typeDescriptor, TSSchemaPrimitiveTypeDescriptor<'integer', false>>).toBe(true);
+        expect(true satisfies AssertTypeEquality<typeof lives.typeDescriptor, TSSchemaPrimitiveTypeDescriptor<'integer', false, _NoNumberConstraints>>).toBe(
+          true,
+        );
       });
 
       it('Describes a definition by the same descriptor as every reference to it', () => {
@@ -229,7 +243,7 @@ describe('Reflection', () => {
 
       it('Describes a nullable model as a model, flagged nullable', () => {
         // Being required belongs to a property entry of the model descriptor, never to the property's type descriptor (see AGENTS.md › A model descriptor's
-        // properties hold { required, type } entries).
+        // properties hold { required, type, annotations } entries).
         const owner = reflect(_schema).getDefinition('Owner').typeDescriptor;
         expect([owner.kind, owner.nullable]).toEqual(['model', true]);
         expect(owner.properties.pets.required).toBe(true);
@@ -276,6 +290,91 @@ describe('Reflection', () => {
         const deep = reflect(_schema).getDefinition('Owner').getProperty('notes.a');
         expect(deep.typeDescriptor).toEqual({ kind: 'unknown', nullable: false });
         expect(true satisfies AssertTypeEquality<typeof deep.typeDescriptor, TSSchemaUnknownTypeDescriptor<false>>).toBe(true);
+      });
+    });
+
+    describe('Annotations', () => {
+      // The `annotations` getter of a reflection and its shortcuts (`title`, `description`, `default`, `deprecated`, `examples`, `decorators`): only which
+      // fragment each reflection reads them from, as reading them is covered by Annotations.test.ts. Uses the res/sidecar/schema.json fixture, whose
+      // annotations and `x-decorators` the sibling dotnetschema generates from .NET attributes, and the inline `_annotated` collection below for the
+      // positions the fixture does not cover, each runtime `expect` paired with an `AssertTypeEquality` on the literal type inferred from the schema.
+
+      /**
+       * Collection annotating its root, a definition, and properties next to a `$ref`, next to a nullable reference's `anyOf`, with no type keywords, and
+       * in two models at once
+       */
+      const _annotated = {
+        title: 'Root',
+        $defs: {
+          Tag: { type: 'string', description: 'A tag' },
+          A: {
+            type: 'object',
+            properties: {
+              tag: { $ref: '#/$defs/Tag', title: 'Main tag' },
+              other: { anyOf: [{ $ref: '#/$defs/Tag' }, { type: 'null' }], deprecated: true },
+              any: { examples: [1, 'a'] },
+              shared: { type: 'string', title: 'Shared in A' },
+            },
+          },
+          B: { type: 'object', properties: { shared: { type: 'string', title: 'Shared in B' } } },
+          AB: { anyOf: [{ $ref: '#/$defs/A' }, { $ref: '#/$defs/B' }] },
+        },
+      } as const;
+
+      it('Reads the annotations of the root, a definition and a property from their own fragments', () => {
+        const root = reflect(jsonSchema);
+        expect(root.title).toBe('school');
+        expect(true satisfies AssertTypeEquality<typeof root.title, 'school'>).toBe(true);
+
+        const campus = root.getDefinition('Campus');
+        expect(campus.title).toBe('Campus site');
+        expect(campus.decorators).toEqual([{ name: 'System.ComponentModel.DisplayNameAttribute', arguments: { displayName: 'Campus site' }, properties: {} }]);
+        expect(true satisfies AssertTypeEquality<typeof campus.title, 'Campus site'>).toBe(true);
+        expect(true satisfies AssertTypeEquality<(typeof campus.decorators)[0]['arguments']['displayName'], 'Campus site'>).toBe(true);
+
+        // `isbn` is a nullable string, a type array split into branches: its annotations are still read from the property's fragment as a whole
+        const isbn = root.getDefinition('Book').getProperty('isbn');
+        expect([isbn.title, isbn.description]).toEqual(['ISBN-13', 'ISBN-13, formatted with separators.']);
+        expect(isbn.decorators[0].properties).toEqual({ Description: 'ISBN-13, formatted with separators.', Name: 'ISBN-13' });
+        expect(true satisfies AssertTypeEquality<typeof isbn.title, 'ISBN-13'>).toBe(true);
+
+        const hasDigitalLicence = root.getDefinition('Book').getProperty('hasDigitalLicence');
+        expect(hasDigitalLicence.default).toBe(false);
+        expect(true satisfies AssertTypeEquality<typeof hasDigitalLicence.default, false>).toBe(true);
+      });
+
+      it('Reads the annotations next to a reference, never through it', () => {
+        // Annotations belong to the position a type is used at: `tag` has its own title, not `Tag`'s description, and `other` is flagged deprecated next
+        // to the `anyOf` of its nullable reference (see AGENTS.md › Annotations belong to the position a fragment is used at).
+        const a = reflect(_annotated).getDefinition('A');
+        const tag = a.getProperty('tag');
+        expect([tag.title, tag.description]).toEqual(['Main tag', undefined]);
+        expect(true satisfies AssertTypeEquality<typeof tag.title, 'Main tag'>).toBe(true);
+        expect(true satisfies AssertTypeEquality<typeof tag.description, undefined>).toBe(true);
+        expect(a.getDefinition('Tag').description).toBe('A tag');
+
+        const other = a.getProperty('other');
+        expect(other.deprecated).toBe(true);
+        expect(true satisfies AssertTypeEquality<typeof other.deprecated, true>).toBe(true);
+      });
+
+      it('Reads the annotations of a fragment with no type keywords', () => {
+        // `any` parses into no facets, so its annotations could not be read from facets; reflections keep their fragment for this
+        const any = reflect(_annotated).getDefinition('A').getProperty('any');
+        expect(any.facets).toEqual([]);
+        expect(any.examples).toEqual([1, 'a']);
+        expect(true satisfies AssertTypeEquality<typeof any.examples, readonly [1, 'a']>).toBe(true);
+      });
+
+      it('Reads no annotations for a property found in several models', () => {
+        // Its fragment is the implicit `anyOf` of each found property, which has none of its own: each model's annotations stay on that model's property
+        // (see AGENTS.md › A property found in several models is one reflection holding a fresh implicit anyOf facet)
+        const ab = reflect(_annotated).getDefinition('AB');
+        const shared = ab.getProperty('shared');
+        expect(shared.annotations).toEqual({ decorators: [] });
+        expect(shared.title).toBe(undefined);
+        expect(true satisfies AssertTypeEquality<typeof shared.title, undefined>).toBe(true);
+        expect(ab.getDefinition('A').getProperty('shared').title).toBe('Shared in A');
       });
     });
   });

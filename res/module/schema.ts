@@ -24,13 +24,47 @@ const schema = {
           ]
         },
         "countryCode": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(?:[A-Z]{2})$",
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.RegularExpressionAttribute",
+              "arguments": {
+                "pattern": "[A-Z]{2}"
+              }
+            }
+          ]
         },
         "latitude": {
-          "type": "number"
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.RangeAttribute",
+              "arguments": {
+                "minimum": -90,
+                "maximum": 90
+              }
+            }
+          ]
         },
         "longitude": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": -180,
+          "maximum": 180,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.RangeAttribute",
+              "arguments": {
+                "minimum": -180,
+                "maximum": 180
+              },
+              "properties": {
+                "MinimumIsExclusive": true
+              }
+            }
+          ]
         }
       },
       "required": [
@@ -179,17 +213,47 @@ const schema = {
           "type": [
             "string",
             "null"
+          ],
+          "title": "ISBN-13",
+          "description": "ISBN-13, formatted with separators.",
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.DisplayAttribute",
+              "properties": {
+                "Description": "ISBN-13, formatted with separators.",
+                "Name": "ISBN-13"
+              }
+            }
           ]
         },
         "edition": {
           "type": "integer",
-          "minimum": 0,
-          "maximum": 255
+          "minimum": 1,
+          "maximum": 99,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.RangeAttribute",
+              "arguments": {
+                "minimum": 1,
+                "maximum": 99
+              }
+            }
+          ]
         },
         "pageCount": {
           "type": "integer",
-          "minimum": 0,
-          "maximum": 65535
+          "minimum": 1,
+          "maximum": 5000,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.RangeAttribute",
+              "arguments": {
+                "type": "System.UInt16",
+                "minimum": "1",
+                "maximum": "5000"
+              }
+            }
+          ]
         },
         "price": {
           "type": "number",
@@ -199,8 +263,20 @@ const schema = {
           "type": "string",
           "format": "date"
         },
+        "binding": {
+          "$ref": "#/$defs/BookBinding"
+        },
         "hasDigitalLicence": {
-          "type": "boolean"
+          "type": "boolean",
+          "default": false,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DefaultValueAttribute",
+              "arguments": {
+                "value": false
+              }
+            }
+          ]
         },
         "class": {
           "anyOf": [
@@ -225,7 +301,16 @@ const schema = {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Chapter"
-          }
+          },
+          "maxItems": 64,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.MaxLengthAttribute",
+              "arguments": {
+                "length": 64
+              }
+            }
+          ]
         }
       },
       "required": [
@@ -236,8 +321,26 @@ const schema = {
         "pageCount",
         "price",
         "publishedOn",
+        "binding",
         "authors",
         "chapters"
+      ]
+    },
+    "BookBinding": {
+      "type": "string",
+      "oneOf": [
+        {
+          "const": "Hardcover",
+          "title": "Hardcover"
+        },
+        {
+          "const": "Paperback",
+          "title": "Paperback"
+        },
+        {
+          "const": "spiral-bound",
+          "title": "SpiralBound"
+        }
       ]
     },
     "BookName": {
@@ -403,6 +506,15 @@ const schema = {
         "address",
         "openedOn",
         "buildings"
+      ],
+      "title": "Campus site",
+      "x-decorators": [
+        {
+          "name": "System.ComponentModel.DisplayNameAttribute",
+          "arguments": {
+            "displayName": "Campus site"
+          }
+        }
       ]
     },
     "Chapter": {
@@ -1705,10 +1817,32 @@ const schema = {
           "format": "uuid"
         },
         "givenName": {
-          "type": "string"
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.StringLengthAttribute",
+              "arguments": {
+                "maximumLength": 32
+              },
+              "properties": {
+                "MinimumLength": 2
+              }
+            }
+          ]
         },
         "familyName": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 40,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.MaxLengthAttribute",
+              "arguments": {
+                "length": 40
+              }
+            }
+          ]
         },
         "role": {
           "$ref": "#/$defs/PersonRole"
@@ -1721,6 +1855,12 @@ const schema = {
           "type": [
             "string",
             "null"
+          ],
+          "format": "email",
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.EmailAddressAttribute"
+            }
           ]
         },
         "isActive": {
@@ -1730,13 +1870,34 @@ const schema = {
           "type": [
             "number",
             "null"
+          ],
+          "minimum": 1,
+          "maximum": 5,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.RangeAttribute",
+              "arguments": {
+                "minimum": 1,
+                "maximum": 5
+              }
+            }
           ]
         },
         "classes": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Class"
-          }
+          },
+          "maxItems": 64,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.LengthAttribute",
+              "arguments": {
+                "minimumLength": 0,
+                "maximumLength": 64
+              }
+            }
+          ]
         },
         "grades": {
           "type": "object",
@@ -1846,6 +2007,15 @@ const schema = {
         {
           "const": 5,
           "title": "Administrator"
+        }
+      ],
+      "description": "The capacity in which a person is attached to the school.",
+      "x-decorators": [
+        {
+          "name": "System.ComponentModel.DescriptionAttribute",
+          "arguments": {
+            "description": "The capacity in which a person is attached to the school."
+          }
         }
       ]
     },
@@ -2544,6 +2714,15 @@ const schema = {
         "campuses",
         "departments",
         "sisterSchools"
+      ],
+      "description": "A school: the root of the fixture graph.",
+      "x-decorators": [
+        {
+          "name": "System.ComponentModel.DescriptionAttribute",
+          "arguments": {
+            "description": "A school: the root of the fixture graph."
+          }
+        }
       ]
     },
     "Section": {
@@ -2619,6 +2798,7 @@ export type Assessment = Models["Assessment"];
 export type AssessmentKind = Models["AssessmentKind"];
 export type AssessmentRecord = Models["AssessmentRecord"];
 export type Book = Models["Book"];
+export type BookBinding = Models["BookBinding"];
 export type BookName = Models["BookName"];
 export type Building = Models["Building"];
 export type Campus = Models["Campus"];

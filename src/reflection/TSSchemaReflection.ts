@@ -33,6 +33,7 @@ import {
   type JSONSchemaReachablePropertyName,
   type JSONSchemaPropertyShapeIsUnknown,
 } from './PropertyPath.js';
+import { getTSSchemaAnnotations, type TSSchemaAnnotationsOf } from './Annotations.js';
 import { getTSSchemaTypeDescriptor, type TSSchemaTypeDescriptorOf } from './TypeDescriptor.js';
 
 // #region Entry point
@@ -47,10 +48,10 @@ import { getTSSchemaTypeDescriptor, type TSSchemaTypeDescriptorOf } from './Type
 export function reflect<TSchema extends JSONSchema7>(schema: TSchema): TSSchemaFragmentReflection<_ReflectedSchema<TSchema>, _ReflectedFragment<TSchema>> {
   const facets = parseJSONSchema(schema) as Array<JSONSchemaFragmentFacet<any, any, any>>;
   const collection = facets.find((facet) => facet instanceof JSONSchemaCollectionFragmentFacet);
-  return new TSSchemaFragmentReflection(facets.filter((facet) => facet !== collection) as Array<any>, { collection }) as TSSchemaFragmentReflection<
-    _ReflectedSchema<TSchema>,
-    _ReflectedFragment<TSchema>
-  >;
+  return new TSSchemaFragmentReflection(facets.filter((facet) => facet !== collection) as Array<any>, {
+    collection,
+    fragment: schema,
+  }) as TSSchemaFragmentReflection<_ReflectedSchema<TSchema>, _ReflectedFragment<TSchema>>;
 }
 
 /**
@@ -86,6 +87,10 @@ export type TSSchemaReflectionOptions<TSchema extends JSONSchemaCollection, TNam
    * Name of the reflection: the definition's name, or the property's name
    */
   name?: TName;
+  /**
+   * The reflected JSON fragment, as declared (so possibly a boolean schema), which the reflection's annotations are read from
+   */
+  fragment?: unknown;
   /**
    * Whether the fragment is a property of unknown shape (see `JSONSchemaUnknownShapeFragment`)
    */
@@ -141,6 +146,56 @@ export class TSSchemaFragmentReflection<
   }
 
   /**
+   * Annotations of the reflected fragment (see `TSSchemaAnnotations`): its `title`, `description`, `default`, `deprecated` and `examples`, and its
+   * `decorators`, as declared by the fragment itself (e.g. next to a `$ref`), never through a `$ref`
+   */
+  public get annotations(): TSSchemaAnnotationsOf<TFragment> {
+    return getTSSchemaAnnotations(this._fragment) as TSSchemaAnnotationsOf<TFragment>;
+  }
+
+  /**
+   * The reflected fragment's `title`, or `undefined` if it has none (see `annotations`)
+   */
+  public get title(): TSSchemaAnnotationsOf<TFragment>['title'] {
+    return this.annotations.title;
+  }
+
+  /**
+   * The reflected fragment's `description`, or `undefined` if it has none (see `annotations`)
+   */
+  public get description(): TSSchemaAnnotationsOf<TFragment>['description'] {
+    return this.annotations.description;
+  }
+
+  /**
+   * The reflected fragment's `default` value, or `undefined` if it has none (see `annotations`)
+   */
+  public get default(): TSSchemaAnnotationsOf<TFragment>['default'] {
+    return this.annotations.default;
+  }
+
+  /**
+   * The reflected fragment's `deprecated` flag, or `undefined` if it has none (see `annotations`)
+   */
+  public get deprecated(): TSSchemaAnnotationsOf<TFragment>['deprecated'] {
+    return this.annotations.deprecated;
+  }
+
+  /**
+   * The reflected fragment's `examples`, or `undefined` if it has none (see `annotations`)
+   */
+  public get examples(): TSSchemaAnnotationsOf<TFragment>['examples'] {
+    return this.annotations.examples;
+  }
+
+  /**
+   * The reflected fragment's decorators (its `x-decorators`, see `TSSchemaDecoratorDescriptor`), or an empty array if it has none (see `annotations`)
+   */
+  public get decorators(): TSSchemaAnnotationsOf<TFragment>['decorators'] {
+    return this.annotations.decorators;
+  }
+
+  /**
    * Names of all definitions of the collection the fragment belongs to, or an empty array if the reflected schema has no `$defs`
    */
   public get definitionNames(): Array<JSONSchemaDefinitionName<TSchema>> {
@@ -173,6 +228,11 @@ export class TSSchemaFragmentReflection<
   protected _name: TName;
 
   /**
+   * The reflected JSON fragment, as declared
+   */
+  protected _fragment: unknown;
+
+  /**
    * Whether the fragment is a property of unknown shape
    */
   protected _unknown: boolean;
@@ -180,15 +240,16 @@ export class TSSchemaFragmentReflection<
   /**
    * Reflects a JSON schema fragment, by its facets. Reflections are meant to be created by `reflect`, `getDefinition` and `getProperty`.
    * @param facets Facets the fragment was parsed into
-   * @param options Collection, name and shape of the reflected fragment (see `TSSchemaReflectionOptions`)
+   * @param options Collection, name, fragment and shape of the reflected fragment (see `TSSchemaReflectionOptions`)
    */
   public constructor(
     facets: Array<JSONSchemaFragmentFacetOf<TSchema, TFacetName, TFragment>>,
-    { collection, name, unknown }: TSSchemaReflectionOptions<TSchema, TName> = {},
+    { collection, name, fragment, unknown }: TSSchemaReflectionOptions<TSchema, TName> = {},
   ) {
     this._facets = facets;
     this._collection = collection;
     this._name = name as TName;
+    this._fragment = fragment;
     this._unknown = unknown ?? false;
   }
 
@@ -202,7 +263,13 @@ export class TSSchemaFragmentReflection<
   ): _TSSchemaReflectionDefinition<TSchema, TDefinitionName> {
     const facets = this._collection?.$defs[name];
     return (
-      facets === undefined ? undefined : new TSSchemaDefinitionReflection(facets as Array<any>, { collection: this._collection, name })
+      facets === undefined
+        ? undefined
+        : new TSSchemaDefinitionReflection(facets as Array<any>, {
+            collection: this._collection,
+            name,
+            fragment: (this._collection?.fragment.$defs as Record<string, unknown>)[name as string],
+          })
     ) as _TSSchemaReflectionDefinition<TSchema, TDefinitionName>;
   }
 
@@ -243,6 +310,7 @@ export class TSSchemaFragmentReflection<
       return new TSSchemaPropertyReflection(match.facets as Array<any>, {
         collection: this._collection,
         name: path,
+        fragment: match.fragment,
         unknown: isJSONSchemaUnknownShapeFragment(match.fragment),
         parent: this,
         required: match.required,
@@ -252,9 +320,12 @@ export class TSSchemaFragmentReflection<
       collection: this._collection,
       implicit: true,
     });
+    // The implicit `anyOf`'s fragment, with no annotations: each found property's annotations are its own (see AGENTS.md › A property found in several
+    // models is one reflection holding a fresh implicit anyOf facet)
     return new TSSchemaPropertyReflection([anyOf] as Array<any>, {
       collection: this._collection,
       name: path,
+      fragment: anyOf.fragment,
       parent: this,
       required: matches.every((match) => match.required),
     });

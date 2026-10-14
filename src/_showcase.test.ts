@@ -24,6 +24,7 @@ import {
   type TSSchemaJSONCollection,
   type TSSchemaTypeDescriptor,
   type TSSchemaPrimitiveTypeDescriptor,
+  type TSSchemaDecoratorDescriptor,
 } from './index.js';
 import { generateFiles } from './codegen/index.js';
 
@@ -38,8 +39,8 @@ const schema = {
     Person: {
       type: 'object',
       properties: {
-        name: { type: 'string' },
-        age: { type: 'integer' },
+        name: { type: 'string', title: 'Full name', minLength: 1, 'x-decorators': [{ name: 'Required' }] },
+        age: { type: 'integer', minimum: 0 },
         role: { $ref: '#/$defs/Role' },
         mentor: { anyOf: [{ $ref: '#/$defs/Person' }, { type: 'null' }] },
       },
@@ -139,11 +140,11 @@ describe('Runtime reflection', () => {
       expect(personType.kind).toBe('model');
       expect(personType.required).toEqual(['name', 'age', 'role']);
       const age = personType.properties.age;
-      expect(age).toEqual({ required: true, type: { kind: 'primitive', type: 'integer', nullable: false } });
+      expect(age).toMatchObject({ required: true, type: { kind: 'primitive', type: 'integer', constraints: { minimum: 0 }, nullable: false } });
       type AgeType = typeof age.type;
       //   ^?
-      // AgeType: TSSchemaPrimitiveTypeDescriptor<'integer', false>
-      expect(true satisfies AssertTypeEquality<AgeType, TSSchemaPrimitiveTypeDescriptor<'integer', false>>).toBe(true);
+      // AgeType: TSSchemaPrimitiveTypeDescriptor<'integer', false, { readonly minimum: 0; readonly maximum: undefined; … }>
+      expect(true satisfies AssertTypeEquality<AgeType, TSSchemaPrimitiveTypeDescriptor<'integer', false, AgeType['constraints']>>).toBe(true);
 
       // A `$ref` is described by name, and lazily by its `target`: the very same descriptor as the definition's own, within one reflected schema
       const roleType = personType.properties.role.type;
@@ -190,6 +191,66 @@ describe('Runtime reflection', () => {
       const names = person.propertyNames.map((name) => typeName(person.getProperty(name).typeDescriptor));
       // Breakpoint: inspect `names`
       expect(names).toEqual(['string', 'integer', 'Role', 'Person | null']);
+    });
+  });
+
+  describe('Constraints and annotations', () => {
+    // Validation keywords kept as the `constraints` of the type descriptors they apply to, and annotations (decorators included) read from each reflection's
+    // own fragment, and from each property entry of a model descriptor.
+    it('Describes the constraints of a type', () => {
+      const personType = reflect(schema).getDefinition('Person').typeDescriptor;
+      const ageConstraints = personType.properties.age.type.constraints;
+      // Breakpoint: inspect `ageConstraints`, every number keyword, `undefined` where the schema has none
+      expect(ageConstraints).toStrictEqual({ minimum: 0, maximum: undefined, exclusiveMinimum: undefined, exclusiveMaximum: undefined, multipleOf: undefined });
+      type AgeMinimum = typeof ageConstraints.minimum;
+      //   ^?
+      // AgeMinimum: 0
+      expect(true satisfies AssertTypeEquality<AgeMinimum, 0>).toBe(true);
+
+      const nameConstraints = personType.properties.name.type.constraints;
+      // Breakpoint: inspect `nameConstraints`, every string keyword
+      expect(nameConstraints.minLength).toBe(1);
+      type NameMinLength = typeof nameConstraints.minLength;
+      //   ^?
+      // NameMinLength: 1
+      expect(true satisfies AssertTypeEquality<NameMinLength, 1>).toBe(true);
+
+      // @ts-expect-error This will fail at compile time, a number has no `maxLength`
+      expect(ageConstraints.maxLength).toBe(undefined);
+    });
+
+    it('Reads the annotations and decorators of a reflection, and of each property of a model descriptor', () => {
+      const person = reflect(schema).getDefinition('Person');
+      const nameProperty = person.getProperty('name');
+      const nameTitle = nameProperty.title;
+      // Breakpoint: inspect `nameTitle`
+      expect(nameTitle).toBe('Full name');
+      type NameTitle = typeof nameTitle;
+      //   ^?
+      // NameTitle: 'Full name'
+      expect(true satisfies AssertTypeEquality<NameTitle, 'Full name'>).toBe(true);
+
+      const nameDecorators = nameProperty.decorators;
+      // Breakpoint: inspect `nameDecorators`, each decorator with empty `arguments` and `properties` where the schema has none
+      expect(nameDecorators).toEqual([{ name: 'Required', arguments: {}, properties: {} }]);
+      type NameDecorators = typeof nameDecorators;
+      //   ^?
+      // NameDecorators: readonly [TSSchemaDecoratorDescriptor<'Required', {}, {}>]
+      expect(true satisfies AssertTypeEquality<NameDecorators, readonly [TSSchemaDecoratorDescriptor<'Required', {}, {}>]>).toBe(true);
+
+      // The same annotations, held by the model's type descriptor
+      const nameAnnotations = person.typeDescriptor.properties.name.annotations;
+      // Breakpoint: inspect `nameAnnotations`
+      expect(nameAnnotations).toBe(nameProperty.annotations);
+
+      // Annotations are read next to a `$ref`, never through it
+      const roleTitle = person.getProperty('role').title;
+      // Breakpoint: inspect `roleTitle`, undefined
+      expect(roleTitle).toBe(undefined);
+      type RoleTitle = typeof roleTitle;
+      //   ^?
+      // RoleTitle: undefined
+      expect(true satisfies AssertTypeEquality<RoleTitle, undefined>).toBe(true);
     });
   });
 
@@ -312,7 +373,7 @@ describe('Type inference', () => {
       type StandalonePersonRole = TSSchemaProperty<Schema['$defs']['Person'], 'role'>;
       //   ^?
       // StandalonePersonRole: a wrapper of the `role` property, with no collection
-      expect(true satisfies AssertTypeEquality<PersonName['__property'], { readonly type: 'string' }>).toBe(true);
+      expect(true satisfies AssertTypeEquality<PersonName['__property'], Schema['$defs']['Person']['properties']['name']>).toBe(true);
       expect(true satisfies AssertTypeEquality<PersonAge['__propertyName'], 'age'>).toBe(true);
       expect(true satisfies AssertTypeEquality<StandalonePersonRole['__property'], { readonly $ref: '#/$defs/Role' }>).toBe(true);
     });

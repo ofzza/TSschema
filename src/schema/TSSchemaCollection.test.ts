@@ -59,6 +59,7 @@ describe('TSSchemaCollection', () => {
           | 'AssessmentKind'
           | 'AssessmentRecord'
           | 'Book'
+          | 'BookBinding'
           | 'BookName'
           | 'Building'
           | 'Campus'

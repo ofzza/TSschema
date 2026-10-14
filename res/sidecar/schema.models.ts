@@ -11,6 +11,7 @@ export type Assessment = Models["Assessment"];
 export type AssessmentKind = Models["AssessmentKind"];
 export type AssessmentRecord = Models["AssessmentRecord"];
 export type Book = Models["Book"];
+export type BookBinding = Models["BookBinding"];
 export type BookName = Models["BookName"];
 export type Building = Models["Building"];
 export type Campus = Models["Campus"];

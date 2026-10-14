@@ -43,6 +43,8 @@ A few terms used below:
   `{ $ref: '#/$defs/<name>' }`.
 - A **model** is an object fragment with `properties`.
 - A **path** is a dot-separated list of property names, addressing a property of a nested model (e.g. `'mentor.age'`).
+- A **constraint** is a validation keyword limiting the values of a type (`minimum`, `maxLength`, `format`, `maxItems`, ...), and an **annotation** a
+  keyword describing a fragment (`title`, `description`, `default`, ...) or one of its **decorators**, listed by the `x-decorators` vendor keyword.
 
 The examples below all use this schema:
 
@@ -52,8 +54,8 @@ const schema = {
     Person: {
       type: 'object',
       properties: {
-        name: { type: 'string' },
-        age: { type: 'integer' },
+        name: { type: 'string', title: 'Full name', minLength: 1, 'x-decorators': [{ name: 'Required' }] },
+        age: { type: 'integer', minimum: 0 },
         role: { $ref: '#/$defs/Role' },
         mentor: { anyOf: [{ $ref: '#/$defs/Person' }, { type: 'null' }] },
       },
@@ -122,14 +124,15 @@ object with no `properties`, a `$ref` which can not be resolved, or an array wit
 
 Every reflection's `typeDescriptor` describes its type at runtime: what `Type` infers at compile time, as a tree of plain objects told apart by their
 `kind` - `unknown`, `const`, `enum`, `primitive`, `null`, `array`, `record` (an object with no `properties`), `model`, `reference`, `anyOf`, `allOf`,
-`oneOf` and `not`. Every kind also has a `nullable` flag, and a model holds each property as whether it is `required` plus its `type`. Like everything
-else, it is typed by the schema, down to its literal kinds, values, property names and flags:
+`oneOf` and `not`. Every kind also has a `nullable` flag, and a model holds each property as whether it is `required`, its `type` and its `annotations`
+(see [Constraints and annotations](#constraints-and-annotations)). Like everything else, it is typed by the schema, down to its literal kinds, values,
+property names and flags:
 
 ```ts
 import type { TSSchemaTypeDescriptor } from '@ofzza/tsschema';
 
-const personType = person.typeDescriptor; // { kind: 'model', properties: { name: …, age: …, role: …, mentor: … }, required: ['name', 'age', 'role'], nullable: false }
-const age = personType.properties.age; // { required: true, type: { kind: 'primitive', type: 'integer', nullable: false } }
+const personType = person.typeDescriptor; // { kind: 'model', properties: { name: …, age: …, role: …, mentor: … }, required: ['name', 'age', 'role'], constraints: { … }, nullable: false }
+const age = personType.properties.age; // { required: true, type: { kind: 'primitive', type: 'integer', constraints: { minimum: 0, … }, nullable: false }, annotations: { … } }
 const roleType = personType.properties.role.type; // { kind: 'reference', name: 'Role', target: { kind: 'enum', … }, nullable: false }
 const roleNames = roleType.target.names; // ['student', 'teacher']
 const mentorType = personType.properties.mentor.type; // { kind: 'reference', name: 'Person', target: …, nullable: true }
@@ -162,6 +165,41 @@ keyword next to it, or else each value by itself; a `oneOf` of `const` fragments
 an `enum` too, named by each fragment's `title`. A fragment with several keywords is described as an implicit `allOf` of them (`implicit: true`),
 except that an `enum` or `const` absorbs the `type` next to it, and a `type` array naming several types other than `null` as an implicit `anyOf` of
 them. Tuples are not described yet (an array of `unknown` items), nor `additionalProperties` (a `record` of `unknown` values).
+
+### Constraints and annotations
+
+Validation keywords are kept as the `constraints` of the type descriptors they apply to, as JSON Schema applies each of them only to values of one type:
+a `primitive` number (`minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`) or string (`minLength`, `maxLength`, `pattern`,
+`format`, `contentEncoding`), an `array` (`minItems`, `maxItems`, `uniqueItems`), and a `record` or `model` (`minProperties`, `maxProperties`). Every
+keyword is always there, `undefined` if the schema has none, and a `type` array naming several types gives each of them only its own:
+
+```ts
+const ageConstraints = personType.properties.age.type.constraints; // { minimum: 0, maximum: undefined, exclusiveMinimum: undefined, … }
+const nameConstraints = personType.properties.name.type.constraints; // { minLength: 1, maxLength: undefined, pattern: undefined, … }
+const ageMaxLength = ageConstraints.maxLength; // This will fail at compile time, a number has no `maxLength`
+```
+
+Annotations describe where a fragment is used rather than its type, so they are read from the fragment itself, never through a `$ref` (a property's
+`title` next to a `$ref` is the property's, not the definition's). Every reflection has its `annotations`, and each of them as a getter of its own:
+`title`, `description`, `default`, `deprecated`, `examples` (each `undefined` if the fragment has none) and `decorators` (an empty array if it has
+none). A model's type descriptor holds the `annotations` of each of its properties too:
+
+```ts
+const nameProperty = person.getProperty('name');
+const nameTitle = nameProperty.title; // 'Full name'
+const nameDecorators = nameProperty.decorators; // [{ name: 'Required', arguments: {}, properties: {} }]
+const nameAnnotations = personType.properties.name.annotations; // { title: 'Full name', description: undefined, …, decorators: [{ name: 'Required', … }] }
+const roleTitle = person.getProperty('role').title; // undefined
+```
+
+Decorators are listed by the `x-decorators` vendor keyword, as written by the sibling [DotNetSchema](https://github.com/ofzza/DotNetSchema) project
+for the .NET attributes of a type or property: each by its `name`, the `arguments` it was constructed with, and the `properties` it was initialized with
+(both empty objects if there are none). A property found in several models (e.g. both members of an `anyOf`) has no annotations of its own: look them up
+on each model's property instead.
+
+Neither constraints nor annotations change the value types inferred by `Type` or the [type utilities](#type-inference), by design: TypeScript can not
+express most constraints (string lengths, patterns, number ranges), and the ones it could (e.g. a `format` as a template literal type, or `minItems` as a
+tuple) would make plain `string`s or arrays no longer assignable, and grow costly to check.
 
 ### Coming next
 

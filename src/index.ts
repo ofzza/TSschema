@@ -1,8 +1,8 @@
 // Type inference utilities
 export type * from './schema/index.js';
 
-// Runtime reflection: the `reflect` entry point, the reflection classes it creates and the type descriptors they describe their types by (exported as
-// types only)
+// Runtime reflection: the `reflect` entry point, the reflection classes it creates, the type descriptors they describe their types by (with their
+// constraints) and their annotations (exported as types only)
 export type { TSSchemaFragmentReflection, TSSchemaDefinitionReflection, TSSchemaPropertyReflection } from './reflection/index.js';
 export { reflect } from './reflection/index.js';
 export type {
@@ -21,4 +21,12 @@ export type {
   TSSchemaAllOfTypeDescriptor,
   TSSchemaOneOfTypeDescriptor,
   TSSchemaNotTypeDescriptor,
+  TSSchemaPrimitiveConstraints,
+  TSSchemaNumberConstraints,
+  TSSchemaStringConstraints,
+  TSSchemaArrayConstraints,
+  TSSchemaObjectConstraints,
+  TSSchemaAnnotations,
+  TSSchemaDecoratorDescriptor,
+  TSSchemaDecoratorValue,
 } from './reflection/index.js';

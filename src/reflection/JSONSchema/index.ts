@@ -14,6 +14,9 @@ export {
   isJSONSchemaObject,
   getJSONSchemaValueName,
   type JSONSchemaValueName,
+  getJSONSchemaKeyword,
+  type JSONSchemaKeyword,
+  type JSONSchemaKeywordValueType,
 } from './JSONSchema7.js';
 export { JSONSchemaCollectionFragmentFacet, type JSONSchemaCollectionParsedFragment } from './CollectionFragment.js';
 export {

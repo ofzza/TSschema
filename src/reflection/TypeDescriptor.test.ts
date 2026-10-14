@@ -47,9 +47,47 @@ const _schema = {
 type _Schema = typeof _schema;
 
 /**
- * Descriptor of a string which is not nullable
+ * Constraints of a number, a string, an array and an object with none, at runtime (where `toEqual` ignores keys with an `undefined` value) and at type
+ * level
  */
-type _String = TSSchemaPrimitiveTypeDescriptor<'string', false>;
+const _noNumberConstraints = {};
+const _noStringConstraints = {};
+const _noArrayConstraints = {};
+const _noObjectConstraints = {};
+type _NoNumberConstraints = {
+  readonly minimum: undefined;
+  readonly maximum: undefined;
+  readonly exclusiveMinimum: undefined;
+  readonly exclusiveMaximum: undefined;
+  readonly multipleOf: undefined;
+};
+type _NoStringConstraints = {
+  readonly minLength: undefined;
+  readonly maxLength: undefined;
+  readonly pattern: undefined;
+  readonly format: undefined;
+  readonly contentEncoding: undefined;
+};
+type _NoArrayConstraints = { readonly minItems: undefined; readonly maxItems: undefined; readonly uniqueItems: undefined };
+type _NoObjectConstraints = { readonly minProperties: undefined; readonly maxProperties: undefined };
+
+/**
+ * Annotations of a fragment with none, at runtime (where `toEqual` ignores keys with an `undefined` value) and at type level
+ */
+const _noAnnotations = { decorators: [] };
+type _NoAnnotations = {
+  readonly title: undefined;
+  readonly description: undefined;
+  readonly default: undefined;
+  readonly deprecated: undefined;
+  readonly examples: undefined;
+  readonly decorators: readonly [];
+};
+
+/**
+ * Descriptor of a string which is not nullable, with no constraints
+ */
+type _String = TSSchemaPrimitiveTypeDescriptor<'string', false, _NoStringConstraints>;
 
 describe('Reflection', () => {
   // Type descriptors (TypeDescriptor.ts): getTSSchemaTypeDescriptor, building one from a fragment's facets, and its type-level mirror TSSchemaTypeDescriptorOf.
@@ -139,7 +177,7 @@ describe('Reflection', () => {
           kind: 'oneOf',
           members: [
             { kind: 'const', value: 0, nullable: false },
-            { kind: 'primitive', type: 'string', nullable: false },
+            { kind: 'primitive', type: 'string', constraints: _noStringConstraints, nullable: false },
           ],
           nullable: false,
         });
@@ -151,7 +189,7 @@ describe('Reflection', () => {
         expect(withNull).toEqual({
           kind: 'oneOf',
           members: [
-            { kind: 'primitive', type: 'string', nullable: false },
+            { kind: 'primitive', type: 'string', constraints: _noStringConstraints, nullable: false },
             { kind: 'null', nullable: true },
           ],
           nullable: true,
@@ -170,15 +208,15 @@ describe('Reflection', () => {
         // A type array naming only primitive types is one group, parsed as a single primitive type facet listing them in order, so its members infer as a
         // tuple.
         const string = _describe({ type: 'string' });
-        expect(string).toEqual({ kind: 'primitive', type: 'string', nullable: false });
+        expect(string).toEqual({ kind: 'primitive', type: 'string', constraints: _noStringConstraints, nullable: false });
         expect(true satisfies AssertTypeEquality<typeof string, _String>).toBe(true);
 
         const several = _describe({ type: ['string', 'integer'] });
         expect(several).toEqual({
           kind: 'anyOf',
           members: [
-            { kind: 'primitive', type: 'string', nullable: false },
-            { kind: 'primitive', type: 'integer', nullable: false },
+            { kind: 'primitive', type: 'string', constraints: _noStringConstraints, nullable: false },
+            { kind: 'primitive', type: 'integer', constraints: _noNumberConstraints, nullable: false },
           ],
           implicit: true,
           nullable: false,
@@ -186,7 +224,7 @@ describe('Reflection', () => {
         expect(
           true satisfies AssertTypeEquality<
             typeof several,
-            TSSchemaAnyOfTypeDescriptor<readonly [_String, TSSchemaPrimitiveTypeDescriptor<'integer', false>], true, false>
+            TSSchemaAnyOfTypeDescriptor<readonly [_String, TSSchemaPrimitiveTypeDescriptor<'integer', false, _NoNumberConstraints>], true, false>
           >,
         ).toBe(true);
       });
@@ -201,8 +239,8 @@ describe('Reflection', () => {
         // A type array naming `null` is split into branches (see AGENTS.md › null is not a primitive type), whose `null` branch is extracted like an `anyOf`
         // member.
         const nullable = _describe({ type: ['string', 'null'] });
-        expect(nullable).toEqual({ kind: 'primitive', type: 'string', nullable: true });
-        expect(true satisfies AssertTypeEquality<typeof nullable, TSSchemaPrimitiveTypeDescriptor<'string', true>>).toBe(true);
+        expect(nullable).toEqual({ kind: 'primitive', type: 'string', constraints: _noStringConstraints, nullable: true });
+        expect(true satisfies AssertTypeEquality<typeof nullable, TSSchemaPrimitiveTypeDescriptor<'string', true, _NoStringConstraints>>).toBe(true);
 
         const model = _describe({ type: ['object', 'null'], properties: { id: { type: 'string' } } });
         expect(model).toMatchObject({ kind: 'model', nullable: true });
@@ -212,8 +250,8 @@ describe('Reflection', () => {
         expect(several).toEqual({
           kind: 'anyOf',
           members: [
-            { kind: 'primitive', type: 'string', nullable: false },
-            { kind: 'primitive', type: 'integer', nullable: false },
+            { kind: 'primitive', type: 'string', constraints: _noStringConstraints, nullable: false },
+            { kind: 'primitive', type: 'integer', constraints: _noNumberConstraints, nullable: false },
           ],
           implicit: true,
           nullable: true,
@@ -222,7 +260,7 @@ describe('Reflection', () => {
         expect(
           true satisfies AssertTypeEquality<
             typeof several,
-            TSSchemaAnyOfTypeDescriptor<ReadonlyArray<_String | TSSchemaPrimitiveTypeDescriptor<'integer', false>>, true, true>
+            TSSchemaAnyOfTypeDescriptor<ReadonlyArray<_String | TSSchemaPrimitiveTypeDescriptor<'integer', false, _NoNumberConstraints>>, true, true>
           >,
         ).toBe(true);
       });
@@ -230,15 +268,15 @@ describe('Reflection', () => {
       it('Extracts null from an anyOf into the nullable flag of the rest', () => {
         // Unlike the branches of a type array, an `anyOf` keyword is not implicit, and its members infer as a tuple.
         const single = _describe({ anyOf: [{ type: 'string' }, { type: 'null' }] });
-        expect(single).toEqual({ kind: 'primitive', type: 'string', nullable: true });
-        expect(true satisfies AssertTypeEquality<typeof single, TSSchemaPrimitiveTypeDescriptor<'string', true>>).toBe(true);
+        expect(single).toEqual({ kind: 'primitive', type: 'string', constraints: _noStringConstraints, nullable: true });
+        expect(true satisfies AssertTypeEquality<typeof single, TSSchemaPrimitiveTypeDescriptor<'string', true, _NoStringConstraints>>).toBe(true);
 
         const several = _describe({ anyOf: [{ type: 'string' }, { type: 'null' }, { type: 'boolean' }] });
         expect(several).toEqual({
           kind: 'anyOf',
           members: [
-            { kind: 'primitive', type: 'string', nullable: false },
-            { kind: 'primitive', type: 'boolean', nullable: false },
+            { kind: 'primitive', type: 'string', constraints: _noStringConstraints, nullable: false },
+            { kind: 'primitive', type: 'boolean', constraints: {}, nullable: false },
           ],
           implicit: false,
           nullable: true,
@@ -246,7 +284,7 @@ describe('Reflection', () => {
         expect(
           true satisfies AssertTypeEquality<
             typeof several,
-            TSSchemaAnyOfTypeDescriptor<readonly [_String, TSSchemaPrimitiveTypeDescriptor<'boolean', false>], false, true>
+            TSSchemaAnyOfTypeDescriptor<readonly [_String, TSSchemaPrimitiveTypeDescriptor<'boolean', false, {}>], false, true>
           >,
         ).toBe(true);
 
@@ -262,33 +300,50 @@ describe('Reflection', () => {
 
       it('Describes an array by its items', () => {
         const descriptor = _describe({ type: 'array', items: { type: 'number' } });
-        expect(descriptor).toEqual({ kind: 'array', items: { kind: 'primitive', type: 'number', nullable: false }, nullable: false });
-        expect(true satisfies AssertTypeEquality<typeof descriptor, TSSchemaArrayTypeDescriptor<TSSchemaPrimitiveTypeDescriptor<'number', false>, false>>).toBe(
-          true,
-        );
+        expect(descriptor).toEqual({
+          kind: 'array',
+          items: { kind: 'primitive', type: 'number', constraints: _noNumberConstraints, nullable: false },
+          constraints: _noArrayConstraints,
+          nullable: false,
+        });
+        expect(
+          true satisfies AssertTypeEquality<
+            typeof descriptor,
+            TSSchemaArrayTypeDescriptor<TSSchemaPrimitiveTypeDescriptor<'number', false, _NoNumberConstraints>, false, _NoArrayConstraints>
+          >,
+        ).toBe(true);
 
         const untyped = _describe({ type: 'array' });
-        expect(untyped).toEqual({ kind: 'array', items: { kind: 'unknown', nullable: false }, nullable: false });
-        expect(true satisfies AssertTypeEquality<typeof untyped, TSSchemaArrayTypeDescriptor<TSSchemaUnknownTypeDescriptor<false>, false>>).toBe(true);
+        expect(untyped).toEqual({ kind: 'array', items: { kind: 'unknown', nullable: false }, constraints: _noArrayConstraints, nullable: false });
+        expect(
+          true satisfies AssertTypeEquality<typeof untyped, TSSchemaArrayTypeDescriptor<TSSchemaUnknownTypeDescriptor<false>, false, _NoArrayConstraints>>,
+        ).toBe(true);
       });
 
       it('Describes an object with no properties as a record of unknown values', () => {
         const descriptor = _describe({ type: 'object' });
-        expect(descriptor).toEqual({ kind: 'record', values: { kind: 'unknown', nullable: false }, nullable: false });
-        expect(true satisfies AssertTypeEquality<typeof descriptor, TSSchemaRecordTypeDescriptor<TSSchemaUnknownTypeDescriptor<false>, false>>).toBe(true);
+        expect(descriptor).toEqual({ kind: 'record', values: { kind: 'unknown', nullable: false }, constraints: _noObjectConstraints, nullable: false });
+        expect(
+          true satisfies AssertTypeEquality<typeof descriptor, TSSchemaRecordTypeDescriptor<TSSchemaUnknownTypeDescriptor<false>, false, _NoObjectConstraints>>,
+        ).toBe(true);
       });
 
       it('Describes a model by each of its properties, with whether it is required, and the required names', () => {
         // `note` is a boolean schema, which parses into no facets and so is described as unknown. Being required belongs to the property entry, not its type
-        // descriptor (see AGENTS.md › A model descriptor's properties hold { required, type } entries).
+        // descriptor (see AGENTS.md › A model descriptor's properties hold { required, type, annotations } entries).
         const descriptor = _describe({ type: 'object', properties: { id: { type: 'string' }, note: true }, required: ['id'] });
         expect(descriptor).toEqual({
           kind: 'model',
           properties: {
-            id: { required: true, type: { kind: 'primitive', type: 'string', nullable: false } },
-            note: { required: false, type: { kind: 'unknown', nullable: false } },
+            id: {
+              required: true,
+              type: { kind: 'primitive', type: 'string', constraints: _noStringConstraints, nullable: false },
+              annotations: _noAnnotations,
+            },
+            note: { required: false, type: { kind: 'unknown', nullable: false }, annotations: _noAnnotations },
           },
           required: ['id'],
+          constraints: _noObjectConstraints,
           nullable: false,
         });
         expect(
@@ -296,11 +351,13 @@ describe('Reflection', () => {
             typeof descriptor,
             TSSchemaModelTypeDescriptor<
               {
-                readonly id: TSSchemaModelPropertyDescriptor<_String, true>;
-                readonly note: TSSchemaModelPropertyDescriptor<TSSchemaUnknownTypeDescriptor<false>, false>;
+                readonly id: TSSchemaModelPropertyDescriptor<_String, true, _NoAnnotations>;
+                // A boolean schema is not a schema object, so it has no annotations
+                readonly note: TSSchemaModelPropertyDescriptor<TSSchemaUnknownTypeDescriptor<false>, false, _NoAnnotations>;
               },
               ReadonlyArray<'id'>,
-              false
+              false,
+              _NoObjectConstraints
             >
           >,
         ).toBe(true);
@@ -312,7 +369,7 @@ describe('Reflection', () => {
         expect(allOf).toEqual({
           kind: 'allOf',
           members: [
-            { kind: 'primitive', type: 'string', nullable: false },
+            { kind: 'primitive', type: 'string', constraints: _noStringConstraints, nullable: false },
             { kind: 'const', value: 'a', nullable: false },
           ],
           implicit: false,
@@ -330,8 +387,10 @@ describe('Reflection', () => {
         expect(true satisfies AssertTypeEquality<typeof nullableAllOf.nullable, true>).toBe(true);
 
         const not = _describe({ not: { type: 'boolean' } });
-        expect(not).toEqual({ kind: 'not', not: { kind: 'primitive', type: 'boolean', nullable: false }, nullable: false });
-        expect(true satisfies AssertTypeEquality<typeof not, TSSchemaNotTypeDescriptor<TSSchemaPrimitiveTypeDescriptor<'boolean', false>, false>>).toBe(true);
+        expect(not).toEqual({ kind: 'not', not: { kind: 'primitive', type: 'boolean', constraints: {}, nullable: false }, nullable: false });
+        expect(true satisfies AssertTypeEquality<typeof not, TSSchemaNotTypeDescriptor<TSSchemaPrimitiveTypeDescriptor<'boolean', false, {}>, false>>).toBe(
+          true,
+        );
       });
 
       it('Absorbs the type alongside an enum or const', () => {
@@ -357,7 +416,7 @@ describe('Reflection', () => {
         expect(descriptor).toEqual({
           kind: 'allOf',
           members: [
-            { kind: 'primitive', type: 'string', nullable: false },
+            { kind: 'primitive', type: 'string', constraints: _noStringConstraints, nullable: false },
             { kind: 'not', not: { kind: 'const', value: '', nullable: false }, nullable: false },
           ],
           implicit: true,
@@ -376,7 +435,11 @@ describe('Reflection', () => {
         // definition's very descriptor (see AGENTS.md › A reference descriptor's target is a lazy getter).
         const collection = parseJSONSchemaCollection(_schema);
         const person = getTSSchemaTypeDescriptor(collection.$defs.Person);
-        expect(person.properties.name).toEqual({ required: true, type: { kind: 'primitive', type: 'string', nullable: false } });
+        expect(person.properties.name).toEqual({
+          required: true,
+          type: { kind: 'primitive', type: 'string', constraints: _noStringConstraints, nullable: false },
+          annotations: _noAnnotations,
+        });
         const mentor = person.properties.mentor.type;
         expect([mentor.kind, mentor.name, mentor.nullable]).toEqual(['reference', 'Person', false]);
         expect(mentor.target).toBe(person);
@@ -416,6 +479,90 @@ describe('Reflection', () => {
             TSSchemaReferenceTypeDescriptor<'Missing', TSSchemaTypeDescriptor, false> | TSSchemaUnknownTypeDescriptor<false>
           >,
         ).toBe(true);
+      });
+
+      it('Describes the constraints of a number and a string, every keyword always present', () => {
+        const number = _describe({ type: 'number', minimum: 1, exclusiveMaximum: 5, multipleOf: 0.5 });
+        expect(number.constraints).toStrictEqual({ minimum: 1, maximum: undefined, exclusiveMinimum: undefined, exclusiveMaximum: 5, multipleOf: 0.5 });
+        expect(
+          true satisfies AssertTypeEquality<
+            typeof number.constraints,
+            { readonly minimum: 1; readonly maximum: undefined; readonly exclusiveMinimum: undefined; readonly exclusiveMaximum: 5; readonly multipleOf: 0.5 }
+          >,
+        ).toBe(true);
+
+        const string = _describe({ type: 'string', minLength: 2, maxLength: 32, pattern: '^a', format: 'email', contentEncoding: 'base64' });
+        expect(string.constraints).toStrictEqual({ minLength: 2, maxLength: 32, pattern: '^a', format: 'email', contentEncoding: 'base64' });
+        expect(true satisfies AssertTypeEquality<typeof string.constraints.format, 'email'>).toBe(true);
+
+        // A boolean has no constraints
+        const boolean = _describe({ type: 'boolean' });
+        expect(boolean.constraints).toStrictEqual({});
+        expect(true satisfies AssertTypeEquality<typeof boolean.constraints, {}>).toBe(true);
+      });
+
+      it('Describes each primitive type of a type array with only the constraints applying to it', () => {
+        // Validation keywords only apply to values of their type, so a `minLength` next to `minimum` constrains only the string member, and vice versa
+        const several = _describe({ type: ['string', 'integer'], minLength: 1, minimum: 0 });
+        expect(several.members[0].constraints).toEqual({ minLength: 1 });
+        expect(several.members[1].constraints).toEqual({ minimum: 0 });
+        expect(true satisfies AssertTypeEquality<(typeof several.members)[0]['constraints']['minLength'], 1>).toBe(true);
+        expect(true satisfies AssertTypeEquality<(typeof several.members)[1]['constraints']['minimum'], 0>).toBe(true);
+      });
+
+      it('Keeps the constraints of a nullable type', () => {
+        // A type array naming `null` keeps every other keyword in each branch, and the nullable copy keeps the constraints (see AGENTS.md › null is a flag
+        // (nullable), never an alternative)
+        const nullable = _describe({ type: ['number', 'null'], minimum: 1, maximum: 5 });
+        expect(nullable).toEqual({ kind: 'primitive', type: 'number', constraints: { minimum: 1, maximum: 5 }, nullable: true });
+        expect(true satisfies AssertTypeEquality<typeof nullable.constraints.maximum, 5>).toBe(true);
+        expect(true satisfies AssertTypeEquality<typeof nullable.nullable, true>).toBe(true);
+      });
+
+      it('Describes the constraints of an array, a record and a model', () => {
+        const array = _describe({ type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 64, uniqueItems: true });
+        expect(array.constraints).toStrictEqual({ minItems: 1, maxItems: 64, uniqueItems: true });
+        expect(true satisfies AssertTypeEquality<typeof array.constraints, { readonly minItems: 1; readonly maxItems: 64; readonly uniqueItems: true }>).toBe(
+          true,
+        );
+
+        const record = _describe({ type: 'object', maxProperties: 3 });
+        expect(record.constraints).toStrictEqual({ minProperties: undefined, maxProperties: 3 });
+        expect(true satisfies AssertTypeEquality<typeof record.constraints.maxProperties, 3>).toBe(true);
+
+        const model = _describe({ type: 'object', properties: { id: { type: 'string' } }, minProperties: 1 });
+        expect(model.constraints).toStrictEqual({ minProperties: 1, maxProperties: undefined });
+        expect(true satisfies AssertTypeEquality<typeof model.constraints.minProperties, 1>).toBe(true);
+      });
+
+      it('Leaves out a validation keyword of another value type', () => {
+        // The type layer's `JSONSchema7` would reject these, so the fragment is cast, and the inferred types are the unspecified fragment's
+        const descriptor = getTSSchemaTypeDescriptor(parseJSONSchema({ type: 'number', minimum: '1', exclusiveMinimum: true } as any));
+        expect(descriptor).toEqual({ kind: 'primitive', type: 'number', constraints: {}, nullable: false });
+      });
+
+      it('Leaves out the constraints of a type absorbed by an enum', () => {
+        // Constraints next to a closed set of values add nothing to it, and are not described (see AGENTS.md › Type descriptors are type shaped, facets
+        // keyword shaped)
+        const descriptor = _describe({ type: 'string', maxLength: 1, enum: ['a', 'b'] });
+        expect(descriptor).toEqual({ kind: 'enum', values: ['a', 'b'], names: ['a', 'b'], nullable: false });
+      });
+
+      it("Describes each property of a model with the annotations of the property's fragment", () => {
+        // The fixture's properties are annotated, and decorated with the .NET attributes they were generated from, by the sibling dotnetschema project. The
+        // annotations are the property's own (e.g. next to a `$ref`), so they are on the property entry, never on its (shared) type descriptor.
+        const person = getTSSchemaTypeDescriptor(parseJSONSchemaCollection(jsonSchema).$defs.Person);
+        const givenName = person.properties.givenName;
+        expect(givenName.type.constraints).toEqual({ minLength: 2, maxLength: 32 });
+        expect(givenName.annotations.decorators).toEqual([
+          { name: 'System.ComponentModel.DataAnnotations.StringLengthAttribute', arguments: { maximumLength: 32 }, properties: { MinimumLength: 2 } },
+        ]);
+        expect(true satisfies AssertTypeEquality<(typeof givenName.annotations.decorators)[0]['properties'], { readonly MinimumLength: 2 }>).toBe(true);
+        expect(true satisfies AssertTypeEquality<typeof givenName.type.constraints.maxLength, 32>).toBe(true);
+
+        const email = person.properties.email;
+        expect([email.type.nullable, email.type.constraints.format]).toEqual([true, 'email']);
+        expect(true satisfies AssertTypeEquality<typeof email.type.constraints.format, 'email'>).toBe(true);
       });
 
       it('Returns the same descriptor for the same facets', () => {

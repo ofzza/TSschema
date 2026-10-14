@@ -7,7 +7,7 @@ import { JSONSchemaArrayTypeFragmentFacet, JSONSchemaCollectionFragmentFacet, JS
  */
 const _schema = {
   $defs: {
-    Names: { type: 'array', items: { type: 'string' } },
+    Names: { type: 'array', items: { type: 'string' }, minItems: 1, uniqueItems: true },
     Anything: { type: 'array' },
     Booleans: { type: 'array', items: true },
     Tuple: { type: 'array', items: [{ type: 'string' }, { type: 'number' }] },
@@ -21,8 +21,8 @@ describe('Reflection', () => {
   describe('JSONSchema fragment facets', () => {
     // Each file in this directory holds the tests of one facet class under this describe.
     describe('Array Type fragment', () => {
-      // JSONSchemaArrayTypeFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsArrayType), the facets of its `items` (parsed on construction) and
-      // the type-only `Type`. Facets are taken from a JSONSchemaCollectionFragmentFacet parsing the small inline collection above, which covers a single
+      // JSONSchemaArrayTypeFragmentFacet: its static `is` (the runtime JSONSchemaFragmentIsArrayType), the facets of its `items` (parsed on construction), the
+      // validation keywords of arrays it parses, and the type-only `Type`. Facets are taken from a JSONSchemaCollectionFragmentFacet parsing the small inline collection above, which covers a single
       // schema, absent, boolean schema and tuple `items`. Each runtime `expect` on a parsed value is paired with an AssertTypeEquality on its static type.
       it('Detects an array type', () => {
         expect(JSONSchemaArrayTypeFragmentFacet.is({ type: 'array' })).toBe(true);
@@ -61,6 +61,15 @@ describe('Reflection', () => {
         expect(collection.$defs.Tuple[0].items).toEqual([]);
         const _tuple = collection.$defs.Tuple[0];
         expect(true satisfies AssertTypeEquality<typeof _tuple.items, never[]>).toBe(true);
+      });
+
+      it('Parses the validation keywords of an array', () => {
+        const collection = new JSONSchemaCollectionFragmentFacet(_schema);
+        const names = collection.$defs.Names[0];
+        expect([names.minItems, names.maxItems, names.uniqueItems]).toEqual([1, undefined, true]);
+        expect(true satisfies AssertTypeEquality<typeof names.minItems, 1>).toBe(true);
+        expect(true satisfies AssertTypeEquality<typeof names.maxItems, undefined>).toBe(true);
+        expect(true satisfies AssertTypeEquality<typeof names.uniqueItems, true>).toBe(true);
       });
 
       it('Infers the type of an array type', () => {

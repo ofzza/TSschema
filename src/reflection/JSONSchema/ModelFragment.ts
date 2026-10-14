@@ -1,6 +1,6 @@
 /**
  * Facets of JSON schema model fragments (`type: "object"` with `properties`): property names, the facets of each property and the required
- * property names.
+ * property names, and the validation keywords applying to objects.
  */
 
 import type {
@@ -12,7 +12,7 @@ import type {
 } from '../../schema/JSONSchema/index.js';
 import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
 import { createJSONSchemaNestedFragmentFacets, type JSONSchemaNestedFragmentFacets } from './FragmentFacets.js';
-import { isJSONSchemaObject } from './JSONSchema7.js';
+import { getJSONSchemaKeyword, isJSONSchemaObject, type JSONSchemaKeyword } from './JSONSchema7.js';
 
 /**
  * Parses a JSON schema model definition, which is any object schema fragment containing `properties`. Parses each property's fragment on
@@ -55,6 +55,16 @@ export class JSONSchemaModelFragmentFacet<
   public readonly required: Array<_JSONSchemaModelFragmentRequiredName<TFragment>>;
 
   /**
+   * The fragment's `minProperties` (the minimum number of properties), or `undefined` if it has none
+   */
+  public readonly minProperties: JSONSchemaKeyword<TFragment, 'minProperties', number>;
+
+  /**
+   * The fragment's `maxProperties` (the maximum number of properties), or `undefined` if it has none
+   */
+  public readonly maxProperties: JSONSchemaKeyword<TFragment, 'maxProperties', number>;
+
+  /**
    * Parses a JSON schema model definition
    * @param fragment JSON fragment to parse
    * @param options Collection and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
@@ -70,9 +80,11 @@ export class JSONSchemaModelFragmentFacet<
     this.required = (
       required instanceof Array ? required.filter((name) => typeof name === 'string' && (this.names as Array<string>).includes(name)) : []
     ) as Array<_JSONSchemaModelFragmentRequiredName<TFragment>>;
+    this.minProperties = getJSONSchemaKeyword(fragment, 'minProperties', 'number') as JSONSchemaKeyword<TFragment, 'minProperties', number>;
+    this.maxProperties = getJSONSchemaKeyword(fragment, 'maxProperties', 'number') as JSONSchemaKeyword<TFragment, 'maxProperties', number>;
   }
 
-  // TODO: Not implemented yet (as in the type layer): `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`
+  // TODO: Not implemented yet (as in the type layer): `propertyNames`, `patternProperties`, `additionalProperties`
 }
 
 /**

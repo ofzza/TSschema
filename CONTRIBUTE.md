@@ -31,7 +31,7 @@ TSschema is two layers, each built in two levels:
 |                                                                           | JSON schema base: one unit per JSON schema keyword, internal         | TSSchema level: built on the base, public                                                       |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | **Type layer** - compile time, infers names and value types from a schema | `src/schema/JSONSchema/` - fragment types, `JSONSchemaFragmentIs*` checks, value type inference | `src/schema/TSSchema*.ts` - wrappers, `TSSchemaName`, `TSSchemaType`                            |
-| **Runtime layer** - parses and navigates a schema at runtime              | `src/reflection/JSONSchema/` - facets (parsing a schema)              | `src/reflection/TSSchemaReflection.ts` (with `PropertyPath.ts`, `TypeDescriptor.ts`) - reflections, `reflect`, type descriptors |
+| **Runtime layer** - parses and navigates a schema at runtime              | `src/reflection/JSONSchema/` - facets (parsing a schema)              | `src/reflection/TSSchemaReflection.ts` (with `PropertyPath.ts`, `TypeDescriptor.ts`, `Annotations.ts`) - reflections, `reflect`, type descriptors, annotations |
 
 - **The JSON schema base** follows JSON schema closely: a file per keyword (`ModelFragment.ts`, `ReferenceFragment.ts`, ...), the same file names in both
   layers. **The TSSchema level** is what users see: it combines the keywords into answers ("what are this model's properties?", "what is this value's
@@ -49,8 +49,18 @@ Terms are listed in the order they build on each other. Use them as defined here
 **JSON schema**
 
 - **Schema** - a whole JSON schema document, as passed to `reflect` or the type utilities.
-- **Keyword** - one property of a schema object with a JSON schema meaning (`type`, `properties`, `$ref`, `anyOf`, ...). Annotations (`title`,
-  `$comment`, ...) are keywords which constrain nothing.
+- **Keyword** - one property of a schema object with a JSON schema meaning (`type`, `properties`, `$ref`, `anyOf`, ...). A **vendor keyword** is one
+  JSON schema does not define, prefixed `x-` (`x-enumNames`, `x-decorators`); the `JSONSchema7` type does not declare them, so they are read with
+  `getJSONSchemaKeyword` and never added to the type layer's fragment types.
+- **Constraint** - a validation keyword which limits the values of one type of values only: a number (`minimum`, `maximum`, `exclusiveMinimum`,
+  `exclusiveMaximum`, `multipleOf`), a string (`minLength`, `maxLength`, `pattern`, `format`, `contentEncoding`), an array (`minItems`, `maxItems`,
+  `uniqueItems`) or an object (`minProperties`, `maxProperties`). Parsed by the facet of that type, and held by its type descriptor's `constraints`.
+  Never used by value type inference (see AGENTS.md › Constraints and annotations never change inferred value types).
+- **Annotation** - a keyword describing a fragment rather than constraining its values (`title`, `description`, `default`, `deprecated`, `examples`,
+  and the decorators; `$comment` is not exposed). Belongs to the position the fragment is used at, so it is read from the fragment itself, never
+  through a `$ref`, and is no facet's: a reflection's `annotations` and a property descriptor's `annotations` (`TSSchemaAnnotations`, `Annotations.ts`).
+- **Decorator** - an entry of the `x-decorators` vendor keyword (`TSSchemaDecoratorDescriptor`): something applied to the type or property a fragment
+  was generated from (e.g. a .NET attribute, as written by the sibling dotnetschema project), by its `name`, its `arguments` and its `properties`.
 - **Fragment** - any schema object within a schema, the schema included: a definition, a property's schema, an `anyOf` member, an array's `items`, ...
   The superterm of definition, root fragment and property (see [How the terms relate](#how-the-terms-relate)). *Not* a `$defs` entry specifically:
   that is a definition.
@@ -95,12 +105,13 @@ Terms are listed in the order they build on each other. Use them as defined here
   ...), describing a fragment's value type at runtime (`TSSchemaTypeDescriptor`). Built from a fragment's facets (`getTSSchemaTypeDescriptor`,
   `TypeDescriptor.ts`), and inferred from its fragment at type level (`TSSchemaTypeDescriptorOf`). Type shaped where facets are keyword shaped: several
   facets of one fragment are one descriptor (an **implicit** `allOf`, or an `enum` / `const` absorbing the `type` next to it). *Not* a facet, nor the
-  value type itself.
+  value type itself. Holds the constraints of its kind (`constraints`), never annotations.
 - **Nullable** - a descriptor's `nullable` flag: `null` is explicitly accepted where the descriptor is used. `null` next to other types (in an `anyOf`, a
   type array, an `enum`) is extracted into this flag rather than described as an alternative; `null` alone is the `null` kind. Says nothing about a
   reference's `target`.
-- **Property descriptor** - an entry of a model descriptor's `properties`: whether the property is `required`, and its `type` descriptor
-  (`TSSchemaModelPropertyDescriptor`). *Not* a type descriptor: being required belongs to the property's place in its model, not to its type.
+- **Property descriptor** - an entry of a model descriptor's `properties`: whether the property is `required`, its `type` descriptor and its
+  `annotations` (`TSSchemaModelPropertyDescriptor`). *Not* a type descriptor: being required and annotations belong to the property's place in its
+  model, not to its type.
 - **Value name** - the name of an `enum` or `const` value where the schema gives none (`getJSONSchemaValueName`): a string is its own name, any other
   value its string form or JSON. Names given by the schema come from `x-enumNames` (an enum) or `title` (each `const` of a `oneOf` described as an enum).
 - **Shape** *(internal to property lookup, `PropertyPath.ts`)* - something a property can be looked up in: a model, or an **unknown shape** (an object
@@ -120,7 +131,7 @@ Terms are listed in the order they build on each other. Use them as defined here
 
 - A **fragment** is the superterm: a definition, the root fragment and a property's schema are all fragments, and so are `anyOf` members and `items`.
 - A fragment is parsed into zero or more **facets**, one per keyword; a **reflection** holds all facets of one fragment, and describes its type by one
-  **type descriptor** built from them.
+  **type descriptor** built from them, holding the **constraints** its facets parsed. Its **annotations** are read from the fragment itself.
 - A **definition** and a **property** are fragments with a name, given by their position (`$defs`, `properties`): their reflections are the definition
   and property reflections, and their wrappers the fragment and property wrappers.
 - A **wrapper** (type layer) and a **reflection** (runtime layer) play the same role - a fragment plus where it came from - and agree on every name
@@ -136,7 +147,7 @@ extension), plain comments state the same types for other editors, and `// Break
 - [`src/_showcase.test.ts`](src/_showcase.test.ts) - the public API, as documented in the README.
 - [`src/schema/_showcase.test.ts`](src/schema/_showcase.test.ts) - the wrapper types behind the public API, and how property paths are resolved.
 - [`src/schema/JSONSchema/_showcase.test.ts`](src/schema/JSONSchema/_showcase.test.ts) - the per-keyword JSON schema type utilities everything is built on.
-- [`src/reflection/_showcase.test.ts`](src/reflection/_showcase.test.ts) - the runtime reflection module: the reflections, the facets they hold, and the type descriptors built from them.
+- [`src/reflection/_showcase.test.ts`](src/reflection/_showcase.test.ts) - the runtime reflection module: the reflections, the facets they hold, the type descriptors built from them (with their constraints), and the annotations read from their fragments.
 - [`src/reflection/JSONSchema/_showcase.test.ts`](src/reflection/JSONSchema/_showcase.test.ts) - the runtime JSON schema fragment facets (the parsed form of a schema), mirroring
   the type utilities.
 

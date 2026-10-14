@@ -8,6 +8,9 @@
  * `null` is not described as an alternative but as a flag: every descriptor's `nullable` says whether `null` is explicitly accepted where it is used, so
  * `anyOf: [{ type: "string" }, { type: "null" }]` (or `type: ["string", "null"]`) is just a nullable string.
  *
+ * Validation keywords are kept as constraints (`constraints`) by the descriptors of the kinds of values they apply to: a primitive (numbers, strings), an
+ * array, and a record or model (objects). Annotations are not part of a type: see `TSSchemaAnnotations`.
+ *
  * This file imports facets only, never a reflection class, so it stays out of the reflection classes' import cycle.
  */
 
@@ -17,6 +20,7 @@ import type {
   JSONSchemaNotCollectionFragment,
   JSONSchemaPrimitiveTypeName,
 } from '../schema/JSONSchema/index.js';
+import { getTSSchemaAnnotations, type TSSchemaAnnotations, type TSSchemaAnnotationsOf } from './Annotations.js';
 import {
   JSONSchemaAllOfTypeFragmentFacet,
   JSONSchemaAnyOfTypeFragmentFacet,
@@ -53,7 +57,7 @@ export type TSSchemaTypeDescriptor =
   | TSSchemaUnknownTypeDescriptor
   | TSSchemaConstTypeDescriptor
   | TSSchemaEnumTypeDescriptor
-  | TSSchemaPrimitiveTypeDescriptor
+  | _TSSchemaPrimitiveTypeDescriptors
   | TSSchemaNullTypeDescriptor
   | TSSchemaArrayTypeDescriptor
   | TSSchemaRecordTypeDescriptor
@@ -103,13 +107,31 @@ export interface TSSchemaEnumTypeDescriptor<
 }
 
 /**
- * Describes a primitive type (`string`, `number`, `integer` or `boolean`). A `type` array naming several is described as an implicit `anyOf` of them.
+ * Describes a primitive type (`string`, `number`, `integer` or `boolean`), with the constraints applying to it. A `type` array naming several is
+ * described as an implicit `anyOf` of them, each with the constraints applying to its own type.
  */
-export interface TSSchemaPrimitiveTypeDescriptor<TType extends JSONSchemaPrimitiveTypeName = JSONSchemaPrimitiveTypeName, TNullable extends boolean = boolean> {
+export interface TSSchemaPrimitiveTypeDescriptor<
+  TType extends JSONSchemaPrimitiveTypeName = JSONSchemaPrimitiveTypeName,
+  TNullable extends boolean = boolean,
+  TConstraints = TSSchemaPrimitiveConstraints<TType>,
+> {
   readonly kind: 'primitive';
   readonly type: TType;
+  /**
+   * Validation keywords applying to the type: those of a string for `string`, of a number for `number` and `integer`, and none for `boolean`
+   */
+  readonly constraints: TConstraints;
   readonly nullable: TNullable;
 }
+
+/**
+ * Descriptor of each primitive type, as a union told apart by `type`, so that checking a descriptor's `type` narrows its `constraints`
+ */
+type _TSSchemaPrimitiveTypeDescriptors = JSONSchemaPrimitiveTypeName extends infer T
+  ? T extends JSONSchemaPrimitiveTypeName
+    ? TSSchemaPrimitiveTypeDescriptor<T>
+    : never
+  : never;
 
 /**
  * Describes the `null` type, alone: `null` alongside other types makes them `nullable` instead
@@ -122,12 +144,16 @@ export interface TSSchemaNullTypeDescriptor {
 /**
  * Describes an array, by the type of its items
  */
-export interface TSSchemaArrayTypeDescriptor<TItems = TSSchemaTypeDescriptor, TNullable extends boolean = boolean> {
+export interface TSSchemaArrayTypeDescriptor<TItems = TSSchemaTypeDescriptor, TNullable extends boolean = boolean, TConstraints = TSSchemaArrayConstraints> {
   readonly kind: 'array';
   /**
    * Type of every item: `unknown` if the array has no `items`, or no single schema `items`
    */
   readonly items: TItems;
+  /**
+   * Validation keywords applying to an array
+   */
+  readonly constraints: TConstraints;
   readonly nullable: TNullable;
   // TODO: Not implemented yet (as in the facet and type layers): tuples (`prefixItems`), described as an array of `unknown` items for now
 }
@@ -135,12 +161,16 @@ export interface TSSchemaArrayTypeDescriptor<TItems = TSSchemaTypeDescriptor, TN
 /**
  * Describes an object with no known properties (`type: "object"` without `properties`), by the type of its values
  */
-export interface TSSchemaRecordTypeDescriptor<TValues = TSSchemaTypeDescriptor, TNullable extends boolean = boolean> {
+export interface TSSchemaRecordTypeDescriptor<TValues = TSSchemaTypeDescriptor, TNullable extends boolean = boolean, TConstraints = TSSchemaObjectConstraints> {
   readonly kind: 'record';
   /**
    * Type of every value: always `unknown` for now
    */
   readonly values: TValues;
+  /**
+   * Validation keywords applying to an object
+   */
+  readonly constraints: TConstraints;
   readonly nullable: TNullable;
   // TODO: Not implemented yet (as in the facet and type layers): `additionalProperties`, describing the type of the values
 }
@@ -152,6 +182,7 @@ export interface TSSchemaModelTypeDescriptor<
   TProperties = { readonly [name: string]: TSSchemaModelPropertyDescriptor },
   TRequired extends ReadonlyArray<string> = ReadonlyArray<string>,
   TNullable extends boolean = boolean,
+  TConstraints = TSSchemaObjectConstraints,
 > {
   readonly kind: 'model';
   /**
@@ -162,14 +193,19 @@ export interface TSSchemaModelTypeDescriptor<
    * Names of the required properties (every other property is optional), the same as each property's `required`, for convenience
    */
   readonly required: TRequired;
+  /**
+   * Validation keywords applying to an object
+   */
+  readonly constraints: TConstraints;
   readonly nullable: TNullable;
 }
 
 /**
- * Describes a property of a model: whether the model requires it, and its type. Not a type descriptor itself: being required is up to the model, not the
- * property's type, so the property's own flags are kept apart from its type's.
+ * Describes a property of a model: whether the model requires it, its type, and its annotations. Not a type descriptor itself: being required is up to
+ * the model, not the property's type, and annotations belong to where the property's type is used (e.g. next to a `$ref`), so the property's own flags
+ * are kept apart from its type's.
  */
-export interface TSSchemaModelPropertyDescriptor<TType = TSSchemaTypeDescriptor, TRequired extends boolean = boolean> {
+export interface TSSchemaModelPropertyDescriptor<TType = TSSchemaTypeDescriptor, TRequired extends boolean = boolean, TAnnotations = TSSchemaAnnotations> {
   /**
    * Whether the property is listed in its model's `required` keyword
    */
@@ -178,6 +214,10 @@ export interface TSSchemaModelPropertyDescriptor<TType = TSSchemaTypeDescriptor,
    * Type of the property
    */
   readonly type: TType;
+  /**
+   * Annotations of the property's fragment (see `TSSchemaAnnotations`)
+   */
+  readonly annotations: TAnnotations;
 }
 
 /**
@@ -258,9 +298,84 @@ export interface TSSchemaNotTypeDescriptor<TNot = TSSchemaTypeDescriptor, TNulla
   readonly nullable: TNullable;
 }
 
+/**
+ * Validation keywords applying to a number (`number` or `integer`), each `undefined` if the fragment has none
+ */
+export interface TSSchemaNumberConstraints {
+  readonly minimum: number | undefined;
+  readonly maximum: number | undefined;
+  readonly exclusiveMinimum: number | undefined;
+  readonly exclusiveMaximum: number | undefined;
+  readonly multipleOf: number | undefined;
+}
+
+/**
+ * Validation keywords applying to a string, each `undefined` if the fragment has none
+ */
+export interface TSSchemaStringConstraints {
+  readonly minLength: number | undefined;
+  readonly maxLength: number | undefined;
+  readonly pattern: string | undefined;
+  readonly format: string | undefined;
+  readonly contentEncoding: string | undefined;
+}
+
+/**
+ * Validation keywords applying to an array, each `undefined` if the fragment has none
+ */
+export interface TSSchemaArrayConstraints {
+  readonly minItems: number | undefined;
+  readonly maxItems: number | undefined;
+  readonly uniqueItems: boolean | undefined;
+}
+
+/**
+ * Validation keywords applying to an object, each `undefined` if the fragment has none
+ */
+export interface TSSchemaObjectConstraints {
+  readonly minProperties: number | undefined;
+  readonly maxProperties: number | undefined;
+}
+
+/**
+ * Gets the validation keywords applying to a primitive type: those of a string for `string`, of a number for `number` and `integer`, and none for
+ * `boolean`
+ */
+export type TSSchemaPrimitiveConstraints<TType extends JSONSchemaPrimitiveTypeName = JSONSchemaPrimitiveTypeName> =
+  // String
+  TType extends 'string'
+    ? TSSchemaStringConstraints
+    : // Number
+      TType extends 'number' | 'integer'
+      ? TSSchemaNumberConstraints
+      : // Boolean
+        {};
+
 // #endregion
 
 // #region Runtime
+
+/**
+ * Validation keywords applying to a number, as held by a primitive type facet
+ */
+const _numberConstraints = ['minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf'] as const satisfies ReadonlyArray<
+  keyof TSSchemaNumberConstraints
+>;
+
+/**
+ * Validation keywords applying to a string, as held by a primitive type facet
+ */
+const _stringConstraints = ['minLength', 'maxLength', 'pattern', 'format', 'contentEncoding'] as const satisfies ReadonlyArray<keyof TSSchemaStringConstraints>;
+
+/**
+ * Validation keywords applying to an array, as held by an array type facet
+ */
+const _arrayConstraints = ['minItems', 'maxItems', 'uniqueItems'] as const satisfies ReadonlyArray<keyof TSSchemaArrayConstraints>;
+
+/**
+ * Validation keywords applying to an object, as held by an object type or model facet
+ */
+const _objectConstraints = ['minProperties', 'maxProperties'] as const satisfies ReadonlyArray<keyof TSSchemaObjectConstraints>;
 
 /**
  * Descriptors already built, by the facets array they describe, so that every reference to a definition describes it by the same descriptor
@@ -326,10 +441,15 @@ function _describeFacet(facet: JSONSchemaFragmentFacet<any, any, any>): TSSchema
       properties: Object.fromEntries(
         Object.entries(properties).map(([name, facets]) => [
           name,
-          { required: required.includes(name), type: getTSSchemaTypeDescriptor(facets) as TSSchemaTypeDescriptor },
+          {
+            required: required.includes(name),
+            type: getTSSchemaTypeDescriptor(facets) as TSSchemaTypeDescriptor,
+            annotations: getTSSchemaAnnotations((facet.fragment.properties as Record<string, unknown>)[name]),
+          },
         ]),
       ),
       required: [...required],
+      constraints: _getConstraints(facet, _objectConstraints),
       nullable: false,
     };
   }
@@ -340,8 +460,8 @@ function _describeFacet(facet: JSONSchemaFragmentFacet<any, any, any>): TSSchema
   if (facet instanceof JSONSchemaEnumFragmentFacet) return _describeEnum(facet.enum as ReadonlyArray<unknown>, facet.names as ReadonlyArray<string>);
   // Primitive type(s)
   if (facet instanceof JSONSchemaPrimitiveTypeFragmentFacet) {
-    if (!(facet.type instanceof Array)) return { kind: 'primitive', type: facet.type, nullable: false };
-    const members = (facet.type as ReadonlyArray<JSONSchemaPrimitiveTypeName>).map((type) => ({ kind: 'primitive', type, nullable: false }) as const);
+    if (!(facet.type instanceof Array)) return _describePrimitive(facet, facet.type);
+    const members = (facet.type as ReadonlyArray<JSONSchemaPrimitiveTypeName>).map((type) => _describePrimitive(facet, type));
     return members.length === 1 ? members[0] : _describeAnyOf(members, true);
   }
   // Null type
@@ -349,10 +469,16 @@ function _describeFacet(facet: JSONSchemaFragmentFacet<any, any, any>): TSSchema
   // Array type
   if (facet instanceof JSONSchemaArrayTypeFragmentFacet) {
     const items = facet.items as Array<JSONSchemaFragmentFacet<any, any, any>> | undefined;
-    return { kind: 'array', items: items === undefined ? { kind: 'unknown', nullable: false } : getTSSchemaTypeDescriptor(items), nullable: false };
+    return {
+      kind: 'array',
+      items: items === undefined ? { kind: 'unknown', nullable: false } : getTSSchemaTypeDescriptor(items),
+      constraints: _getConstraints(facet, _arrayConstraints),
+      nullable: false,
+    };
   }
   // Object type
-  if (facet instanceof JSONSchemaObjectTypeFragmentFacet) return { kind: 'record', values: { kind: 'unknown', nullable: false }, nullable: false };
+  if (facet instanceof JSONSchemaObjectTypeFragmentFacet)
+    return { kind: 'record', values: { kind: 'unknown', nullable: false }, constraints: _getConstraints(facet, _objectConstraints), nullable: false };
   // AllOf type: nullable only if every member is
   if (facet instanceof JSONSchemaAllOfTypeFragmentFacet) {
     const members = _describeMembers(facet.allOf as Array<Array<JSONSchemaFragmentFacet<any, any, any>>>);
@@ -408,6 +534,28 @@ function _describeFacet(facet: JSONSchemaFragmentFacet<any, any, any>): TSSchema
  */
 function _describeMembers(members: Array<Array<JSONSchemaFragmentFacet<any, any, any>>>): Array<TSSchemaTypeDescriptor> {
   return members.map((facets) => getTSSchemaTypeDescriptor(facets));
+}
+
+/**
+ * Describes a primitive type of a primitive type facet, with the facet's constraints applying to it (see `TSSchemaPrimitiveConstraints`)
+ * @param facet Primitive type facet
+ * @param type The primitive type to describe, named by the facet's `type`
+ * @returns Descriptor of the primitive type
+ */
+function _describePrimitive(facet: JSONSchemaPrimitiveTypeFragmentFacet<any, any, any>, type: JSONSchemaPrimitiveTypeName): TSSchemaTypeDescriptor {
+  const constraints =
+    type === 'string' ? _getConstraints(facet, _stringConstraints) : type === 'number' || type === 'integer' ? _getConstraints(facet, _numberConstraints) : {};
+  return { kind: 'primitive', type, constraints, nullable: false } as TSSchemaTypeDescriptor;
+}
+
+/**
+ * Gets the constraints of a facet: the values of the given validation keywords, as parsed by the facet
+ * @param facet Facet holding the validation keywords
+ * @param keywords Names of the validation keywords
+ * @returns Value of each validation keyword, by keyword name
+ */
+function _getConstraints<TKeyword extends string>(facet: { readonly [K in TKeyword]: unknown }, keywords: ReadonlyArray<TKeyword>): any {
+  return Object.fromEntries(keywords.map((keyword) => [keyword, facet[keyword]]));
 }
 
 /**
@@ -520,11 +668,11 @@ type _TSSchemaUnknownTypeDescriptor = TSSchemaUnknownTypeDescriptor<false>;
  * Descriptors which only describe a `type` keyword, absorbed by an `enum` or `const` alongside them
  */
 type _TSSchemaAbsorbedTypeDescriptor =
-  | TSSchemaPrimitiveTypeDescriptor<any, any>
+  | TSSchemaPrimitiveTypeDescriptor<any, any, any>
   | TSSchemaNullTypeDescriptor
-  | TSSchemaRecordTypeDescriptor<any, any>
+  | TSSchemaRecordTypeDescriptor<any, any, any>
   | TSSchemaAnyOfTypeDescriptor<
-      ReadonlyArray<TSSchemaPrimitiveTypeDescriptor<any, any> | TSSchemaNullTypeDescriptor | TSSchemaRecordTypeDescriptor<any, any>>,
+      ReadonlyArray<TSSchemaPrimitiveTypeDescriptor<any, any, any> | TSSchemaNullTypeDescriptor | TSSchemaRecordTypeDescriptor<any, any, any>>,
       any,
       any
     >;
@@ -561,11 +709,13 @@ type _TSSchemaFacetTypeDescriptor<TSchema extends JSONSchemaCollection, TFacet> 
             {
               readonly [K in keyof P]-?: TSSchemaModelPropertyDescriptor<
                 _TSSchemaNestedTypeDescriptor<TSchema, Exclude<P[K], undefined>>,
-                K extends R ? true : false
+                K extends R ? true : false,
+                TSSchemaAnnotationsOf<Exclude<P[K], undefined>>
               >;
             },
             ReadonlyArray<R>,
-            false
+            false,
+            _TSSchemaConstraints<TFacet, keyof TSSchemaObjectConstraints>
           >
         : never
       : // Const: a `null` constant is the null type
@@ -577,12 +727,13 @@ type _TSSchemaFacetTypeDescriptor<TSchema extends JSONSchemaCollection, TFacet> 
           : // Array type
             TFacet extends { items: unknown }
             ? F extends { items: infer I }
-              ? TSSchemaArrayTypeDescriptor<_TSSchemaNestedTypeDescriptor<TSchema, I>, false>
+              ? TSSchemaArrayTypeDescriptor<_TSSchemaNestedTypeDescriptor<TSchema, I>, false, _TSSchemaConstraints<TFacet, keyof TSSchemaArrayConstraints>>
               : TSSchemaArrayTypeDescriptor<
                   F extends { items?: infer I }
                     ? _TSSchemaNestedTypeDescriptor<TSchema, Exclude<I, undefined>> | _TSSchemaUnknownTypeDescriptor
                     : _TSSchemaUnknownTypeDescriptor,
-                  false
+                  false,
+                  _TSSchemaConstraints<TFacet, keyof TSSchemaArrayConstraints>
                 >
             : // AllOf type: nullable only if every member is
               TFacet extends { allOf: unknown }
@@ -614,8 +765,8 @@ type _TSSchemaFacetTypeDescriptor<TSchema extends JSONSchemaCollection, TFacet> 
                         ? T extends 'null'
                           ? TSSchemaNullTypeDescriptor
                           : T extends 'object'
-                            ? TSSchemaRecordTypeDescriptor<_TSSchemaUnknownTypeDescriptor, false>
-                            : _TSSchemaPrimitiveTypeDescriptor<T>
+                            ? TSSchemaRecordTypeDescriptor<_TSSchemaUnknownTypeDescriptor, false, _TSSchemaConstraints<TFacet, keyof TSSchemaObjectConstraints>>
+                            : _TSSchemaPrimitiveTypeDescriptor<T, TFacet>
                         : never
     : never;
 
@@ -752,28 +903,49 @@ type _TSSchemaOneOfTypeDescriptor<TMembers extends ReadonlyArray<unknown>, TDesc
 
 /**
  * Infers the descriptor of a primitive `type`: a primitive type name, or an array naming a single one, as a primitive descriptor, and an array naming
- * several as an implicit `anyOf` of them, element by element for a tuple
+ * several as an implicit `anyOf` of them, element by element for a tuple. Each with the constraints of the facet applying to its type.
  */
-type _TSSchemaPrimitiveTypeDescriptor<TType> =
+type _TSSchemaPrimitiveTypeDescriptor<TType, TFacet> =
   // Single type name
   TType extends JSONSchemaPrimitiveTypeName
-    ? TSSchemaPrimitiveTypeDescriptor<TType, false>
+    ? _TSSchemaPrimitiveTypeDescriptorOf<TType, TFacet>
     : // Array of type names
       TType extends ReadonlyArray<infer N extends JSONSchemaPrimitiveTypeName>
       ? // Several type names
         true extends _IsUnion<N>
         ? // Array of unknown length
           number extends TType['length']
-          ? TSSchemaAnyOfTypeDescriptor<ReadonlyArray<N extends unknown ? TSSchemaPrimitiveTypeDescriptor<N, false> : never>, true, false>
+          ? TSSchemaAnyOfTypeDescriptor<ReadonlyArray<N extends unknown ? _TSSchemaPrimitiveTypeDescriptorOf<N, TFacet> : never>, true, false>
           : // Tuple
             TSSchemaAnyOfTypeDescriptor<
-              { readonly [I in keyof TType]: TSSchemaPrimitiveTypeDescriptor<TType[I] & JSONSchemaPrimitiveTypeName, false> },
+              { readonly [I in keyof TType]: _TSSchemaPrimitiveTypeDescriptorOf<TType[I] & JSONSchemaPrimitiveTypeName, TFacet> },
               true,
               false
             >
         : // Single type name
-          TSSchemaPrimitiveTypeDescriptor<N, false>
+          _TSSchemaPrimitiveTypeDescriptorOf<N, TFacet>
       : never;
+
+/**
+ * Infers the descriptor of a single primitive type, with the constraints of the facet applying to it (see `TSSchemaPrimitiveConstraints`)
+ */
+type _TSSchemaPrimitiveTypeDescriptorOf<TType extends JSONSchemaPrimitiveTypeName, TFacet> = TSSchemaPrimitiveTypeDescriptor<
+  TType,
+  false,
+  // String
+  TType extends 'string'
+    ? _TSSchemaConstraints<TFacet, keyof TSSchemaStringConstraints>
+    : // Number
+      TType extends 'number' | 'integer'
+      ? _TSSchemaConstraints<TFacet, keyof TSSchemaNumberConstraints>
+      : // Boolean
+        {}
+>;
+
+/**
+ * Infers the constraints of a facet: the type of each of the given validation keywords, as parsed by the facet (see `_getConstraints`)
+ */
+type _TSSchemaConstraints<TFacet, TKeyword extends string> = { readonly [K in TKeyword]: K extends keyof TFacet ? TFacet[K] : undefined };
 
 /**
  * Infers the descriptor of a reference, by the name of the referenced definition, or `unknown` for a reference which can not be resolved
@@ -802,20 +974,20 @@ type _WithNullable<TDescriptor, TNullable extends boolean> =
         TDescriptor extends TSSchemaEnumTypeDescriptor<infer V, infer N, any>
         ? TSSchemaEnumTypeDescriptor<V, N, TNullable>
         : // Primitive type
-          TDescriptor extends TSSchemaPrimitiveTypeDescriptor<infer T, any>
-          ? TSSchemaPrimitiveTypeDescriptor<T, TNullable>
+          TDescriptor extends TSSchemaPrimitiveTypeDescriptor<infer T, any, infer C>
+          ? TSSchemaPrimitiveTypeDescriptor<T, TNullable, C>
           : // Null type: always nullable
             TDescriptor extends TSSchemaNullTypeDescriptor
             ? TSSchemaNullTypeDescriptor
             : // Array type
-              TDescriptor extends TSSchemaArrayTypeDescriptor<infer I, any>
-              ? TSSchemaArrayTypeDescriptor<I, TNullable>
+              TDescriptor extends TSSchemaArrayTypeDescriptor<infer I, any, infer C>
+              ? TSSchemaArrayTypeDescriptor<I, TNullable, C>
               : // Record type
-                TDescriptor extends TSSchemaRecordTypeDescriptor<infer V, any>
-                ? TSSchemaRecordTypeDescriptor<V, TNullable>
+                TDescriptor extends TSSchemaRecordTypeDescriptor<infer V, any, infer C>
+                ? TSSchemaRecordTypeDescriptor<V, TNullable, C>
                 : // Model
-                  TDescriptor extends TSSchemaModelTypeDescriptor<infer P, infer R, any>
-                  ? TSSchemaModelTypeDescriptor<P, R, TNullable>
+                  TDescriptor extends TSSchemaModelTypeDescriptor<infer P, infer R, any, infer C>
+                  ? TSSchemaModelTypeDescriptor<P, R, TNullable, C>
                   : // Reference
                     TDescriptor extends TSSchemaReferenceTypeDescriptor<infer N, infer T, any>
                     ? TSSchemaReferenceTypeDescriptor<N, T, TNullable>

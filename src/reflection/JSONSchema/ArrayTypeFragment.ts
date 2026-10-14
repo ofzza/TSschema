@@ -1,10 +1,11 @@
 /**
- * Facets of JSON schema `type: "array"` fragments: the facets of their `items` fragment.
+ * Facets of JSON schema `type: "array"` fragments: the facets of their `items` fragment, and the validation keywords applying to arrays.
  */
 
 import type { JSONSchema7, JSONSchemaArrayTypeFragment, JSONSchemaCollection, JSONSchemaDefinitionName } from '../../schema/JSONSchema/index.js';
 import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
 import { createJSONSchemaNestedFragmentFacets, type JSONSchemaNestedFragmentFacets } from './FragmentFacets.js';
+import { getJSONSchemaKeyword, type JSONSchemaKeyword } from './JSONSchema7.js';
 
 /**
  * Parses a JSON schema array type definition, which is any schema fragment containing a `type="array"` property and an optional `items` property.
@@ -38,6 +39,21 @@ export class JSONSchemaArrayTypeFragmentFacet<
   public readonly items: _JSONSchemaArrayTypeFragmentItemsFacets<TSchema, TFragment>;
 
   /**
+   * The fragment's `minItems` (the minimum number of items), or `undefined` if it has none
+   */
+  public readonly minItems: JSONSchemaKeyword<TFragment, 'minItems', number>;
+
+  /**
+   * The fragment's `maxItems` (the maximum number of items), or `undefined` if it has none
+   */
+  public readonly maxItems: JSONSchemaKeyword<TFragment, 'maxItems', number>;
+
+  /**
+   * The fragment's `uniqueItems` (whether every item must be unique), or `undefined` if it has none
+   */
+  public readonly uniqueItems: JSONSchemaKeyword<TFragment, 'uniqueItems', boolean>;
+
+  /**
    * Parses a JSON schema array type definition
    * @param fragment JSON fragment to parse
    * @param options Collection and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
@@ -45,6 +61,9 @@ export class JSONSchemaArrayTypeFragmentFacet<
   public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     super(fragment, options);
     this.type = fragment['type'];
+    this.minItems = getJSONSchemaKeyword(fragment, 'minItems', 'number') as JSONSchemaKeyword<TFragment, 'minItems', number>;
+    this.maxItems = getJSONSchemaKeyword(fragment, 'maxItems', 'number') as JSONSchemaKeyword<TFragment, 'maxItems', number>;
+    this.uniqueItems = getJSONSchemaKeyword(fragment, 'uniqueItems', 'boolean') as JSONSchemaKeyword<TFragment, 'uniqueItems', boolean>;
     const items = fragment['items'];
     this.items = (items === undefined ? undefined : createJSONSchemaNestedFragmentFacets(items, this._collection)) as _JSONSchemaArrayTypeFragmentItemsFacets<
       TSchema,

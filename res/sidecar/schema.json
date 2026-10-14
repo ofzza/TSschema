@@ -14,28 +14,53 @@
           "type": "string"
         },
         "postalCode": {
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "countryCode": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(?:[A-Z]{2})$",
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.RegularExpressionAttribute",
+              "arguments": {
+                "pattern": "[A-Z]{2}"
+              }
+            }
+          ]
         },
         "latitude": {
-          "type": "number"
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.RangeAttribute",
+              "arguments": {
+                "minimum": -90,
+                "maximum": 90
+              }
+            }
+          ]
         },
         "longitude": {
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": -180,
+          "maximum": 180,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.RangeAttribute",
+              "arguments": {
+                "minimum": -180,
+                "maximum": 180
+              },
+              "properties": {
+                "MinimumIsExclusive": true
+              }
+            }
+          ]
         }
       },
-      "required": [
-        "street",
-        "city",
-        "countryCode",
-        "latitude",
-        "longitude"
-      ]
+      "required": ["street", "city", "countryCode", "latitude", "longitude"]
     },
     "Assessment": {
       "type": "object",
@@ -60,10 +85,7 @@
           "maximum": 65535
         },
         "dueAt": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "format": "date-time"
         },
         "isOpenBook": {
@@ -83,14 +105,7 @@
           "$ref": "#/$defs/AssessmentRecord"
         }
       },
-      "required": [
-        "id",
-        "title",
-        "weight",
-        "maximumMarks",
-        "dueAt",
-        "record"
-      ]
+      "required": ["id", "title", "weight", "maximumMarks", "dueAt", "record"]
     },
     "AssessmentKind": {
       "type": "integer",
@@ -152,14 +167,7 @@
           "$ref": "#/$defs/NullableScalarRegister"
         }
       },
-      "required": [
-        "battery",
-        "series",
-        "register",
-        "nullableBattery",
-        "nullableSeries",
-        "nullableRegister"
-      ]
+      "required": ["battery", "series", "register", "nullableBattery", "nullableSeries", "nullableRegister"]
     },
     "Book": {
       "type": "object",
@@ -172,20 +180,47 @@
           "$ref": "#/$defs/BookName"
         },
         "isbn": {
-          "type": [
-            "string",
-            "null"
+          "type": ["string", "null"],
+          "title": "ISBN-13",
+          "description": "ISBN-13, formatted with separators.",
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.DisplayAttribute",
+              "properties": {
+                "Description": "ISBN-13, formatted with separators.",
+                "Name": "ISBN-13"
+              }
+            }
           ]
         },
         "edition": {
           "type": "integer",
-          "minimum": 0,
-          "maximum": 255
+          "minimum": 1,
+          "maximum": 99,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.RangeAttribute",
+              "arguments": {
+                "minimum": 1,
+                "maximum": 99
+              }
+            }
+          ]
         },
         "pageCount": {
           "type": "integer",
-          "minimum": 0,
-          "maximum": 65535
+          "minimum": 1,
+          "maximum": 5000,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.RangeAttribute",
+              "arguments": {
+                "type": "System.UInt16",
+                "minimum": "1",
+                "maximum": "5000"
+              }
+            }
+          ]
         },
         "price": {
           "type": "number",
@@ -195,8 +230,20 @@
           "type": "string",
           "format": "date"
         },
+        "binding": {
+          "$ref": "#/$defs/BookBinding"
+        },
         "hasDigitalLicence": {
-          "type": "boolean"
+          "type": "boolean",
+          "default": false,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DefaultValueAttribute",
+              "arguments": {
+                "value": false
+              }
+            }
+          ]
         },
         "class": {
           "anyOf": [
@@ -209,10 +256,7 @@
           ]
         },
         "authors": {
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
             "$ref": "#/$defs/Person"
           }
@@ -221,19 +265,35 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/Chapter"
-          }
+          },
+          "maxItems": 64,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.MaxLengthAttribute",
+              "arguments": {
+                "length": 64
+              }
+            }
+          ]
         }
       },
-      "required": [
-        "id",
-        "name",
-        "isbn",
-        "edition",
-        "pageCount",
-        "price",
-        "publishedOn",
-        "authors",
-        "chapters"
+      "required": ["id", "name", "isbn", "edition", "pageCount", "price", "publishedOn", "binding", "authors", "chapters"]
+    },
+    "BookBinding": {
+      "type": "string",
+      "oneOf": [
+        {
+          "const": "Hardcover",
+          "title": "Hardcover"
+        },
+        {
+          "const": "Paperback",
+          "title": "Paperback"
+        },
+        {
+          "const": "spiral-bound",
+          "title": "SpiralBound"
+        }
       ]
     },
     "BookName": {
@@ -341,10 +401,7 @@
           "type": "boolean"
         },
         "builtInYear": {
-          "type": [
-            "integer",
-            "null"
-          ],
+          "type": ["integer", "null"],
           "minimum": 0,
           "maximum": 65535
         },
@@ -355,13 +412,7 @@
           }
         }
       },
-      "required": [
-        "id",
-        "name",
-        "floorCount",
-        "builtInYear",
-        "rooms"
-      ]
+      "required": ["id", "name", "floorCount", "builtInYear", "rooms"]
     },
     "Campus": {
       "type": "object",
@@ -377,10 +428,7 @@
           "$ref": "#/$defs/Address"
         },
         "openedOn": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "format": "date"
         },
         "areaHectares": {
@@ -393,12 +441,15 @@
           }
         }
       },
-      "required": [
-        "id",
-        "name",
-        "address",
-        "openedOn",
-        "buildings"
+      "required": ["id", "name", "address", "openedOn", "buildings"],
+      "title": "Campus site",
+      "x-decorators": [
+        {
+          "name": "System.ComponentModel.DisplayNameAttribute",
+          "arguments": {
+            "displayName": "Campus site"
+          }
+        }
       ]
     },
     "Chapter": {
@@ -422,10 +473,7 @@
           "maximum": 65535
         },
         "estimatedReadingTime": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "pattern": "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$",
           "$comment": "System.TimeSpan. System.Text.Json writes [-][d.]hh:mm:ss[.fffffff], not an ISO-8601 duration, so the \"duration\" format does not hold."
         },
@@ -442,13 +490,7 @@
           }
         }
       },
-      "required": [
-        "id",
-        "ordinal",
-        "title",
-        "startPage",
-        "sections"
-      ]
+      "required": ["id", "ordinal", "title", "startPage", "sections"]
     },
     "Class": {
       "type": "object",
@@ -490,10 +532,7 @@
           "type": "boolean"
         },
         "synopsis": {
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "professor": {
           "anyOf": [
@@ -524,10 +563,7 @@
           }
         },
         "schedule": {
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
             "$ref": "#/$defs/ClassSession"
           }
@@ -549,19 +585,7 @@
           ]
         }
       },
-      "required": [
-        "id",
-        "name",
-        "code",
-        "academicYear",
-        "credits",
-        "seats",
-        "isEnrollmentOpen",
-        "professor",
-        "students",
-        "materials",
-        "assessments"
-      ]
+      "required": ["id", "name", "code", "academicYear", "credits", "seats", "isEnrollmentOpen", "professor", "students", "materials", "assessments"]
     },
     "ClassName": {
       "type": "integer",
@@ -683,12 +707,7 @@
           ]
         }
       },
-      "required": [
-        "id",
-        "day",
-        "startsAt",
-        "duration"
-      ]
+      "required": ["id", "day", "startsAt", "duration"]
     },
     "DayOfWeek": {
       "type": "integer",
@@ -738,10 +757,7 @@
           "type": "string"
         },
         "annualBudget": {
-          "type": [
-            "number",
-            "null"
-          ],
+          "type": ["number", "null"],
           "$comment": "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly."
         },
         "establishedOn": {
@@ -771,15 +787,7 @@
           }
         }
       },
-      "required": [
-        "id",
-        "name",
-        "annualBudget",
-        "establishedOn",
-        "head",
-        "courses",
-        "subDepartments"
-      ]
+      "required": ["id", "name", "annualBudget", "establishedOn", "head", "courses", "subDepartments"]
     },
     "DepartmentName": {
       "type": "integer",
@@ -833,10 +841,7 @@
           "type": "string"
         },
         "difficulty": {
-          "type": [
-            "number",
-            "null"
-          ]
+          "type": ["number", "null"]
         },
         "hasWorkedSolution": {
           "type": "boolean"
@@ -847,12 +852,7 @@
           "maximum": 255
         }
       },
-      "required": [
-        "id",
-        "label",
-        "prompt",
-        "marks"
-      ]
+      "required": ["id", "label", "prompt", "marks"]
     },
     "Library": {
       "type": "object",
@@ -875,18 +875,12 @@
           "$comment": "System.TimeOnly. System.Text.Json writes hh:mm:ss[.fffffff] with no UTC offset, so the JSON Schema \"time\" format (RFC 3339 full-time) does not hold."
         },
         "closesAt": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "pattern": "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d{1,7})?$",
           "$comment": "System.TimeOnly. System.Text.Json writes hh:mm:ss[.fffffff] with no UTC offset, so the JSON Schema \"time\" format (RFC 3339 full-time) does not hold."
         },
         "catalogue": {
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": ["object", "null"],
           "$comment": "Keyed by DotNetSchema.Fixtures.Schema.Enums.BookName. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.",
           "propertyNames": {
             "type": "string",
@@ -930,164 +924,96 @@
           }
         }
       },
-      "required": [
-        "id",
-        "name",
-        "opensAt",
-        "closesAt",
-        "catalogue",
-        "librarians",
-        "readingRooms"
-      ]
+      "required": ["id", "name", "opensAt", "closesAt", "catalogue", "librarians", "readingRooms"]
     },
     "NullableScalarBattery": {
       "type": "object",
       "properties": {
         "isProctored": {
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "curveAdjustment": {
-          "type": [
-            "integer",
-            "null"
-          ],
+          "type": ["integer", "null"],
           "minimum": -128,
           "maximum": 127
         },
         "rawScore": {
-          "type": [
-            "integer",
-            "null"
-          ],
+          "type": ["integer", "null"],
           "minimum": 0,
           "maximum": 255
         },
         "seatNumber": {
-          "type": [
-            "integer",
-            "null"
-          ],
+          "type": ["integer", "null"],
           "minimum": -32768,
           "maximum": 32767
         },
         "itemCount": {
-          "type": [
-            "integer",
-            "null"
-          ],
+          "type": ["integer", "null"],
           "minimum": 0,
           "maximum": 65535
         },
         "totalPoints": {
-          "type": [
-            "integer",
-            "null"
-          ],
+          "type": ["integer", "null"],
           "minimum": -2147483648,
           "maximum": 2147483647
         },
         "submissionSequence": {
-          "type": [
-            "integer",
-            "null"
-          ],
+          "type": ["integer", "null"],
           "minimum": 0,
           "maximum": 4294967295
         },
         "elapsedTicks": {
-          "type": [
-            "integer",
-            "null"
-          ],
+          "type": ["integer", "null"],
           "$comment": "System.Int64. Bounds are omitted: they are not exactly representable in IEEE-754, and values beyond 2^53 lose precision in readers that parse JSON numbers as doubles."
         },
         "integrityChecksum": {
-          "type": [
-            "integer",
-            "null"
-          ],
+          "type": ["integer", "null"],
           "minimum": 0,
           "$comment": "System.UInt64. The upper bound is omitted: it is not exactly representable in IEEE-754."
         },
         "percentileRank": {
-          "type": [
-            "number",
-            "null"
-          ]
+          "type": ["number", "null"]
         },
         "scaledScore": {
-          "type": [
-            "number",
-            "null"
-          ]
+          "type": ["number", "null"]
         },
         "weightedAverage": {
-          "type": [
-            "number",
-            "null"
-          ],
+          "type": ["number", "null"],
           "$comment": "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly."
         },
         "letterGrade": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "minLength": 1,
           "maxLength": 1
         },
         "remarks": {
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "responseId": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "format": "uuid"
         },
         "administeredOn": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "format": "date"
         },
         "startedAt": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "pattern": "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d{1,7})?$",
           "$comment": "System.TimeOnly. System.Text.Json writes hh:mm:ss[.fffffff] with no UTC offset, so the JSON Schema \"time\" format (RFC 3339 full-time) does not hold."
         },
         "allowedDuration": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "pattern": "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$",
           "$comment": "System.TimeSpan. System.Text.Json writes [-][d.]hh:mm:ss[.fffffff], not an ISO-8601 duration, so the \"duration\" format does not hold."
         },
         "recordedAtUtc": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "format": "date-time",
           "$comment": "System.DateTime. The offset suffix is present only when DateTimeKind is Utc or Local; a DateTimeKind.Unspecified value is written without one and would not satisfy \"date-time\"."
         },
         "submittedAt": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "format": "date-time"
         }
       },
@@ -1110,47 +1036,29 @@
         "answeredByItem": {
           "type": "object",
           "additionalProperties": {
-            "type": [
-              "boolean",
-              "null"
-            ]
+            "type": ["boolean", "null"]
           }
         },
         "curveByItem": {
           "type": "object",
           "additionalProperties": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "minimum": -128,
             "maximum": 127
           }
         },
         "rawScoreByItem": {
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": ["object", "null"],
           "additionalProperties": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "minimum": 0,
             "maximum": 255
           }
         },
         "seatByItem": {
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": ["object", "null"],
           "additionalProperties": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "minimum": -32768,
             "maximum": 32767
           }
@@ -1158,10 +1066,7 @@
         "attemptsByItem": {
           "type": "object",
           "additionalProperties": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "minimum": 0,
             "maximum": 65535
           }
@@ -1169,48 +1074,30 @@
         "pointsByItem": {
           "type": "object",
           "additionalProperties": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "minimum": -2147483648,
             "maximum": 2147483647
           }
         },
         "sequenceByItem": {
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": ["object", "null"],
           "additionalProperties": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "minimum": 0,
             "maximum": 4294967295
           }
         },
         "elapsedTicksByItem": {
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": ["object", "null"],
           "additionalProperties": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "$comment": "System.Int64. Bounds are omitted: they are not exactly representable in IEEE-754, and values beyond 2^53 lose precision in readers that parse JSON numbers as doubles."
           }
         },
         "checksumByItem": {
           "type": "object",
           "additionalProperties": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "minimum": 0,
             "$comment": "System.UInt64. The upper bound is omitted: it is not exactly representable in IEEE-754."
           }
@@ -1218,44 +1105,26 @@
         "percentileByItem": {
           "type": "object",
           "additionalProperties": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           }
         },
         "scaledScoreByItem": {
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": ["object", "null"],
           "additionalProperties": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           }
         },
         "weightByItem": {
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": ["object", "null"],
           "additionalProperties": {
-            "type": [
-              "number",
-              "null"
-            ],
+            "type": ["number", "null"],
             "$comment": "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly."
           }
         },
         "letterGradeByItem": {
           "type": "object",
           "additionalProperties": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "minLength": 1,
             "maxLength": 1
           }
@@ -1263,45 +1132,27 @@
         "remarkByItem": {
           "type": "object",
           "additionalProperties": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           }
         },
         "responseIdByItem": {
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": ["object", "null"],
           "additionalProperties": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "uuid"
           }
         },
         "markedOnByItem": {
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": ["object", "null"],
           "additionalProperties": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date"
           }
         },
         "openedAtByItem": {
           "type": "object",
           "additionalProperties": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "pattern": "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d{1,7})?$",
             "$comment": "System.TimeOnly. System.Text.Json writes hh:mm:ss[.fffffff] with no UTC offset, so the JSON Schema \"time\" format (RFC 3339 full-time) does not hold."
           }
@@ -1309,38 +1160,23 @@
         "durationByItem": {
           "type": "object",
           "additionalProperties": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "pattern": "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$",
             "$comment": "System.TimeSpan. System.Text.Json writes [-][d.]hh:mm:ss[.fffffff], not an ISO-8601 duration, so the \"duration\" format does not hold."
           }
         },
         "recordedAtUtcByItem": {
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": ["object", "null"],
           "additionalProperties": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "$comment": "System.DateTime. The offset suffix is present only when DateTimeKind is Utc or Local; a DateTimeKind.Unspecified value is written without one and would not satisfy \"date-time\"."
           }
         },
         "savedAtByItem": {
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": ["object", "null"],
           "additionalProperties": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           }
         },
@@ -1351,10 +1187,7 @@
             "pattern": "^-?(0|[1-9]\\d*)$"
           },
           "additionalProperties": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           }
         },
         "scoreByResponseId": {
@@ -1364,53 +1197,29 @@
             "format": "uuid"
           },
           "additionalProperties": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           }
         },
         "weightByAssessmentKind": {
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": ["object", "null"],
           "$comment": "Keyed by DotNetSchema.Fixtures.Schema.Enums.AssessmentKind. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.",
           "propertyNames": {
             "type": "string",
-            "enum": [
-              "Quiz",
-              "MidtermExam",
-              "FinalExam",
-              "Essay",
-              "LabReport",
-              "Practical",
-              "OralDefence",
-              "GroupProject"
-            ]
+            "enum": ["Quiz", "MidtermExam", "FinalExam", "Essay", "LabReport", "Practical", "OralDefence", "GroupProject"]
           },
           "additionalProperties": {
-            "type": [
-              "number",
-              "null"
-            ],
+            "type": ["number", "null"],
             "$comment": "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly."
           }
         },
         "attendanceByDate": {
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": ["object", "null"],
           "propertyNames": {
             "type": "string",
             "format": "date"
           },
           "additionalProperties": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "minimum": 0,
             "maximum": 65535
           }
@@ -1437,47 +1246,29 @@
         "attemptedFlags": {
           "type": "array",
           "items": {
-            "type": [
-              "boolean",
-              "null"
-            ]
+            "type": ["boolean", "null"]
           }
         },
         "curveAdjustments": {
           "type": "array",
           "items": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "minimum": -128,
             "maximum": 127
           }
         },
         "rawScores": {
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "minimum": 0,
             "maximum": 255
           }
         },
         "seatNumbers": {
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "minimum": -32768,
             "maximum": 32767
           }
@@ -1485,10 +1276,7 @@
         "attemptCounts": {
           "type": "array",
           "items": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "minimum": 0,
             "maximum": 65535
           }
@@ -1496,48 +1284,30 @@
         "pointsPerItem": {
           "type": "array",
           "items": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "minimum": -2147483648,
             "maximum": 2147483647
           }
         },
         "submissionSequences": {
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "minimum": 0,
             "maximum": 4294967295
           }
         },
         "elapsedTicksPerItem": {
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "$comment": "System.Int64. Bounds are omitted: they are not exactly representable in IEEE-754, and values beyond 2^53 lose precision in readers that parse JSON numbers as doubles."
           }
         },
         "integrityChecksums": {
           "type": "array",
           "items": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "minimum": 0,
             "$comment": "System.UInt64. The upper bound is omitted: it is not exactly representable in IEEE-754."
           }
@@ -1545,44 +1315,26 @@
         "percentileRanks": {
           "type": "array",
           "items": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           }
         },
         "scaledScores": {
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           }
         },
         "weightedAverages": {
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
-            "type": [
-              "number",
-              "null"
-            ],
+            "type": ["number", "null"],
             "$comment": "System.Decimal. Written as an unquoted JSON number with its scale preserved; a reader backed by an IEEE-754 double cannot hold it exactly."
           }
         },
         "letterGrades": {
           "type": "array",
           "items": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "minLength": 1,
             "maxLength": 1
           }
@@ -1590,45 +1342,27 @@
         "remarks": {
           "type": "array",
           "items": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           }
         },
         "responseIds": {
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "uuid"
           }
         },
         "markedOn": {
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date"
           }
         },
         "openedAt": {
           "type": "array",
           "items": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "pattern": "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d{1,7})?$",
             "$comment": "System.TimeOnly. System.Text.Json writes hh:mm:ss[.fffffff] with no UTC offset, so the JSON Schema \"time\" format (RFC 3339 full-time) does not hold."
           }
@@ -1636,46 +1370,28 @@
         "durations": {
           "type": "array",
           "items": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "pattern": "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$",
             "$comment": "System.TimeSpan. System.Text.Json writes [-][d.]hh:mm:ss[.fffffff], not an ISO-8601 duration, so the \"duration\" format does not hold."
           }
         },
         "recordedAtUtc": {
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "$comment": "System.DateTime. The offset suffix is present only when DateTimeKind is Utc or Local; a DateTimeKind.Unspecified value is written without one and would not satisfy \"date-time\"."
           }
         },
         "savedAt": {
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           }
         },
         "answerSheetScan": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "contentEncoding": "base64"
         }
       },
@@ -1701,10 +1417,32 @@
           "format": "uuid"
         },
         "givenName": {
-          "type": "string"
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.StringLengthAttribute",
+              "arguments": {
+                "maximumLength": 32
+              },
+              "properties": {
+                "MinimumLength": 2
+              }
+            }
+          ]
         },
         "familyName": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 40,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.MaxLengthAttribute",
+              "arguments": {
+                "length": 40
+              }
+            }
+          ]
         },
         "role": {
           "$ref": "#/$defs/PersonRole"
@@ -1714,25 +1452,46 @@
           "format": "date"
         },
         "email": {
-          "type": [
-            "string",
-            "null"
+          "type": ["string", "null"],
+          "format": "email",
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.EmailAddressAttribute"
+            }
           ]
         },
         "isActive": {
           "type": "boolean"
         },
         "gradePointAverage": {
-          "type": [
-            "number",
-            "null"
+          "type": ["number", "null"],
+          "minimum": 1,
+          "maximum": 5,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.RangeAttribute",
+              "arguments": {
+                "minimum": 1,
+                "maximum": 5
+              }
+            }
           ]
         },
         "classes": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/Class"
-          }
+          },
+          "maxItems": 64,
+          "x-decorators": [
+            {
+              "name": "System.ComponentModel.DataAnnotations.LengthAttribute",
+              "arguments": {
+                "minimumLength": 0,
+                "maximumLength": 64
+              }
+            }
+          ]
         },
         "grades": {
           "type": "object",
@@ -1769,10 +1528,7 @@
           }
         },
         "contactMethods": {
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": ["object", "null"],
           "additionalProperties": {
             "type": "string"
           }
@@ -1804,16 +1560,7 @@
           ]
         }
       },
-      "required": [
-        "id",
-        "givenName",
-        "familyName",
-        "role",
-        "bornOn",
-        "isActive",
-        "gradePointAverage",
-        "classes"
-      ]
+      "required": ["id", "givenName", "familyName", "role", "bornOn", "isActive", "gradePointAverage", "classes"]
     },
     "PersonRole": {
       "type": "integer",
@@ -1842,6 +1589,15 @@
         {
           "const": 5,
           "title": "Administrator"
+        }
+      ],
+      "description": "The capacity in which a person is attached to the school.",
+      "x-decorators": [
+        {
+          "name": "System.ComponentModel.DescriptionAttribute",
+          "arguments": {
+            "description": "The capacity in which a person is attached to the school."
+          }
         }
       ]
     },
@@ -1882,13 +1638,7 @@
           }
         }
       },
-      "required": [
-        "id",
-        "code",
-        "kind",
-        "floor",
-        "classes"
-      ]
+      "required": ["id", "code", "kind", "floor", "classes"]
     },
     "RoomKind": {
       "type": "integer",
@@ -2221,16 +1971,7 @@
           "$comment": "Keyed by DotNetSchema.Fixtures.Schema.Enums.AssessmentKind. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.",
           "propertyNames": {
             "type": "string",
-            "enum": [
-              "Quiz",
-              "MidtermExam",
-              "FinalExam",
-              "Essay",
-              "LabReport",
-              "Practical",
-              "OralDefence",
-              "GroupProject"
-            ]
+            "enum": ["Quiz", "MidtermExam", "FinalExam", "Essay", "LabReport", "Practical", "OralDefence", "GroupProject"]
           },
           "additionalProperties": {
             "type": "number",
@@ -2467,10 +2208,7 @@
           "type": "string"
         },
         "motto": {
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "foundedOn": {
           "type": "string",
@@ -2499,16 +2237,7 @@
           "$comment": "Keyed by DotNetSchema.Fixtures.Schema.Enums.DepartmentName. System.Text.Json writes an enum dictionary key as the member name even under the default numeric converter, so this differs from the enum's value form.",
           "propertyNames": {
             "type": "string",
-            "enum": [
-              "Mathematics",
-              "NaturalSciences",
-              "ComputerScience",
-              "Humanities",
-              "SocialSciences",
-              "Arts",
-              "Athletics",
-              "ContinuingEducation"
-            ]
+            "enum": ["Mathematics", "NaturalSciences", "ComputerScience", "Humanities", "SocialSciences", "Arts", "Athletics", "ContinuingEducation"]
           },
           "additionalProperties": {
             "$ref": "#/$defs/Department"
@@ -2531,15 +2260,15 @@
           }
         }
       },
-      "required": [
-        "id",
-        "name",
-        "foundedOn",
-        "isAccredited",
-        "endowment",
-        "campuses",
-        "departments",
-        "sisterSchools"
+      "required": ["id", "name", "foundedOn", "isAccredited", "endowment", "campuses", "departments", "sisterSchools"],
+      "description": "A school: the root of the fixture graph.",
+      "x-decorators": [
+        {
+          "name": "System.ComponentModel.DescriptionAttribute",
+          "arguments": {
+            "description": "A school: the root of the fixture graph."
+          }
+        }
       ]
     },
     "Section": {
@@ -2553,10 +2282,7 @@
           "type": "string"
         },
         "heading": {
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "body": {
           "type": "string"
@@ -2573,13 +2299,7 @@
           }
         }
       },
-      "required": [
-        "id",
-        "number",
-        "heading",
-        "body",
-        "exercises"
-      ]
+      "required": ["id", "number", "heading", "body", "exercises"]
     },
     "Term": {
       "type": "integer",

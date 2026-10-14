@@ -1,9 +1,10 @@
 /**
- * Facets of JSON schema `type: "object"` fragments without `properties`.
+ * Facets of JSON schema `type: "object"` fragments without `properties`: the validation keywords applying to objects.
  */
 
 import type { JSONSchema7, JSONSchemaCollection, JSONSchemaDefinitionName, JSONSchemaObjectTypeFragment } from '../../schema/JSONSchema/index.js';
 import { JSONSchemaFragmentFacet, type JSONSchemaFragmentFacetOptions } from './Fragment.js';
+import { getJSONSchemaKeyword, type JSONSchemaKeyword } from './JSONSchema7.js';
 
 /**
  * Parses a JSON schema object type definition, which is any schema fragment containing a `type="object"` property and no `properties` property (one
@@ -30,6 +31,16 @@ export class JSONSchemaObjectTypeFragmentFacet<
   public readonly type: TFragment['type'];
 
   /**
+   * The fragment's `minProperties` (the minimum number of properties), or `undefined` if it has none
+   */
+  public readonly minProperties: JSONSchemaKeyword<TFragment, 'minProperties', number>;
+
+  /**
+   * The fragment's `maxProperties` (the maximum number of properties), or `undefined` if it has none
+   */
+  public readonly maxProperties: JSONSchemaKeyword<TFragment, 'maxProperties', number>;
+
+  /**
    * Parses a JSON schema object type definition
    * @param fragment JSON fragment to parse
    * @param options Collection and name of the parsed fragment (see `JSONSchemaFragmentFacetOptions`)
@@ -37,8 +48,9 @@ export class JSONSchemaObjectTypeFragmentFacet<
   public constructor(fragment: TFragment, options: JSONSchemaFragmentFacetOptions<TSchema, TName> = {}) {
     super(fragment, options);
     this.type = fragment['type'];
+    this.minProperties = getJSONSchemaKeyword(fragment, 'minProperties', 'number') as JSONSchemaKeyword<TFragment, 'minProperties', number>;
+    this.maxProperties = getJSONSchemaKeyword(fragment, 'maxProperties', 'number') as JSONSchemaKeyword<TFragment, 'maxProperties', number>;
   }
 
-  // TODO: Not implemented yet (as in the type layer): `propertyNames`, `patternProperties`, `additionalProperties`, `minProperties`, `maxProperties`,
-  //       `required`
+  // TODO: Not implemented yet (as in the type layer): `propertyNames`, `patternProperties`, `additionalProperties`, `required`
 }

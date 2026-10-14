@@ -25,12 +25,46 @@ export type Schema = {
         };
         readonly countryCode: {
           readonly type: "string";
+          readonly pattern: "^(?:[A-Z]{2})$";
+          readonly "x-decorators": readonly [
+            {
+              readonly name: "System.ComponentModel.DataAnnotations.RegularExpressionAttribute";
+              readonly arguments: {
+                readonly pattern: "[A-Z]{2}";
+              };
+            },
+          ];
         };
         readonly latitude: {
           readonly type: "number";
+          readonly minimum: -90;
+          readonly maximum: 90;
+          readonly "x-decorators": readonly [
+            {
+              readonly name: "System.ComponentModel.DataAnnotations.RangeAttribute";
+              readonly arguments: {
+                readonly minimum: -90;
+                readonly maximum: 90;
+              };
+            },
+          ];
         };
         readonly longitude: {
           readonly type: "number";
+          readonly exclusiveMinimum: -180;
+          readonly maximum: 180;
+          readonly "x-decorators": readonly [
+            {
+              readonly name: "System.ComponentModel.DataAnnotations.RangeAttribute";
+              readonly arguments: {
+                readonly minimum: -180;
+                readonly maximum: 180;
+              };
+              readonly properties: {
+                readonly MinimumIsExclusive: true;
+              };
+            },
+          ];
         };
       };
       readonly required: readonly [
@@ -180,16 +214,46 @@ export type Schema = {
             "string",
             "null",
           ];
+          readonly title: "ISBN-13";
+          readonly description: "ISBN-13, formatted with separators.";
+          readonly "x-decorators": readonly [
+            {
+              readonly name: "System.ComponentModel.DataAnnotations.DisplayAttribute";
+              readonly properties: {
+                readonly Description: "ISBN-13, formatted with separators.";
+                readonly Name: "ISBN-13";
+              };
+            },
+          ];
         };
         readonly edition: {
           readonly type: "integer";
-          readonly minimum: 0;
-          readonly maximum: 255;
+          readonly minimum: 1;
+          readonly maximum: 99;
+          readonly "x-decorators": readonly [
+            {
+              readonly name: "System.ComponentModel.DataAnnotations.RangeAttribute";
+              readonly arguments: {
+                readonly minimum: 1;
+                readonly maximum: 99;
+              };
+            },
+          ];
         };
         readonly pageCount: {
           readonly type: "integer";
-          readonly minimum: 0;
-          readonly maximum: 65535;
+          readonly minimum: 1;
+          readonly maximum: 5000;
+          readonly "x-decorators": readonly [
+            {
+              readonly name: "System.ComponentModel.DataAnnotations.RangeAttribute";
+              readonly arguments: {
+                readonly type: "System.UInt16";
+                readonly minimum: "1";
+                readonly maximum: "5000";
+              };
+            },
+          ];
         };
         readonly price: {
           readonly type: "number";
@@ -199,8 +263,20 @@ export type Schema = {
           readonly type: "string";
           readonly format: "date";
         };
+        readonly binding: {
+          readonly $ref: "#/$defs/BookBinding";
+        };
         readonly hasDigitalLicence: {
           readonly type: "boolean";
+          readonly default: false;
+          readonly "x-decorators": readonly [
+            {
+              readonly name: "System.ComponentModel.DefaultValueAttribute";
+              readonly arguments: {
+                readonly value: false;
+              };
+            },
+          ];
         };
         readonly class: {
           readonly anyOf: readonly [
@@ -226,6 +302,15 @@ export type Schema = {
           readonly items: {
             readonly $ref: "#/$defs/Chapter";
           };
+          readonly maxItems: 64;
+          readonly "x-decorators": readonly [
+            {
+              readonly name: "System.ComponentModel.DataAnnotations.MaxLengthAttribute";
+              readonly arguments: {
+                readonly length: 64;
+              };
+            },
+          ];
         };
       };
       readonly required: readonly [
@@ -236,8 +321,26 @@ export type Schema = {
         "pageCount",
         "price",
         "publishedOn",
+        "binding",
         "authors",
         "chapters",
+      ];
+    };
+    readonly BookBinding: {
+      readonly type: "string";
+      readonly oneOf: readonly [
+        {
+          readonly const: "Hardcover";
+          readonly title: "Hardcover";
+        },
+        {
+          readonly const: "Paperback";
+          readonly title: "Paperback";
+        },
+        {
+          readonly const: "spiral-bound";
+          readonly title: "SpiralBound";
+        },
       ];
     };
     readonly BookName: {
@@ -403,6 +506,15 @@ export type Schema = {
         "address",
         "openedOn",
         "buildings",
+      ];
+      readonly title: "Campus site";
+      readonly "x-decorators": readonly [
+        {
+          readonly name: "System.ComponentModel.DisplayNameAttribute";
+          readonly arguments: {
+            readonly displayName: "Campus site";
+          };
+        },
       ];
     };
     readonly Chapter: {
@@ -1706,9 +1818,31 @@ export type Schema = {
         };
         readonly givenName: {
           readonly type: "string";
+          readonly minLength: 2;
+          readonly maxLength: 32;
+          readonly "x-decorators": readonly [
+            {
+              readonly name: "System.ComponentModel.DataAnnotations.StringLengthAttribute";
+              readonly arguments: {
+                readonly maximumLength: 32;
+              };
+              readonly properties: {
+                readonly MinimumLength: 2;
+              };
+            },
+          ];
         };
         readonly familyName: {
           readonly type: "string";
+          readonly maxLength: 40;
+          readonly "x-decorators": readonly [
+            {
+              readonly name: "System.ComponentModel.DataAnnotations.MaxLengthAttribute";
+              readonly arguments: {
+                readonly length: 40;
+              };
+            },
+          ];
         };
         readonly role: {
           readonly $ref: "#/$defs/PersonRole";
@@ -1722,6 +1856,12 @@ export type Schema = {
             "string",
             "null",
           ];
+          readonly format: "email";
+          readonly "x-decorators": readonly [
+            {
+              readonly name: "System.ComponentModel.DataAnnotations.EmailAddressAttribute";
+            },
+          ];
         };
         readonly isActive: {
           readonly type: "boolean";
@@ -1731,12 +1871,33 @@ export type Schema = {
             "number",
             "null",
           ];
+          readonly minimum: 1;
+          readonly maximum: 5;
+          readonly "x-decorators": readonly [
+            {
+              readonly name: "System.ComponentModel.DataAnnotations.RangeAttribute";
+              readonly arguments: {
+                readonly minimum: 1;
+                readonly maximum: 5;
+              };
+            },
+          ];
         };
         readonly classes: {
           readonly type: "array";
           readonly items: {
             readonly $ref: "#/$defs/Class";
           };
+          readonly maxItems: 64;
+          readonly "x-decorators": readonly [
+            {
+              readonly name: "System.ComponentModel.DataAnnotations.LengthAttribute";
+              readonly arguments: {
+                readonly minimumLength: 0;
+                readonly maximumLength: 64;
+              };
+            },
+          ];
         };
         readonly grades: {
           readonly type: "object";
@@ -1846,6 +2007,15 @@ export type Schema = {
         {
           readonly const: 5;
           readonly title: "Administrator";
+        },
+      ];
+      readonly description: "The capacity in which a person is attached to the school.";
+      readonly "x-decorators": readonly [
+        {
+          readonly name: "System.ComponentModel.DescriptionAttribute";
+          readonly arguments: {
+            readonly description: "The capacity in which a person is attached to the school.";
+          };
         },
       ];
     };
@@ -2545,6 +2715,15 @@ export type Schema = {
         "departments",
         "sisterSchools",
       ];
+      readonly description: "A school: the root of the fixture graph.";
+      readonly "x-decorators": readonly [
+        {
+          readonly name: "System.ComponentModel.DescriptionAttribute";
+          readonly arguments: {
+            readonly description: "A school: the root of the fixture graph.";
+          };
+        },
+      ];
     };
     readonly Section: {
       readonly type: "object";
@@ -2616,6 +2795,7 @@ export type Assessment = Models["Assessment"];
 export type AssessmentKind = Models["AssessmentKind"];
 export type AssessmentRecord = Models["AssessmentRecord"];
 export type Book = Models["Book"];
+export type BookBinding = Models["BookBinding"];
 export type BookName = Models["BookName"];
 export type Building = Models["Building"];
 export type Campus = Models["Campus"];

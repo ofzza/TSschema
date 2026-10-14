@@ -138,6 +138,20 @@ describe('Showcase', () => {
         expect(true satisfies AssertTypeEquality<Role extends JSONSchemaFragmentFacet<Schema, 'Role', any> ? true : false, true>).toBe(true);
       });
 
+      it('Parses the validation keywords applying to its kind of values', () => {
+        // Each facet class parses the validation keywords of the values it describes, `undefined` where the fragment has none: numbers and strings for the
+        // primitive type facet, arrays for the array type facet, objects for the object type and model facets. Annotations are not parsed by any facet.
+        const [count] = parseJSONSchema({ type: 'integer', minimum: 1, title: 'Count' } as const);
+        // Breakpoint: inspect `count`, with `minimum` and every other validation keyword of numbers and strings
+        expect(count).toBeInstanceOf(JSONSchemaPrimitiveTypeFragmentFacet);
+        const minimum = count.minimum;
+        expect(minimum).toBe(1);
+        type Minimum = typeof minimum;
+        //   ^?
+        // Minimum: 1
+        expect(true satisfies AssertTypeEquality<Minimum, 1>).toBe(true);
+      });
+
       it('Infers the value type of any facet, through its type-only Type accessor', () => {
         const person = parseJSONSchemaCollection(schema).$defs.Person[0];
         type PersonType = typeof person.Type;
