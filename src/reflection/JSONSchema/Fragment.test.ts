@@ -14,7 +14,7 @@ const _schema = {
 type _Schema = typeof _schema;
 
 describe('Reflection', () => {
-  // Runtime tests of Fragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in src/schema/JSONSchema/Fragment.test.ts, so the
+  // Runtime tests of Fragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in src/schema/JSONSchema/Fragment.test-d.ts, so the
   // two layers' tests line up; the router, which the type layer's dispatcher maps to, is tested in FragmentFacets.test.ts.
   describe('JSONSchema fragment facets', () => {
     // Each file in this directory holds the tests of one facet class under this describe; this one holds their base class, and type array branches.

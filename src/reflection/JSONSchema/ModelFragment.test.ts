@@ -31,7 +31,7 @@ type _Person = _Schema['$defs']['Person'];
 
 describe('Reflection', () => {
   // Runtime tests of ModelFragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in
-  // src/schema/JSONSchema/ModelFragment.test.ts, so the two layers' tests line up.
+  // src/schema/JSONSchema/ModelFragment.test-d.ts, so the two layers' tests line up.
   describe('JSONSchema fragment facets', () => {
     // Each file in this directory holds the tests of one facet class under this describe.
     describe('Model fragment', () => {

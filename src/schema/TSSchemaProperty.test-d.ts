@@ -177,7 +177,6 @@ describe('TSSchemaProperty', () => {
       type _ModelWrapper = TSSchemaProperty<JSONSchemaAssessmentModel, 'unknown'>;
       // @ts-expect-error `unknown` is not a property of the `Assessment` model
       type _CollectionWrapper = TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'unknown'>;
-      expect(true).toBe(true);
     });
 
     it('Rejects a property name of a fragment which is not a model', () => {
@@ -185,13 +184,11 @@ describe('TSSchemaProperty', () => {
       type _CollectionWrapper = TSSchemaProperty<JSONSchemaFixtureCollection, 'AssessmentKind', 'value'>;
       // @ts-expect-error `AssessmentKind` is not a model, so has no properties
       type _FragmentWrapper = TSSchemaProperty<TSSchemaFragment<JSONSchemaFixtureCollection, 'AssessmentKind'>, 'value'>;
-      expect(true).toBe(true);
     });
 
     it('Rejects a model name not defined in the collection', () => {
       // @ts-expect-error `Unknown` is not a fragment of the fixture collection
       type _Wrapper = TSSchemaProperty<JSONSchemaFixtureCollection, 'Unknown', 'title'>;
-      expect(true).toBe(true);
     });
   });
 
@@ -327,7 +324,6 @@ describe('TSSchemaProperty', () => {
       type _ModelWrapper = TSSchemaProperty<JSONSchemaAssessmentModel, 'unknown.name'>;
       // @ts-expect-error `unknown` is not a property of the `Assessment` model
       type _CollectionWrapper = TSSchemaProperty<JSONSchemaFixtureCollection, 'Assessment', 'unknown.name'>;
-      expect(true).toBe(true);
     });
   });
 

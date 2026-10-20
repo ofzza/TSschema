@@ -55,7 +55,7 @@ function _nodeClasses(name: keyof _Schema['$defs']) {
 describe('Reflection', () => {
   // Runtime tests of FragmentFacets.ts: the entry points parsing a schema, the router, and the type-level mirror of the router. The tree mirrors the type
   // layer's `JSONSchema > JSONSchema fragments` tree, the router being the runtime counterpart of JSONSchemaFragmentType's dispatch over keywords
-  // (src/schema/JSONSchema/Fragment.test.ts).
+  // (src/schema/JSONSchema/Fragment.test-d.ts).
   describe('JSONSchema fragment facets', () => {
     // Each file in this directory holds the tests of one facet class under this describe; this one holds the parsing that creates them.
     describe('Schema facets', () => {

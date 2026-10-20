@@ -4,7 +4,7 @@ import type { JSONSchema7, JSONSchemaPrimitiveTypeName } from '../../schema/JSON
 import { JSONSchemaPrimitiveTypeNames, getJSONSchemaKeyword, isJSONSchemaObject, isJSONSchemaPrimitiveTypeName, type JSONSchemaKeyword } from './index.js';
 
 describe('Reflection', () => {
-  // Runtime tests of JSONSchema7.ts, the runtime counterpart of the type layer's src/schema/JSONSchema/JSONSchema7.test.ts (its `JSONSchema > Primitive types`
+  // Runtime tests of JSONSchema7.ts, the runtime counterpart of the type layer's src/schema/JSONSchema/JSONSchema7.test-d.ts (its `JSONSchema > Primitive types`
   // mirrored as `Reflection > Primitive types`), plus the runtime only schema object check and keyword reader.
   describe('Primitive types', () => {
     // JSONSchemaPrimitiveTypeNames and isJSONSchemaPrimitiveTypeName, checked by runtime expects against the type layer's JSONSchemaPrimitiveTypeName, which

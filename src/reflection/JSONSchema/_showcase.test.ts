@@ -55,7 +55,7 @@ type Schema = typeof schema;
 
 describe('Showcase', () => {
   // Internal showcase of src/reflection/JSONSchema/, the JSON schema base of the runtime layer: parsing a schema into facets, as the type layer's showcase
-  // (src/schema/JSONSchema/_showcase.test.ts) walks through the fragment types the facets are typed by. Every example parses the small inline `as const` schema
+  // (src/schema/JSONSchema/_showcase.test-d.ts) walks through the fragment types the facets are typed by. Every example parses the small inline `as const` schema
   // above (a root model next to `$defs` with a recursive model and an enum), with runtime expects paired with AssertTypeEquality.
   describe('JSONSchema fragment facets', () => {
     // Each nested describe shows one aspect of the facets, in the order they build on each other.

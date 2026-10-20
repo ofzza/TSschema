@@ -11,7 +11,7 @@ import { default as jsonSchema } from '../../../res/sidecar/schema.json';
 
 describe('Reflection', () => {
   // Runtime tests of OneOfTypeFragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in
-  // src/schema/JSONSchema/OneOfTypeFragment.test.ts, so the two layers' tests line up.
+  // src/schema/JSONSchema/OneOfTypeFragment.test-d.ts, so the two layers' tests line up.
   describe('JSONSchema fragment facets', () => {
     // Each file in this directory holds the tests of one facet class under this describe.
     describe('OneOf Type fragment', () => {

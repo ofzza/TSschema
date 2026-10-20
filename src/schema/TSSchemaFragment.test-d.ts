@@ -113,14 +113,12 @@ describe('TSSchemaFragment', () => {
     it('Rejects a name not defined in the collection', () => {
       // @ts-expect-error `Unknown` is not a fragment of the fixture collection
       type _Wrapper = TSSchemaFragment<JSONSchemaFixtureCollection, 'Unknown'>;
-      expect(true).toBe(true);
     });
 
     it('Rejects a name when wrapping a fragment given directly', () => {
       // The name parameter of a fragment given directly is constrained to `never`, as there is no collection to address it in.
       // @ts-expect-error a fragment given directly is not addressed by name
       type _Wrapper = TSSchemaFragment<JSONSchemaAssessmentModel, 'Assessment'>;
-      expect(true).toBe(true);
     });
   });
 

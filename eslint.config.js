@@ -9,6 +9,8 @@ const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 
 export default ts.config(
   includeIgnoreFile(gitignorePath),
+  // Lint `.jsx` files too: by default ESLint only picks up `.js` files and those another config claims (typescript-eslint claims `.ts`, `.tsx`)
+  { files: ['**/*.{js,jsx,ts,tsx}'] },
   js.configs.recommended,
   ...ts.configs.recommended,
   prettier,

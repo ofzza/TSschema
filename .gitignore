@@ -50,4 +50,5 @@ $RECYCLE.BIN/
 # Explicitly omitted files
 *.gitignore.*
 *.gitignore/
-*.debug.test.ts
+*.debug.test.[jt]s
+*.debug.test.[jt]sx

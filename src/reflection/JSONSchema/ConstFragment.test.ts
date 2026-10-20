@@ -6,7 +6,7 @@ import { default as constJsonSchema } from '../../../res/sidecar/const.json';
 
 describe('Reflection', () => {
   // Runtime tests of ConstFragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in
-  // src/schema/JSONSchema/ConstFragment.test.ts, so the two layers' tests line up.
+  // src/schema/JSONSchema/ConstFragment.test-d.ts, so the two layers' tests line up.
   describe('JSONSchema fragment facets', () => {
     // Each file in this directory holds the tests of one facet class under this describe.
     describe('Const fragment', () => {

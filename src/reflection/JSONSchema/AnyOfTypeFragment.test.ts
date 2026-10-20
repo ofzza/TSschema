@@ -25,7 +25,7 @@ type _MaybeNamed = _Schema['$defs']['MaybeNamed'];
 
 describe('Reflection', () => {
   // Runtime tests of AnyOfTypeFragment.ts. The tree mirrors the type layer's `JSONSchema > JSONSchema fragments` tree in
-  // src/schema/JSONSchema/AnyOfTypeFragment.test.ts, so the two layers' tests line up.
+  // src/schema/JSONSchema/AnyOfTypeFragment.test-d.ts, so the two layers' tests line up.
   describe('JSONSchema fragment facets', () => {
     // Each file in this directory holds the tests of one facet class under this describe.
     describe('AnyOf Type fragment', () => {
