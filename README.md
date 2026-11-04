@@ -203,6 +203,15 @@ Neither constraints nor annotations change the value types inferred by `Type` or
 express most constraints (string lengths, patterns, number ranges), and the ones it could (e.g. a `format` as a template literal type, or `minItems` as a
 tuple) would make plain `string`s or arrays no longer assignable, and grow costly to check.
 
+### Exported types
+
+The reflection classes (`TSSchemaFragmentReflection`, `TSSchemaDefinitionReflection` and `TSSchemaPropertyReflection`) are exported as types only, for
+annotating your own code: create reflections with `reflect`, and check what a reflection is by its properties rather than with `instanceof`. The type
+descriptor types (`TSSchemaTypeDescriptor`, one per kind, e.g. `TSSchemaModelTypeDescriptor`, and `TSSchemaModelPropertyDescriptor`) are exported as
+types too, and so are their constraints (`TSSchemaConstraints`, the `format` every kind of constraints extends, and one per kind of values, e.g.
+`TSSchemaNumberConstraints`) and the annotations (`TSSchemaAnnotations`, `TSSchemaDecoratorDescriptor` and the `TSSchemaDecoratorValue` of its
+arguments and properties).
+
 ### Coming next
 
 Reflection currently navigates and describes a schema. Still to come:
@@ -210,12 +219,6 @@ Reflection currently navigates and describes a schema. Still to come:
 - validating values against a reflected schema,
 - the `readOnly` and `writeOnly` keywords,
 - tuples and `additionalProperties`, in the type utilities and type descriptors alike.
-
-The reflection classes (`TSSchemaFragmentReflection`, `TSSchemaDefinitionReflection` and `TSSchemaPropertyReflection`) are exported as types only, for
-annotating your own code: create reflections with `reflect`, and check what a reflection is by its properties rather than with `instanceof`. The type
-descriptor types (`TSSchemaTypeDescriptor`, one per kind, e.g. `TSSchemaModelTypeDescriptor`, and `TSSchemaModelPropertyDescriptor`) are exported as
-types too, and so are their constraints (`TSSchemaConstraints`, the `format` every kind of constraints extends, and one per kind of values, e.g.
-`TSSchemaNumberConstraints`).
 
 ## Code generation: Schemas from JSON files
 
@@ -476,7 +479,7 @@ const role: RoleType = 'principal'; // This will fail at compile time
   time. Partly available, see [Type inference](#type-inference). Property paths address properties (see [TSSchemaProperty](#tsschemaproperty)), while
   [TSSchemaName](#tsschemaname) deliberately infers direct names only, never paths.
 - **Model generation** - generating TypeScript data model definitions from the JSON schema. Partly available: `tsschema generate --models` generates a
-  named type per definition, see [Code generation](#code-generation-schemas-from-json-files).
+  named type per definition, and `--enums` the schema's enums as runtime values, see [Code generation](#code-generation-schemas-from-json-files).
 - **Runtime reflection** - runtime utilities for inspecting the same model, property and path information the utility types infer. Partly
   available: navigating a schema's definitions, properties and paths, and describing their types, see [Runtime reflection](#runtime-reflection).
   Validating values is still to come.
@@ -486,8 +489,8 @@ const role: RoleType = 'principal'; // This will fail at compile time
 - `npm run build` - cleans `dist/` (`npm run clean`), then compiles `src/` into it, emitting declarations. Also run on `prepare`, so a local `npm install` builds too.
 - `npm run dev` - the same, in watch mode.
 - `npm run fixtures` - builds, then regenerates the test fixtures from the JSON schemas in `res/` with the built `tsschema` command: copies of the JSON
-  files with their sidecars and model types into `res/sidecar/`, and the `module` / `types` mode outputs into `res/module/` / `res/types/`. Run it after
-  changing a fixture or the code generation; the tests fail while any generated fixture is out of date.
+  files with their sidecars, model types and enums into `res/sidecar/`, and the `module` / `types` mode outputs (with their enums) into `res/module/` /
+  `res/types/`. Run it after changing a fixture or the code generation; the tests fail while any generated fixture is out of date.
 - `npm test` - runs every `test:*` script.
   - `npm run test:unit` - a single Vitest invocation that executes test files, runs their runtime expectations, and type checks them, reporting type errors as test failures.
 - `npm run ci` - runs every `ci:*` script: build, ESLint, Prettier and the tests. This is what GitHub Actions runs on every pull request targeting `master` or `develop` and on every push to either, against Node 22 and 24. It also runs on `prepublishOnly`, so `npm publish` refuses to publish a failing build.

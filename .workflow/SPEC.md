@@ -9,8 +9,7 @@ instead of repeating them. The domain terms are defined in the glossary in `CONT
 The "never" rules of `AGENTS.md` on how work is done in this repository, made hard rules on 2026-11-04 (see `AGENTS.md` for each one's reason):
 
 1. Never commit to `master` directly; it only receives merges from `develop` for a release.
-2. Never commit `*.gitignore.*` files or `*.gitignore/` directories (e.g. `_legacy.gitignore/`), and never move `_legacy.gitignore/` back under
-   `src/`. An agent never creates either kind unless asked to.
+2. Never commit `*.gitignore.*` files or `*.gitignore/` directories. An agent never creates either kind unless asked to.
 3. Never edit generated fixtures (everything under `res/`'s subdirectories) by hand; regenerate them with `npm run fixtures`. Never edit
    `res/schema.json` by hand either: copy the sibling dotnetschema project's output over it.
 4. Never use `npm ci --ignore-scripts` in this repository.

@@ -26,3 +26,5 @@ Nothing.
 - 2026-11-04: Segment 4 (codegen enums) implemented; deviations in `PLAN.md` › Segment 4 › Implementation notes.
 - 2026-11-04: Segment 4 checkpoint approved ("Approve and commit").
 - 2026-11-04: Released `0.1.0-alpha.6` to NPM (dist-tags `alpha` and `latest`), version bump committed on `develop`.
+- 2026-11-04: Fast path: review of `AGENTS.md`, `README.md`, `CONTRIBUTE.md` for obsolete, wrong and duplicated content; fixes applied. SPEC
+  HARD RULE 2 changed on explicit request ("Change it as written"): the gone `_legacy.gitignore/` example and clause dropped.
