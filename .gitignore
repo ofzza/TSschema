@@ -52,3 +52,6 @@ $RECYCLE.BIN/
 *.gitignore/
 *.debug.test.[jt]s
 *.debug.test.[jt]sx
+
+# Repo skill workflow
+/.workflow/.temp/

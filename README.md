@@ -457,3 +457,5 @@ To release a new version, follow the checklist and steps in [PUBLISH.md](PUBLISH
 # Contributing
 
 For reporting issues, contribution workflow and branching, see [CONTRIBUTE.md](./CONTRIBUTE.md).
+
+MIT - see [LICENSE](./LICENSE).

@@ -34,7 +34,8 @@ export default ts.config(
     },
   },
   {
-    files: ['src/*.ts'],
+    // Match every file tsconfig.json includes, at any depth (`**/` also matches `src/` itself)
+    files: ['src/**/*.{ts,tsx}'],
     languageOptions: {
       parserOptions: {
         project: './tsconfig.json',

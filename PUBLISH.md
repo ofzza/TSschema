@@ -16,6 +16,8 @@ Go through every item before each publish.
 
 ### Package metadata (`package.json`)
 
+<!-- prettier-ignore-start -->
+
 - [ ] `version` is the version being released and has never been published (`npm view @ofzza/tsschema versions`). Below `1.0.0`, bump the minor version
       for breaking changes and the patch version for everything else.
 - [ ] `description` and `keywords` describe the library's intended scope. Below `1.0.0` they may name planned but not yet implemented functionality
@@ -28,6 +30,8 @@ Go through every item before each publish.
       ```
       The only match should be `json-schema`.
 - [ ] Every entry in `exports` and `bin` points at a file that exists in `dist/` after `npm run build`.
+
+<!-- prettier-ignore-end -->
 
 ### Package contents
 
@@ -46,6 +50,8 @@ Go through every item before each publish.
 
 ### Consumer smoke test
 
+<!-- prettier-ignore-start -->
+
 - [ ] The packed tarball works when installed into a new project. From an empty scratch directory:
       ```sh
       npm pack --pack-destination . <path-to-repo>
@@ -59,6 +65,8 @@ Go through every item before each publish.
         `tsc --noEmit --strict --allowArbitraryExtensions --resolveJsonModule`, both with `--module nodenext` and with
         `--module esnext --moduleResolution bundler`.
   - [ ] An invalid value (e.g. a wrong enum member) fails to compile.
+
+<!-- prettier-ignore-end -->
 
 ### NPM access
 
@@ -87,18 +95,23 @@ Go through every item before each publish.
    This runs `prepare` (a clean build) and `prepublishOnly` (`npm run ci`), and prints the tarball contents without uploading. Check the file list,
    `name` and `version`.
 5. **Publish:**
+
    ```sh
    npm publish                      # add --otp=<code> if 2FA asks for it
    ```
+
+   `prepublishOnly` runs `npm run ci` before the upload, which takes a while, so generate the code right before running the command.
    `publishConfig.access: public` is already set, so the scoped package is published publicly without `--access public`.
 
    A prerelease (e.g. `0.1.0-alpha.2`) is published with `--tag alpha`. While there is no stable version, also move `latest` to it, so a plain
    `npm install @ofzza/tsschema` gets the newest alpha. This is a separate write to the registry, so it needs a **fresh** 2FA code, as the one used
    to publish has already been spent:
+
    ```sh
    npm publish --tag alpha --otp=<code>
    npm dist-tag add @ofzza/tsschema@<version> latest --otp=<new-code>
    ```
+
 6. **Verify the release:**
    ```sh
    curl -s https://registry.npmjs.org/@ofzza%2ftsschema | jq '."dist-tags"'
