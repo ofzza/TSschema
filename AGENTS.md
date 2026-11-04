@@ -27,7 +27,7 @@ Concrete triggers:
 | introduces, renames or retires a concept or term               | the glossary in `CONTRIBUTE.md`, and every identifier, comment and document using the term  |
 | changes the project structure (layers, directories, mirroring) | the architecture section in `CONTRIBUTE.md`, its showcase list, and [Layout](#layout) below |
 | adds or changes an npm script, Vitest project or tsconfig      | [Commands](#commands) / [Testing](#testing), and `# Development` in `README.md`             |
-| changes the branching model, contribution or release workflow  | [Branching](#branching), `CONTRIBUTE.md` / `PUBLISH.md`                                     |
+| changes the branching model, contribution or release workflow  | [Branching](#branching), `WORKFLOW.custom.md`, `CONTRIBUTE.md` / `PUBLISH.md`               |
 | adds a source directory under `src/`                           | [Layout](#layout) below, and the architecture section in `CONTRIBUTE.md`                    |
 | establishes a new convention, or hits a new gotcha             | [Code style](#code-style) / [Gotchas and known issues](#gotchas-and-known-issues)           |
 | resolves one of the known issues listed below                  | remove it from [Gotchas and known issues](#gotchas-and-known-issues)                        |
@@ -48,15 +48,8 @@ TSschema — helps generate TS data models, provides TS utility types for deep t
 
 - **`develop` is the work-in-progress trunk.** Create every feature, fix or dependency branch from `develop`, and open every pull request against `develop`.
 - **`master` holds only the latest stable release.** It is never committed to directly and never receives feature pull requests — it is only updated by merging `develop` into it when a stable version is released.
-- **Commit to the current branch by default.** Whatever branch is checked out is where the work goes. Do not create a feature branch unless the user asks for one.
-- **Never commit to `master`, or onto a detached HEAD.** If the current branch is `master` (or there is none), stop and ask the user where the work should go: normally `develop` or a new feature branch.
-- **Propose a feature branch when a change warrants one.** If a change is large enough to deserve its own branch and pull request, say so and let the user decide. Do not branch on your own.
-- **Feature branches** are named after the work, e.g. `feature/<short-topic>` or `fix/<short-topic>`. Once work on one is pushed, propose opening a pull request into `develop` (see `WORKFLOW.md` › Outward actions).
 
-## Commits
-
-- Commit messages have an imperative summary line, and explain _why_ in the body when it is not obvious from the change.
-- **No agent attribution** anywhere: see `WORKFLOW.md` › No AI attribution (a hard rule).
+How agents commit and branch is part of the workflow: see `WORKFLOW.custom.md` › Branching and Commits.
 
 ## Layout
 
