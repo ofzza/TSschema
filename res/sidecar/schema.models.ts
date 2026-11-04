@@ -2,38 +2,30 @@
 /* eslint-disable */
 import type schema from "./schema.json";
 import type { TSSchemaFragment, TSSchemaType } from "../../src/index.js";
+export { AssessmentKind, BookBinding, BookName, ClassName, DayOfWeek, DepartmentName, PersonRole, RoomKind, Term } from "./schema.enums.js";
 
 export type Schema = typeof schema;
 
 export type Models = { [K in keyof Schema['$defs'] & string]: TSSchemaType<TSSchemaFragment<Schema, K>> };
 export type Address = Models["Address"];
 export type Assessment = Models["Assessment"];
-export type AssessmentKind = Models["AssessmentKind"];
 export type AssessmentRecord = Models["AssessmentRecord"];
 export type Book = Models["Book"];
-export type BookBinding = Models["BookBinding"];
-export type BookName = Models["BookName"];
 export type Building = Models["Building"];
 export type Campus = Models["Campus"];
 export type Chapter = Models["Chapter"];
 export type Class = Models["Class"];
-export type ClassName = Models["ClassName"];
 export type ClassSession = Models["ClassSession"];
-export type DayOfWeek = Models["DayOfWeek"];
 export type Department = Models["Department"];
-export type DepartmentName = Models["DepartmentName"];
 export type Exercise = Models["Exercise"];
 export type Library = Models["Library"];
 export type NullableScalarBattery = Models["NullableScalarBattery"];
 export type NullableScalarRegister = Models["NullableScalarRegister"];
 export type NullableScalarSeries = Models["NullableScalarSeries"];
 export type Person = Models["Person"];
-export type PersonRole = Models["PersonRole"];
 export type Room = Models["Room"];
-export type RoomKind = Models["RoomKind"];
 export type ScalarBattery = Models["ScalarBattery"];
 export type ScalarRegister = Models["ScalarRegister"];
 export type ScalarSeries = Models["ScalarSeries"];
 export type School = Models["School"];
 export type Section = Models["Section"];
-export type Term = Models["Term"];

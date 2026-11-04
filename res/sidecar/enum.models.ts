@@ -2,9 +2,11 @@
 /* eslint-disable */
 import type schema from "./enum.json";
 import type { TSSchemaFragment, TSSchemaType } from "../../src/index.js";
+export { Enum, NamedEnum, TitledEnum, NullableEnum, MixedEnum, QuotedEnum } from "./enum.enums.js";
 
 export type Schema = typeof schema;
 
 export type Models = { [K in keyof Schema['$defs'] & string]: TSSchemaType<TSSchemaFragment<Schema, K>> };
-export type Enum = Models["Enum"];
-export type NamedEnum = Models["NamedEnum"];
+export type NumericNamesEnum = Models["NumericNamesEnum"];
+export type DuplicateNamesEnum = Models["DuplicateNamesEnum"];
+export type BooleanEnum = Models["BooleanEnum"];

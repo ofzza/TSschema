@@ -24,5 +24,70 @@ declare const _3: {
       "Three",
     ];
   };
+  readonly TitledEnum: {
+    readonly type: "integer";
+    readonly oneOf: readonly [
+      {
+        readonly const: 0;
+        readonly title: "Zero";
+      },
+      {
+        readonly const: 1;
+        readonly title: "One";
+      },
+    ];
+  };
+  readonly NullableEnum: {
+    readonly enum: readonly [
+      "Aaa",
+      null,
+    ];
+  };
+  readonly MixedEnum: {
+    readonly enum: readonly [
+      "text",
+      -1.5,
+    ];
+    readonly "x-enumNames": readonly [
+      "Text",
+      "Negative",
+    ];
+  };
+  readonly QuotedEnum: {
+    readonly enum: readonly [
+      "kebab-value",
+      "Plain",
+    ];
+  };
+  readonly NumericNamesEnum: {
+    readonly type: "integer";
+    readonly enum: readonly [
+      1,
+      2,
+      3,
+    ];
+  };
+  readonly DuplicateNamesEnum: {
+    readonly enum: readonly [
+      "a",
+      "b",
+    ];
+    readonly "x-enumNames": readonly [
+      "Same",
+      "Same",
+    ];
+  };
+  readonly BooleanEnum: {
+    readonly enum: readonly [
+      true,
+      false,
+    ];
+  };
+  readonly "kebab-enum": {
+    readonly enum: readonly [
+      "a",
+      "b",
+    ];
+  };
 };
 export { _0 as $schema, _1 as $id, _2 as title, _3 as $defs };

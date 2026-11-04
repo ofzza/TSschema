@@ -5,7 +5,7 @@
 import { globSync, watch, type FSWatcher } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { generate, type TSSchemaCodegenMode, type TSSchemaCodegenOptions } from './index.js';
+import { generate, type TSSchemaCodegenEnums, type TSSchemaCodegenMode, type TSSchemaCodegenOptions } from './index.js';
 
 /**
  * Usage instructions printed by `--help`, or after invalid arguments
@@ -23,6 +23,10 @@ Options:
                               (<name>.ts if <name> already is or ends with "schema")
       --models              Also generate a Models map type and a type alias per fragment
                             (into <name>.models.ts in the sidecar mode)
+      --enums [<form>]      Also generate the enums defined by the schema, into <name>.enums.ts, re-exported by
+                            the module / types mode file (by <name>.models.ts in the sidecar mode, with --models):
+                              enum    - TS enums (default)
+                              object  - "as const" objects, with a type of the same name (erasable syntax)
       --out-dir <dir>       Generate module / types mode files into this directory
       --import-from <spec>  Module specifier to import TSschema types from (default: @ofzza/tsschema)
       --check               Only check that generated files are up to date; exits with 1 if any are not
@@ -142,6 +146,7 @@ export function run(args: string[], output: TSSchemaCliOutput = console, cwd: st
   }
   const [command, ...patterns] = positionals;
   const mode = values.mode ?? 'sidecar';
+  const enums = values.enums;
   const invalid =
     command !== 'generate'
       ? `Unknown command '${command ?? ''}'`
@@ -149,9 +154,11 @@ export function run(args: string[], output: TSSchemaCliOutput = console, cwd: st
         ? 'No paths or glob patterns given'
         : !['sidecar', 'module', 'types'].includes(mode)
           ? `Unknown mode '${mode}'`
-          : values.check && values.watch
-            ? 'Options --check and --watch can not be combined'
-            : undefined;
+          : enums !== undefined && !['enum', 'object'].includes(enums)
+            ? `Unknown enums form '${enums}'`
+            : values.check && values.watch
+              ? 'Options --check and --watch can not be combined'
+              : undefined;
   if (invalid) {
     output.error(`${invalid}\n\n${_USAGE}`);
     return { code: 2 };
@@ -161,6 +168,7 @@ export function run(args: string[], output: TSSchemaCliOutput = console, cwd: st
   const options = {
     mode: mode as TSSchemaCodegenMode,
     models: values.models,
+    enums: enums === undefined ? (false as const) : (enums as TSSchemaCodegenEnums),
     outDir: values['out-dir'] === undefined ? undefined : resolve(cwd, values['out-dir']),
     importFrom: values['import-from'],
     check: values.check ?? false,
@@ -191,6 +199,27 @@ export function run(args: string[], output: TSSchemaCliOutput = console, cwd: st
 }
 
 /**
+ * Normalizes the `--enums` option, which takes an optional value, into its `--enums=<form>` form, as `parseArgs` has no options with an optional value:
+ * a bare `--enums` selects the default form, and `--enums <form>` the form named by the next argument, if it is one
+ *
+ * @param args Command line arguments
+ * @returns Command line arguments, with `--enums` always given a value
+ */
+function _normalizeEnumsArgs(args: string[]): string[] {
+  const normalized: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] !== '--enums') {
+      normalized.push(args[i]);
+    } else if (args[i + 1] === 'enum' || args[i + 1] === 'object') {
+      normalized.push(`--enums=${args[++i]}`);
+    } else {
+      normalized.push('--enums=enum');
+    }
+  }
+  return normalized;
+}
+
+/**
  * Parses command line arguments
  *
  * @param args Command line arguments
@@ -198,11 +227,12 @@ export function run(args: string[], output: TSSchemaCliOutput = console, cwd: st
  */
 function _parse(args: string[]) {
   return parseArgs({
-    args,
+    args: _normalizeEnumsArgs(args),
     allowPositionals: true,
     options: {
       mode: { type: 'string', short: 'm' },
       models: { type: 'boolean' },
+      enums: { type: 'string' },
       'out-dir': { type: 'string' },
       'import-from': { type: 'string' },
       check: { type: 'boolean' },

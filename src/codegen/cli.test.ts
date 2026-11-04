@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { run, type TSSchemaCliOutput } from './cli.js';
@@ -59,6 +59,21 @@ describe('cli', () => {
       });
     });
 
+    it('Passes the enums option on, given as --enums=<form> or --enums <form>, a bare --enums selecting TS enums', () => {
+      // `parseArgs` has no options with an optional value, so `run` rewrites `--enums` to `--enums=<form>` first, taking the next argument as
+      // the form only if it names one.
+      _withSchemas((dir) => {
+        writeFileSync(join(dir, 'schemas', 'a.json'), '{ "$defs": { "A": { "enum": ["a"] } } }');
+        expect(run(['generate', '-m', 'types', '--enums', 'schemas/a.json'], _output(), dir).code).toBe(0);
+        expect(readFileSync(join(dir, 'schemas', 'a.enums.ts'), 'utf8')).toContain('export enum A {');
+        expect(run(['generate', '-m', 'types', '--enums=object', 'schemas/a.json'], _output(), dir).code).toBe(0);
+        expect(readFileSync(join(dir, 'schemas', 'a.enums.ts'), 'utf8')).toContain('export const A = {');
+        writeFileSync(join(dir, 'schemas', 'a.json'), '{ "$defs": { "B": { "enum": ["b"] } } }');
+        expect(run(['generate', '-m', 'types', '--enums', 'object', 'schemas/a.json'], _output(), dir).code).toBe(0);
+        expect(readFileSync(join(dir, 'schemas', 'a.enums.ts'), 'utf8')).toContain('export const B = {');
+      });
+    });
+
     it('Exits with 1 when checking finds stale files, and with 0 once they are up to date', () => {
       _withSchemas((dir) => {
         const output = _output();
@@ -88,6 +103,8 @@ describe('cli', () => {
         ['generate'],
         ['generate', '--mode', 'x', 'a.json'],
         ['generate', '--check', '--watch', 'a.json'],
+        ['generate', '--enums=union', 'a.json'],
+        ['generate', '--enums=', 'a.json'],
         ['--nope'],
       ]) {
         const output = _output();

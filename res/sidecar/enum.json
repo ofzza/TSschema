@@ -10,6 +10,37 @@
       "type": "integer",
       "enum": [1, 2, 3],
       "x-enumNames": ["One", "Two", "Three"]
+    },
+    "TitledEnum": {
+      "type": "integer",
+      "oneOf": [
+        { "const": 0, "title": "Zero" },
+        { "const": 1, "title": "One" }
+      ]
+    },
+    "NullableEnum": {
+      "enum": ["Aaa", null]
+    },
+    "MixedEnum": {
+      "enum": ["text", -1.5],
+      "x-enumNames": ["Text", "Negative"]
+    },
+    "QuotedEnum": {
+      "enum": ["kebab-value", "Plain"]
+    },
+    "NumericNamesEnum": {
+      "type": "integer",
+      "enum": [1, 2, 3]
+    },
+    "DuplicateNamesEnum": {
+      "enum": ["a", "b"],
+      "x-enumNames": ["Same", "Same"]
+    },
+    "BooleanEnum": {
+      "enum": [true, false]
+    },
+    "kebab-enum": {
+      "enum": ["a", "b"]
     }
   }
 }

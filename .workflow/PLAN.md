@@ -48,6 +48,18 @@ Fulfils SPEC.md section 3, and takes its three enum pitfalls. Full analysis (app
    Commands, Gotchas, Exports), and the glossary in `CONTRIBUTE.md` if a term is introduced.
 7. Verify: README samples per AGENTS.md, a generated `module` file run through `node` against `dist/`, `npm run ci`.
 
+### Implementation notes (2026-11-04)
+
+Steps 1-7 implemented. Deviations from and additions to the steps above:
+
+- The CLI also accepts the form as a separate argument (`--enums object`), not only `--enums=object`: without that, `--enums object` was silently
+  read as a bare `--enums` plus a file pattern `object`. Only `enum` / `object` are taken as the form.
+- The enums file is generated whenever the option is on, as `export {};` when the schema has no generatable enums, so an earlier one never lingers
+  out of date (`generate` never deletes files).
+- The probe confirmed TS2452 for numeric member names (`"1"`, `"1.5"`, `"-1"`, but not `"Infinity"` / `"NaN"`, which are skipped anyway) and
+  TS2300 for duplicates; enum names like `schema` do not clash with the generated module's local `const schema`.
+- No glossary term added: "enum" is used in its JSON schema / TypeScript sense.
+
 ### Open points
 
 None.

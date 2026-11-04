@@ -42,7 +42,8 @@ TSschema is two layers, each built in two levels:
   (class), `JSONSchemaFragmentIs<Kind>` ↔ the facet's static `is`, a wrapper ↔ a reflection. Every runtime result's static type is inferred by the
   type layer, so the two must agree on every schema.
 - **Code generation** (`src/codegen/`) sits beside both layers: a Node only tool (the `tsschema` command, and the `@ofzza/tsschema/codegen` subpath)
-  turning JSON schema files into TypeScript that keeps their literal types, which both layers need.
+  turning JSON schema files into TypeScript that keeps their literal types, which both layers need. It uses the runtime layer (`reflect`) to find
+  the enums it can also generate as runtime values.
 
 ### Glossary
 

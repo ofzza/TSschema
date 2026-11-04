@@ -13,10 +13,15 @@
  *
  * Any mode can additionally generate a `Models` map type and a named type alias per fragment of a collection (in a separate `<name>.models.ts` file for
  * `sidecar`, as named imports from a JSON module are not allowed under `module: nodenext`).
+ *
+ * Any mode can also generate the enums defined by a collection as runtime values, TS `enum`s or `as const` objects, into a separate `<name>.enums.ts`
+ * file, re-exported by name from the `module` / `types` mode file (or, for `sidecar`, from `<name>.models.ts`, as a declaration file can not re-export
+ * values). An enum replaces the type alias of its definition.
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, relative } from 'node:path';
+import { reflect, type TSSchemaTypeDescriptor } from '../reflection/index.js';
 
 // #region Options and results
 
@@ -25,6 +30,12 @@ import { basename, dirname, join, relative } from 'node:path';
  * or a schema type only module (`types`)
  */
 export type TSSchemaCodegenMode = 'sidecar' | 'module' | 'types';
+
+/**
+ * Represents the form enums are generated in: TS `enum`s (`enum`), or `as const` objects with a type of the same name (`object`), which, unlike `enum`s,
+ * are erasable syntax
+ */
+export type TSSchemaCodegenEnums = 'enum' | 'object';
 
 /**
  * Represents code generation options. Unspecified options default to the `sidecar` mode, no model types and importing from `@ofzza/tsschema`.
@@ -38,6 +49,10 @@ export type TSSchemaCodegenOptions = {
    * If a `Models` map type and a named type alias per fragment of a collection should also be generated (defaults to `false`)
    */
   models?: boolean;
+  /**
+   * If, and in which form, the enums defined by a collection should also be generated, into a separate `<name>.enums.ts` file (defaults to `false`)
+   */
+  enums?: false | TSSchemaCodegenEnums;
   /**
    * Directory to generate `module` / `types` mode files into, instead of next to their JSON files (not supported by the `sidecar` mode, whose
    * declaration files must sit next to their JSON files)
@@ -202,13 +217,83 @@ function _relativeSpecifier(fromPath: string, toPath: string): string {
 }
 
 /**
- * Renders the model types of a schema: for a collection a `Models` map type and a named type alias per fragment (where the fragment's name is usable as
- * one), for any other schema object a single `Model` type, and nothing for a boolean schema
+ * Checks if a name is usable as the name of a generated type alias or enum: a valid identifier, which is neither reserved nor declared by generated
+ * code itself
+ *
+ * @param name Name to check
+ * @returns If the name is usable
+ */
+function _isUsableName(name: string): boolean {
+  return _isIdentifier(name) && !_RESERVED_NAMES.has(name) && !_DECLARED_NAMES.has(name);
+}
+
+/**
+ * Represents an enum to generate: the name of its definition, and the name and value of each of its members, in order
+ */
+type _Enum = { name: string; members: { name: string; value: string | number }[] };
+
+/**
+ * Gets the enums defined by a collection which can be generated: every definition described as an enum (see the reflection's type descriptors),
+ * whose name is usable (see `_isUsableName`), whose values (other than `null`) are all strings or numbers, and whose member names are all distinct and
+ * none numeric, which TypeScript does not allow as enum member names. Any other schema defines no enums.
  *
  * @param json Parsed JSON schema
+ * @returns Enums to generate, in the order of their definitions
+ */
+function _getEnums(json: unknown): _Enum[] {
+  // Not a collection: no definitions to name an enum after
+  if (!_isCollection(json)) {
+    return [];
+  }
+  // Collection: every generatable enum definition
+  const root = reflect(json as any) as unknown as {
+    definitionNames: string[];
+    getDefinition(name: string): { typeDescriptor: TSSchemaTypeDescriptor };
+  };
+  return root.definitionNames.flatMap((name): _Enum[] => {
+    const descriptor = root.getDefinition(name).typeDescriptor;
+    if (descriptor.kind !== 'enum' || !_isUsableName(name)) {
+      return [];
+    }
+    const members = descriptor.values.map((value, i) => ({ name: descriptor.names[i], value }));
+    const valid =
+      members.length > 0 &&
+      members.every(({ name, value }) => (typeof value === 'string' || typeof value === 'number') && String(Number(name)) !== name) &&
+      new Set(members.map((member) => member.name)).size === members.length;
+    return valid ? [{ name, members: members as _Enum['members'] }] : [];
+  });
+}
+
+/**
+ * Renders the enums of a schema, as TS `enum`s or as `as const` objects with a type of the same name
+ *
+ * @param enums Enums to render
+ * @param form Form to render them in
+ * @returns Rendered enums, or an empty export when there are none, so the file is still a module
+ */
+function _renderEnums(enums: _Enum[], form: TSSchemaCodegenEnums): string {
+  if (!enums.length) {
+    return 'export {};\n';
+  }
+  return enums
+    .map(({ name, members }) =>
+      form === 'enum'
+        ? `export enum ${name} {\n${members.map((member) => `  ${_renderKey(member.name)} = ${JSON.stringify(member.value)},\n`).join('')}}\n`
+        : `export const ${name} = {\n${members.map((member) => `  ${_renderKey(member.name)}: ${JSON.stringify(member.value)},\n`).join('')}} as const;\n` +
+          `export type ${name} = (typeof ${name})[keyof typeof ${name}];\n`,
+    )
+    .join('\n');
+}
+
+/**
+ * Renders the model types of a schema: for a collection a `Models` map type and a named type alias per fragment (where the fragment's name is usable as
+ * one, and no enum is generated for it), for any other schema object a single `Model` type, and nothing for a boolean schema
+ *
+ * @param json Parsed JSON schema
+ * @param enumNames Names of the definitions enums are generated for, which get no type alias
  * @returns Rendered model types
  */
-function _renderModels(json: unknown): string {
+function _renderModels(json: unknown, enumNames: Set<string> = new Set()): string {
   // Boolean schema: no models
   if (!_isObject(json)) {
     return '';
@@ -219,7 +304,7 @@ function _renderModels(json: unknown): string {
   }
   // Collection: a map of all models, and an alias per model
   const aliases = Object.keys(json.$defs)
-    .filter((name) => _isIdentifier(name) && !_RESERVED_NAMES.has(name) && !_DECLARED_NAMES.has(name))
+    .filter((name) => _isUsableName(name) && !enumNames.has(name))
     .map((name) => `export type ${name} = Models[${JSON.stringify(name)}];\n`)
     .join('');
   return `\nexport type Models = { [K in keyof Schema['$defs'] & string]: TSSchemaType<TSSchemaFragment<Schema, K>> };\n${aliases}`;
@@ -234,10 +319,22 @@ function _renderModels(json: unknown): string {
  * @returns Generated files
  */
 export function generateFiles(sourcePath: string, json: unknown, options: TSSchemaCodegenOptions = {}): TSSchemaCodegenFile[] {
-  const { mode = 'sidecar', models = false, outDir, importFrom = '@ofzza/tsschema' } = options;
+  const { mode = 'sidecar', models = false, enums = false, outDir, importFrom = '@ofzza/tsschema' } = options;
   const stem = basename(sourcePath).replace(/\.json$/i, '');
   const importTypes = (names: string[]) => `import type { ${names.join(', ')} } from ${JSON.stringify(importFrom)};\n`;
   const modelTypeImports = !models || !_isObject(json) ? [] : _isCollection(json) ? ['TSSchemaFragment', 'TSSchemaType'] : ['TSSchemaType'];
+  if (enums !== false && enums !== 'enum' && enums !== 'object') {
+    throw new Error(`Unknown enums form '${String(enums)}'`);
+  }
+  // Enums: a separate file next to the generated file re-exporting them, and an explicit re-export of each by name (never `export *`, which a local
+  // declaration of the same name would silently shadow)
+  const enumList = enums ? _getEnums(json) : [];
+  const enumNames = new Set(enumList.map((item) => item.name));
+  const enumsFile = (path: string): TSSchemaCodegenFile => ({ path, content: `${_renderHeader(sourcePath, path)}${_renderEnums(enumList, enums || 'enum')}` });
+  const reexportEnums = (fromPath: string, enumsPath: string) =>
+    !enumList.length
+      ? ''
+      : `export { ${[...enumNames].join(', ')} } from ${JSON.stringify(_relativeSpecifier(fromPath, enumsPath).replace(/\.ts$/, '.js'))};\n`;
 
   // Sidecar: a declaration file of the JSON module, declaring each top-level key as a named export
   if (mode === 'sidecar') {
@@ -252,32 +349,40 @@ export function generateFiles(sourcePath: string, json: unknown, options: TSSche
     const declarations = entries.map(([, value], i) => `declare const _${i}: ${_renderType(value)};\n`).join('');
     const exported = entries.map(([key], i) => `_${i} as ${_isIdentifier(key) ? key : JSON.stringify(key)}`).join(', ');
     const files = [{ path: sidecarPath, content: `${_renderHeader(sourcePath, sidecarPath)}${declarations}export { ${exported} };\n` }];
+    const enumsPath = join(dirname(sourcePath), `${stem}.enums.ts`);
     if (models) {
       const modelsPath = join(dirname(sourcePath), `${stem}.models.ts`);
       const content =
         `${_renderHeader(sourcePath, modelsPath)}import type schema from ${JSON.stringify(_relativeSpecifier(modelsPath, sourcePath))};\n` +
-        `${importTypes(modelTypeImports)}\nexport type Schema = typeof schema;\n${_renderModels(json)}`;
+        `${importTypes(modelTypeImports)}${reexportEnums(modelsPath, enumsPath)}\nexport type Schema = typeof schema;\n${_renderModels(json, enumNames)}`;
       files.push({ path: modelsPath, content });
+    }
+    if (enums) {
+      files.push(enumsFile(enumsPath));
     }
     return files;
   }
 
   // Module or types: a single `.schema.ts` module
   const outputPath = join(outDir ?? dirname(sourcePath), _renderModuleFileName(stem));
+  const enumsPath = join(dirname(outputPath), `${stem}.enums.ts`);
+  const reexport = reexportEnums(outputPath, enumsPath);
   let body: string;
   if (mode === 'module') {
     const schemaType = _isCollection(json) ? 'TSSchemaJSONCollection' : 'TSSchemaJSONSchema';
     body =
-      `${importTypes([schemaType, ...modelTypeImports])}\n` +
+      `${importTypes([schemaType, ...modelTypeImports])}${reexport}\n` +
       `const schema = ${JSON.stringify(json, null, 2)} as const;\n` +
       // Checked as an identifier rather than as a literal, so unknown keywords (newer drafts, vendor extensions) are not rejected as excess properties
       `export default schema satisfies ${schemaType};\n\nexport type Schema = typeof schema;\n`;
   } else if (mode === 'types') {
-    body = `${modelTypeImports.length ? `${importTypes(modelTypeImports)}\n` : ''}export type Schema = ${_renderType(json)};\n`;
+    const imports = `${modelTypeImports.length ? importTypes(modelTypeImports) : ''}${reexport}`;
+    body = `${imports ? `${imports}\n` : ''}export type Schema = ${_renderType(json)};\n`;
   } else {
     throw new Error(`Unknown code generation mode '${String(mode)}'`);
   }
-  return [{ path: outputPath, content: `${_renderHeader(sourcePath, outputPath)}${body}${models ? _renderModels(json) : ''}` }];
+  const files = [{ path: outputPath, content: `${_renderHeader(sourcePath, outputPath)}${body}${models ? _renderModels(json, enumNames) : ''}` }];
+  return enums ? [...files, enumsFile(enumsPath)] : files;
 }
 
 // #endregion

@@ -296,11 +296,51 @@ Generated files have to be regenerated whenever their JSON file changes, so:
 A missing sidecar is caught at compile time, since the loosely typed JSON is rejected by the utilities, but a stale one is not. `tsschema` refuses to
 overwrite a file it did not generate. Run `npx tsschema --help` for all options, including `--out-dir` and `--import-from`.
 
+### Enums
+
+With `--enums`, the enums a collection defines in `$defs` are generated as runtime values too, into a separate `<name>.enums.ts` file, keeping them
+apart from the types. Each is re-exported by name from `<name>.schema.ts` in the `module` and `types` modes, or from `<name>.models.ts` in the `sidecar`
+mode with `--models` (a `.d.json.ts` declaration file can not re-export values; without `--models`, import `<name>.enums.ts` directly). An enum takes
+the place of its definition's `--models` type alias. Enums are recognised as `TSschema`'s [type descriptors](#type-descriptors) describe them: an
+`enum`, with its members named by `x-enumNames` if it is given, or a `oneOf` of `const`s, named by their `title`s.
+
+With `src/people.json` containing the schema above, `npx tsschema generate --models --enums src/people.json` also generates `src/people.enums.ts`:
+
+```ts
+export enum Role {
+  student = 'student',
+  teacher = 'teacher',
+}
+```
+
+which lets you write:
+
+```ts
+import { Role, type Person } from './people.models.js';
+
+const teacher: Person = { name: 'Ada', age: 36, role: Role.teacher }; // This will work
+const student: Role = 'student'; // This will fail at compile time
+```
+
+TypeScript `enum`s come with caveats, so `--enums object` generates an `as const` object with a type of the same name instead (`export const Role =
+{ student: 'student', teacher: 'teacher' } as const;` and `export type Role = (typeof Role)[keyof typeof Role];`):
+
+- an `enum` is not erasable syntax: Node's built-in TypeScript type stripping, and the `erasableSyntaxOnly` compiler option, reject it,
+- the inferred model types keep using the enum's values (`role: 'student' | 'teacher'`). An enum member fits wherever its value does, and a number
+  fits a numeric enum, but a string does not fit a string enum, so a value read from a model has to be cast to it. The type of an `as const` object
+  is the union of its values, which fits both ways.
+
+Only the enums defined in `$defs` are generated, as an enum used inline (e.g. the `propertyNames` of a record) has no name to generate it under. An
+enum whose values TypeScript can not hold as members (values other than strings and numbers, duplicate names, or names which are numbers, such as
+those of `enum: [1, 2]` without `x-enumNames`) is not generated, and keeps its type alias. A `null` value is left out of the enum, so a nullable
+enum's inferred type is the enum's type or `null`.
+
 ### Programmatic use
 
 The same code generation is available programmatically, from `@ofzza/tsschema/codegen`: `generateFiles(sourcePath, json, options)` returns the
 generated files without touching the file system, and `generate(sourcePaths, options)` writes them (or, with `check: true`, only reports which are
-stale). Like the command, it requires Node 22 or newer.
+stale). Their options mirror the command's: `mode`, `models`, `enums` (`'enum'` or `'object'`, typed `TSSchemaCodegenEnums`), `outDir` and
+`importFrom`. Like the command, it requires Node 22 or newer.
 
 ## Type inference
 

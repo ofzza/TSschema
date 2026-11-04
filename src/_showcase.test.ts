@@ -27,7 +27,7 @@ import {
   type TSSchemaDecoratorDescriptor,
   type TSSchemaConstraints,
 } from './index.js';
-import { generateFiles } from './codegen/index.js';
+import { generateFiles, type TSSchemaCodegenEnums } from './codegen/index.js';
 
 // #region The schema
 
@@ -331,6 +331,20 @@ describe('Code generation: Schemas from JSON files', () => {
       // Breakpoint: inspect `typesFiles`, a `src/people.schema.ts` exporting only the schema's type, as `Schema`
       expect(typesFiles[0].path).toBe('src/people.schema.ts');
       expect(typesFiles[0].content).toContain('export type Schema');
+    });
+
+    it('Generates the enums of a collection as runtime values, as TS enums or as const objects', () => {
+      // An enum is generated into a separate `<name>.enums.ts`, re-exported by name from the generated module, in place of its type alias
+      const form: TSSchemaCodegenEnums = 'enum';
+      const enumFiles = generateFiles('src/people.json', schema, { mode: 'module', models: true, enums: form });
+      // Breakpoint: inspect `enumFiles`, now also a `src/people.enums.ts` declaring `enum Role { student = "student", teacher = "teacher" }`
+      expect(enumFiles.map((file) => file.path)).toEqual(['src/people.schema.ts', 'src/people.enums.ts']);
+      expect(enumFiles[0].content).toContain('export { Role } from "./people.enums.js";');
+      expect(enumFiles[1].content).toContain('export enum Role {\n  student = "student",\n  teacher = "teacher",\n}');
+      const objectFiles = generateFiles('src/people.json', schema, { mode: 'module', enums: 'object' });
+      // Breakpoint: inspect `objectFiles`, whose `src/people.enums.ts` declares `const Role = { ... } as const` and a `Role` type instead, which
+      // unlike an `enum` is erasable syntax
+      expect(objectFiles[1].content).toContain('export const Role = {\n  student: "student",\n  teacher: "teacher",\n} as const;');
     });
   });
 });
