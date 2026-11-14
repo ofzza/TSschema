@@ -2,8 +2,7 @@
 
 ## Next session: start here
 
-Planning stage, `PLAN.md` › Segment 5: Showroom documentation (drafted, decisions recorded, not approved). Next step: the spike in its open
-points (needs a go-ahead), then draft the segment's steps.
+Implementation stage, `PLAN.md` › Segment 5: Showroom documentation (approved). Next step: implement its steps 1-8.
 
 ## Open questions
 
@@ -31,3 +30,5 @@ Nothing.
 - 2026-11-15: Showroom proposals (14) answered "Accept all recs"; recorded as `PLAN.md` › Segment 5 decisions.
 - 2026-11-15: Fast path: documented `showroom` / `ci:showroom`, `showroom.json`, the Pages workflow and `/showroom/` in AGENTS.md, README and
   CONTRIBUTE.md.
+- 2026-11-15: Segment 5 spike run (go-ahead "Go ahead"): every premise held; results and draft steps written into `PLAN.md` › Segment 5.
+- 2026-11-15: Segment 5 approved ("Approve").

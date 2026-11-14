@@ -64,9 +64,9 @@ Steps 1-7 implemented. Deviations from and additions to the steps above:
 
 None.
 
-## Segment 5: Showroom documentation (drafted, not approved)
+## Segment 5: Showroom documentation
 
-Goal: use `showroom` (`@ofzza/showroom`) to make the README samples live and checked in CI. Steps get drafted after the spike.
+Goal: use `showroom` (`@ofzza/showroom`) to make the README samples live and checked in CI.
 
 ### Decisions (2026-11-15, "Accept all recs")
 
@@ -83,10 +83,41 @@ Goal: use `showroom` (`@ofzza/showroom`) to make the README samples live and che
 - `showroom.json` adds `PUBLISH.md` as a documentation page (not `AGENTS.md`).
 - `package.json` `homepage` stays the GitHub URL.
 
+### Spike results (2026-11-15)
+
+Tried in a throwaway host repository: 6 `ts` showcases converted from the README (reflection, a type descriptor walk, type inference, a
+sidecar-typed fixture), plus a copy-host whose `package.json` is this package's own.
+
+- Importing `@ofzza/tsschema` by name works from the repository root: it resolves through `exports` to `dist/`, at bundling and in the type
+  check. Without `dist/` every showcase fails ("Can't resolve"), so `ci:build` must keep running before `ci:showroom`, and `npm run showroom`
+  needs a build first.
+- Type checking uses the root `tsconfig.json` as is, so no separate tsconfig is needed. A type error and an unused `@ts-expect-error` (TS2578)
+  both fail the check, reported at their line in the Markdown.
+- The `ts showcase file=schema.ts` resource works as `import { schema } from './schema.js'`, so the shared block must `export` its `schema` and
+  `Schema`. Importing `res/sidecar/schema.json` works too, typed by its sidecar.
+- Run in a browser, each showcase logged exactly what was expected. Logging a recursive descriptor (`Person`) is safe: its lazy `target` shows as
+  `"[Circular]"`. `undefined` values show as `"[undefined]"`, so log focused values rather than whole descriptors.
+- `showroom check --showcases` took about 1.4 s for the 6 showcases.
+
+### Steps
+
+1. README `# Usage`: turn the shared schema block into a `ts showcase file=schema.ts` resource, exporting `schema` and `Schema`.
+2. README › Runtime reflection: make each sample a `ts showcase` block that imports what it uses (from `@ofzza/tsschema` and `./schema.js`),
+   with a `// @ts-expect-error` above each "This will fail at compile time" line, and `console.log`s of the values its comments name.
+3. README › Type inference and › Schemas declared as const: the same, type checked, each logging a small value typed by the inferred type.
+4. README › Code generation: keep the `tsschema` / `people.json` samples as plain blocks, and link the generated fixtures in `res/sidecar/` and
+   `res/module/`. Optionally, add one showcase reflecting `res/sidecar/schema.json`.
+5. README: rewrite the "See it in action" note (live samples in the showroom, `src/_showcase.test.ts` for the asserted walk-through).
+6. `showroom.json`: add `PUBLISH.md` to `documentation`.
+7. AGENTS.md: in › Verifying README samples, replace the manual process with `ci:showroom` for showcase samples, keeping it for the plain
+   ones (the `people.json` example); add the README showcase conventions (marker, the `@ts-expect-error` idiom, imports, build first); add a
+   triggers table row (a README sample change → `npm run ci:showroom`); keep `src/_showcase.test.ts` in step with the showcases.
+8. Check: `npm run ci` green, a sanity break of one showcase fails it, and a look at `npm run showroom`.
+
 ### Open points
 
-- [ ] Spike (`./.workflow/.temp/spike-showroom-ts/`, on go-ahead): does a `ts showcase` importing `@ofzza/tsschema` type check under the root
-      tsconfig, do the `schema.ts` resource import and `@ts-expect-error` work, and how long does `ci:showroom` take with ~15 showcases.
+- [x] Spike: does a `ts showcase` importing `@ofzza/tsschema` type check under the root tsconfig, do the `schema.ts` resource import and
+      `@ts-expect-error` work, and how long does `ci:showroom` take. Resolved by the spike (2026-11-15), see Spike results.
 
 ## Future segments (not planned yet)
 
