@@ -139,10 +139,14 @@ tsconfig.json              Type check (and editor) config. Includes all .ts/.tsx
 tsconfig.build.json        Build config, extending tsconfig.json. `rootDir: ./src`, so `src/index.ts` emits to `dist/index.js`, with declarations.
                            EXCLUDES test files (*.test / *.spec / *.test-d / *.spec-d), and res/
 vite.config.ts             Two Vitest projects: unit, and debug (only with VITEST_DEBUG=1)
+showroom.json              Configuration of `showroom` (the `@ofzza/showroom` devDependency), which builds the showroom: the documentation site
+                           of README.md, CONTRIBUTE.md and LICENSE, published to GitHub Pages
+showroom/                  Showroom build output (`npx showroom build`), gitignored
 eslint.config.js           ESLint flat config (typescript-eslint + prettier compat, ignores what .gitignore ignores)
 .prettierrc                Prettier config
 dist/                      Build output, gitignored
 .github/workflows/ci.yml   GitHub Actions CI
+.github/workflows/showroom.yml  Builds the showroom and publishes it to GitHub Pages, on every push to master
 .github/dependabot.yml     Weekly dependency updates
 .vscode/extensions.json    Recommended VSCode extensions: ESLint, Prettier, TODO Highlight, Twoslash Query Comments
 .vscode/launch.json        Vitest debug launch configs: all tests, unit tests, current file
@@ -161,7 +165,10 @@ Convention for new modules: one directory per module under `src/`, each an `inde
 - `npm run fixtures` — builds, then runs `fixtures:prepare` (deletes `res/sidecar/`, `res/module/` and `res/types/`, so removed fixtures leave nothing behind, and copies `res/*.json` into `res/sidecar/`), then the built `tsschema` once per mode: `fixtures:sidecar` over `res/sidecar/*.json`, and `fixtures:module` / `fixtures:types` over `res/*.json` into `res/module/` / `res/types/` (all with `--models --import-from ../../src/index.js`, and `--enums`, `--enums` and `--enums=object` respectively, so both enum forms are covered). The copies exist because a sidecar must sit next to its JSON file; the test also checks that they match `res/*.json`. Run it after changing a fixture or `src/codegen/`; `src/codegen/index.test.ts` fails while any committed fixture differs from what the generator would produce now. Not a `test:`/`ci:` script — CI catches stale fixtures through that test.
 - `npm test` — runs every `test:*` script.
   - `npm run test:unit` — `vitest run --project unit`, a single invocation that both executes tests and type checks them.
-- `npm run ci` — runs every `ci:*` script: `ci:build`, `ci:eslint`, `ci:prettier`, `ci:test-unit`. This is what GitHub Actions runs.
+- `npm run showroom` — `showroom serve`: previews the showroom (the documentation site) locally, rebuilding it as the documentation changes.
+- `npm run ci` — runs every `ci:*` script: `ci:build`, `ci:showroom`, `ci:eslint`, `ci:prettier`, `ci:test-unit`. This is what GitHub Actions runs.
+  - `ci:showroom` — `showroom check --showcases --quiet`: checks the showroom's configuration, documentation links and showcases, and builds every
+    showcase, failing on any error. It runs after `ci:build`, as showcases importing `@ofzza/tsschema` by name resolve it to `dist/`.
 - `npm run prepare` — builds; invoked automatically by a local `npm install`/`npm ci` and before `npm publish`, but **not** when the package is installed as a dependency.
 - `prepublishOnly` — runs `npm run ci` before `npm publish`, so a failing build is never published.
 
@@ -310,6 +317,8 @@ Enforced by `ci:prettier` and `ci:eslint`, both of which only look at `src` — 
 ## Continuous integration
 
 `.github/workflows/ci.yml` runs `npm ci && npm run ci` on every pull request targeting `master` or `develop` and on every push to either, across a Node matrix of `[22, 24]` with `fail-fast: false`. In-progress runs are cancelled only for pull requests, never for `master`.
+
+`.github/workflows/showroom.yml` builds the showroom (`npx showroom build`, after `npm ci`) and publishes it to GitHub Pages ([ofzza.github.io/tsschema](https://ofzza.github.io/tsschema/)) on every push to `master`, so it shows the latest release, or when started by hand. It needs one-off GitHub repository settings, listed in `PUBLISH.md` › Showroom on GitHub Pages.
 
 **A workflow alone does not block merges.** Making it mandatory requires branch protection on `master` in GitHub repo settings, marking `CI / Node 22` and `CI / Node 24` as required status checks. That is a repo setting, not a file in this repository.
 

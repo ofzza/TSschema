@@ -495,7 +495,8 @@ const role: RoleType = 'principal'; // This will fail at compile time
   `res/types/`. Run it after changing a fixture or the code generation; the tests fail while any generated fixture is out of date.
 - `npm test` - runs every `test:*` script.
   - `npm run test:unit` - a single Vitest invocation that executes test files, runs their runtime expectations, and type checks them, reporting type errors as test failures.
-- `npm run ci` - runs every `ci:*` script: build, ESLint, Prettier and the tests. This is what GitHub Actions runs on every pull request targeting `master` or `develop` and on every push to either, against Node 22 and 24. It also runs on `prepublishOnly`, so `npm publish` refuses to publish a failing build.
+- `npm run showroom` - previews the [showroom](https://ofzza.github.io/tsschema/) (this documentation, built by [`showroom`](https://www.npmjs.com/package/@ofzza/showroom)) locally, updating it as the documentation changes.
+- `npm run ci` - runs every `ci:*` script: build, the showroom check (its configuration, links and showcases), ESLint, Prettier and the tests. This is what GitHub Actions runs on every pull request targeting `master` or `develop` and on every push to either, against Node 22 and 24. It also runs on `prepublishOnly`, so `npm publish` refuses to publish a failing build.
 
 To release a new version, follow the checklist and steps in [PUBLISH.md](PUBLISH.md).
 

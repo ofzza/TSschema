@@ -64,10 +64,35 @@ Steps 1-7 implemented. Deviations from and additions to the steps above:
 
 None.
 
+## Segment 5: Showroom documentation (drafted, not approved)
+
+Goal: use `showroom` (`@ofzza/showroom`) to make the README samples live and checked in CI. Steps get drafted after the spike.
+
+### Decisions (2026-11-15, "Accept all recs")
+
+- README › Runtime reflection samples become `ts showcase` blocks, logging their results to the console panel.
+- The shared `schema` becomes a resource (`ts showcase file=schema.ts`), which each showcase imports.
+- The "This will fail at compile time" lines get a `// @ts-expect-error` above them, so CI checks that they really fail.
+- `ci:showroom` (`showroom check --showcases`) replaces the manual "Verifying README samples" process for every sample that is a showcase.
+- README › Type inference and "Schemas declared as const" samples become type-checked showcases.
+- Code generation samples stay plain blocks (Node only, `nodenext`), and link real generated fixtures in `res/`. Optionally, add one showcase
+  that reflects `res/sidecar/schema.json`.
+- No separate tsconfig for showcases unless the spike shows one is needed.
+- Rewrite the README's "See it in action" note to mention the live samples. Add the README showcase conventions to AGENTS.md, and `ci:showroom` to its
+  triggers table.
+- `showroom.json` adds `PUBLISH.md` as a documentation page (not `AGENTS.md`).
+- `package.json` `homepage` stays the GitHub URL.
+
+### Open points
+
+- [ ] Spike (`./.workflow/.temp/spike-showroom-ts/`, on go-ahead): does a `ts showcase` importing `@ofzza/tsschema` type check under the root
+      tsconfig, do the `schema.ts` resource import and `@ts-expect-error` work, and how long does `ci:showroom` take with ~15 showcases.
+
 ## Future segments (not planned yet)
 
 From SPEC.md section 4, each to be planned when picked up: value validation, `readOnly` / `writeOnly`, tuples and `additionalProperties`, fuller
 model generation.
+Also: per-layer README pages with live internal showcases (showroom proposal 12, deferred 2026-11-15).
 
 ## Known open issues
 

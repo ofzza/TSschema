@@ -22,7 +22,7 @@ Please accompany any work, fix or feature with their own issue, in its own branc
 
 When creating issues and PRs, please keep to provided templates.
 
-Before committing or requesting a merge, make sure `npm run ci` passes locally (build, ESLint, Prettier and tests), and that the documentation, showcases and tests reflect the change: [`AGENTS.md` › Keeping documentation, showcases and tests current](AGENTS.md#keeping-documentation-showcases-and-tests-current) lists what to update for which kind of change.
+Before committing or requesting a merge, make sure `npm run ci` passes locally (build, showroom check, ESLint, Prettier and tests), and that the documentation, showcases and tests reflect the change: [`AGENTS.md` › Keeping documentation, showcases and tests current](AGENTS.md#keeping-documentation-showcases-and-tests-current) lists what to update for which kind of change.
 
 ## Architecture and glossary
 
