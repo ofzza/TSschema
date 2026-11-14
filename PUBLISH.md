@@ -3,6 +3,13 @@
 How to release a new version to [NPM](https://www.npmjs.com/package/@ofzza/tsschema). Releases follow the branching model in `AGENTS.md`: work lands on `develop`, a release merges `develop` into
 `master`, and NPM is published from `master`.
 
+## Showroom on GitHub Pages
+
+This repository's showroom ([ofzza.github.io/tsschema](https://ofzza.github.io/tsschema/)) is built by [`showroom`](https://www.npmjs.com/package/@ofzza/showroom) from `showroom.json` and published to GitHub Pages by `.github/workflows/showroom.yml`, on every push to `master`, so it shows the latest release. Set it up once, in the GitHub repository's settings:
+
+- [ ] **Settings › Pages › Build and deployment › Source** is "GitHub Actions".
+- [ ] **Settings › Environments › `github-pages` › Deployment branches and tags** allows `master`. GitHub only lets the default branch (`develop`) deploy to this environment, so without it the deployment fails with "Branch "master" is not allowed to deploy to github-pages due to environment protection rules". The environment appears once Pages is set up.
+
 ## Pre-publish checklist
 
 Go through every item before each publish.
@@ -83,6 +90,9 @@ Go through every item before each publish.
    ```
 2. **Merge `develop` into `master`.** Open a pull request from `develop` to `master`, wait for CI to pass on it, and merge. `master` never receives
    direct commits.
+
+   The merge into `master` also publishes the showroom: check that the `Showroom` workflow run passes, and that [ofzza.github.io/tsschema](https://ofzza.github.io/tsschema/) shows the new version (see [Showroom on GitHub Pages](#showroom-on-github-pages)).
+
 3. **Check out the released `master`:**
    ```sh
    git checkout master && git pull

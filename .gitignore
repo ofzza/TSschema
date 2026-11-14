@@ -7,6 +7,7 @@ npm-debug.log*
 
 # Build output
 /build/
+/showroom/
 
 # IDE/editor
 .vscode/*

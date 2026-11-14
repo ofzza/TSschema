@@ -4,6 +4,8 @@
 
 Helps generate TS data models, provides TS utility types for deep type inference and provides TS runtime utilities for type reflection, all based off of a JSON schema.
 
+See its showroom, the documentation built by [`showroom`](https://www.npmjs.com/package/@ofzza/showroom): [ofzza.github.io/tsschema](https://ofzza.github.io/tsschema/).
+
 ---
 
 Jump to section:
