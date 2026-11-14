@@ -1,4 +1,5 @@
 {
   "stack": "typescript",
-  "ignore": [".workflow/*"]
+  "ignore": [".workflow/*"],
+  "documentation": ["/PUBLISH.md"]
 }

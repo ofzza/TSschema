@@ -26,8 +26,11 @@ $ npm install @ofzza/tsschema --save
 
 # Usage
 
-> **See it in action:** [`src/_showcase.test.ts`](src/_showcase.test.ts) walks through every example below as a runnable, type checked test file. Open it
-> in an editor with twoslash query support (e.g. VS Code with the `orta.vscode-twoslash-queries` extension) to see every inferred type live.
+> **See it in action:** in [this documentation's showroom](https://ofzza.github.io/tsschema/), the examples below run live, each logging its results,
+> and are type checked (all but the code generation ones, which need generated files): a line marked "This will fail at compile time" is preceded by `// @ts-expect-error`, which itself fails the
+> check if the line compiles. [`src/_showcase.test.ts`](src/_showcase.test.ts) walks through the same examples as a runnable, type checked test file,
+> asserting every result. Open it in an editor with twoslash query support (e.g. VS Code with the `orta.vscode-twoslash-queries` extension) to see
+> every inferred type live.
 
 `TSschema` works off of a JSON schema whose literal types are kept, such as a schema declared `as const`, and offers:
 
@@ -48,10 +51,10 @@ A few terms used below:
 - A **constraint** is a validation keyword limiting the values of a type (`minimum`, `maxLength`, `format`, `maxItems`, ...), and an **annotation** a
   keyword describing a fragment (`title`, `description`, `default`, ...) or one of its **decorators**, listed by the `x-decorators` vendor keyword.
 
-The examples below all use this schema:
+The examples below all use this schema, kept in `schema.ts` next to them:
 
-```ts
-const schema = {
+```ts showcase file=schema.ts
+export const schema = {
   $defs: {
     Person: {
       type: 'object',
@@ -66,7 +69,7 @@ const schema = {
     Role: { enum: ['student', 'teacher'] },
   },
 } as const;
-type Schema = typeof schema;
+export type Schema = typeof schema;
 ```
 
 ## Runtime reflection
@@ -78,11 +81,14 @@ schema it reflects, so names are checked and value types inferred, exactly as by
 
 `reflect` reflects a schema's root. For a collection, it gives access to the collection's definitions by name:
 
-```ts
+```ts showcase=ts
 import { reflect } from '@ofzza/tsschema';
+import { schema } from './schema.js';
 
 const root = reflect(schema); // This will work
 const definitionNames = root.definitionNames; // ['Person', 'Role']
+
+console.log(definitionNames);
 ```
 
 ### Definitions
@@ -90,11 +96,19 @@ const definitionNames = root.definitionNames; // ['Person', 'Role']
 `getDefinition(name)` reflects a definition of the collection, from any reflection of the same schema. The name is checked against the collection, and
 `Type` (used as `typeof reflection.Type`, it holds no value) infers the definition's value type:
 
-```ts
+```ts showcase=ts
+import { reflect } from '@ofzza/tsschema';
+import { schema } from './schema.js';
+
+const root = reflect(schema);
+
 const person = root.getDefinition('Person'); // This will work
 const personName = person.name; // 'Person'
 type PersonValue = typeof person.Type; // { name: string; age: number; role: 'student' | 'teacher'; mentor?: PersonValue | null }
-const teacher = root.getDefinition('Teacher'); // This will fail at compile time
+// @ts-expect-error This will fail at compile time
+const teacher = root.getDefinition('Teacher');
+
+console.log(personName);
 ```
 
 ### Properties and paths
@@ -102,7 +116,12 @@ const teacher = root.getDefinition('Teacher'); // This will fail at compile time
 `getProperty(name)` reflects a property of a model, and `getProperty(path)` a property of a nested model. A property reflection knows its `name`, its
 `parent` (the reflection it was looked up from, or for a path the property the path leads through) and whether it is `required` by its model:
 
-```ts
+```ts showcase=ts
+import { reflect } from '@ofzza/tsschema';
+import { schema } from './schema.js';
+
+const person = reflect(schema).getDefinition('Person');
+
 const propertyNames = person.propertyNames; // ['name', 'age', 'role', 'mentor']
 const personAge = person.getProperty('age'); // This will work
 const ageRequired = personAge.required; // true
@@ -112,7 +131,10 @@ const mentorAge = person.getProperty('mentor.age'); // This will work, through t
 const mentor = mentorAge.parent; // the same property as person.getProperty('mentor')
 const mentorRequired = mentor.required; // false
 const nameLength = person.getProperty('name.length'); // undefined, as `name` is not a model
-const email = person.getProperty('email'); // This will fail at compile time
+// @ts-expect-error This will fail at compile time
+const email = person.getProperty('email');
+
+console.log(propertyNames, ageRequired, mentor.name, mentorRequired, nameLength);
 ```
 
 Properties are looked up in every model the reflected part of the schema leads to: through `$ref`s, every member of an `anyOf`, `oneOf` or `allOf` (e.g.
@@ -130,15 +152,19 @@ Every reflection's `typeDescriptor` describes its type at runtime: what `Type` i
 (see [Constraints and annotations](#constraints-and-annotations)). Like everything else, it is typed by the schema, down to its literal kinds, values,
 property names and flags:
 
-```ts
-import type { TSSchemaTypeDescriptor } from '@ofzza/tsschema';
+```ts showcase=ts
+import { reflect, type TSSchemaTypeDescriptor } from '@ofzza/tsschema';
+import { schema } from './schema.js';
+
+const person = reflect(schema).getDefinition('Person');
 
 const personType = person.typeDescriptor; // { kind: 'model', properties: { name: …, age: …, role: …, mentor: … }, required: ['name', 'age', 'role'], constraints: { … }, nullable: false }
 const age = personType.properties.age; // { required: true, type: { kind: 'primitive', type: 'integer', constraints: { minimum: 0, … }, nullable: false }, annotations: { … } }
 const roleType = personType.properties.role.type; // { kind: 'reference', name: 'Role', target: { kind: 'enum', … }, nullable: false }
 const roleNames = roleType.target.names; // ['student', 'teacher']
 const mentorType = personType.properties.mentor.type; // { kind: 'reference', name: 'Person', target: …, nullable: true }
-const emailType = personType.properties.email; // This will fail at compile time
+// @ts-expect-error This will fail at compile time
+const emailType = personType.properties.email;
 
 function typeName(descriptor: TSSchemaTypeDescriptor): string {
   switch (descriptor.kind) {
@@ -152,6 +178,8 @@ function typeName(descriptor: TSSchemaTypeDescriptor): string {
       return descriptor.kind;
   }
 }
+
+console.log(personType.kind, age.required, typeName(age.type), roleType.name, roleNames, mentorType.nullable);
 ```
 
 `null` alongside other types is not described as an alternative but by `nullable`: `type: ['string', 'null']`, `anyOf: [{ type: 'string' }, { type:
@@ -177,10 +205,18 @@ to values of any type (JSON Schema predefines string formats only, but allows cu
 these holds it, a `boolean` nothing else. Every keyword is always there, `undefined` if the schema has none, and a `type` array naming several types
 gives each of them only its own (and `format`):
 
-```ts
+```ts showcase=ts
+import { reflect } from '@ofzza/tsschema';
+import { schema } from './schema.js';
+
+const personType = reflect(schema).getDefinition('Person').typeDescriptor;
+
 const ageConstraints = personType.properties.age.type.constraints; // { minimum: 0, maximum: undefined, …, format: 'int32' }
 const nameConstraints = personType.properties.name.type.constraints; // { minLength: 1, maxLength: undefined, pattern: undefined, … }
-const ageMaxLength = ageConstraints.maxLength; // This will fail at compile time, a number has no `maxLength`
+// @ts-expect-error This will fail at compile time, a number has no `maxLength`
+const ageMaxLength = ageConstraints.maxLength;
+
+console.log(ageConstraints.minimum, ageConstraints.format, nameConstraints.minLength);
 ```
 
 Annotations describe where a fragment is used rather than its type, so they are read from the fragment itself, never through a `$ref` (a property's
@@ -188,12 +224,20 @@ Annotations describe where a fragment is used rather than its type, so they are 
 `title`, `description`, `default`, `deprecated`, `examples` (each `undefined` if the fragment has none) and `decorators` (an empty array if it has
 none). A model's type descriptor holds the `annotations` of each of its properties too:
 
-```ts
+```ts showcase=ts
+import { reflect } from '@ofzza/tsschema';
+import { schema } from './schema.js';
+
+const person = reflect(schema).getDefinition('Person');
+const personType = person.typeDescriptor;
+
 const nameProperty = person.getProperty('name');
 const nameTitle = nameProperty.title; // 'Full name'
 const nameDecorators = nameProperty.decorators; // [{ name: 'Required', arguments: {}, properties: {} }]
 const nameAnnotations = personType.properties.name.annotations; // { title: 'Full name', description: undefined, …, decorators: [{ name: 'Required', … }] }
 const roleTitle = person.getProperty('role').title; // undefined
+
+console.log(nameTitle, nameDecorators, nameAnnotations.title, roleTitle);
 ```
 
 Decorators are listed by the `x-decorators` vendor keyword, as written by the sibling [DotNetSchema](https://github.com/ofzza/DotNetSchema) project
@@ -234,14 +278,17 @@ is missing.
 declared `as const` can be checked against them with `satisfies` without losing its literal types. Apply `satisfies` to the declared constant rather than
 to the object literal itself, so keywords these types do not know about (newer drafts, vendor extensions) are not rejected as excess properties:
 
-```ts
+```ts showcase=ts
 import type { TSSchemaJSONCollection } from '@ofzza/tsschema';
 
 const people = { $defs: { Person: { type: 'object', properties: { name: { type: 'string' } } } } } as const;
 const checkedPeople = people satisfies TSSchemaJSONCollection; // This will work
 
 const invalid = { $defs: { Person: { type: 'text' } } } as const;
-const checkedInvalid = invalid satisfies TSSchemaJSONCollection; // This will fail at compile time
+// @ts-expect-error This will fail at compile time
+const checkedInvalid = invalid satisfies TSSchemaJSONCollection;
+
+console.log(checkedPeople.$defs.Person.properties.name.type);
 ```
 
 ### The tsschema command
@@ -291,6 +338,11 @@ const person: Person = { name: 'Ada', age: 36, role: 'teacher' }; // This will w
 const role: Role = 'principal'; // This will fail at compile time
 const age = reflect(schema).getDefinition('Person').getProperty('age'); // This will work, reflecting the JSON file's content
 ```
+
+For complete generated output, see this repository's test fixtures, generated from [`res/schema.json`](res/schema.json) with `--models` and
+`--enums`: the `sidecar` mode's [`schema.d.json.ts`](res/sidecar/schema.d.json.ts), [`schema.models.ts`](res/sidecar/schema.models.ts) and
+[`schema.enums.ts`](res/sidecar/schema.enums.ts), the `module` mode's [`schema.ts`](res/module/schema.ts), and the `types` mode's
+[`schema.ts`](res/types/schema.ts) with its `as const` object enums (`--enums=object`) in [`schema.enums.ts`](res/types/schema.enums.ts).
 
 Generated files have to be regenerated whenever their JSON file changes, so:
 
@@ -364,7 +416,10 @@ and, for a property, its parent model - so that any `$ref` it contains can be re
 `TSSchemaCollection<TCollection>` wraps a collection. Anywhere a collection is accepted below, its wrapper can be used in its place (and so can any other
 wrapper, standing in for the collection it came from):
 
-```ts
+```ts showcase=ts
+import type { TSSchemaCollection } from '@ofzza/tsschema';
+import type { Schema } from './schema.js';
+
 type People = TSSchemaCollection<Schema>; // This will work
 ```
 
@@ -374,16 +429,25 @@ type People = TSSchemaCollection<Schema>; // This will work
 checked against the collection. A union of names wraps each named definition, and omitting the name wraps every definition, both resulting in a union of
 wrappers:
 
-```ts
+```ts showcase=ts
+import type { TSSchemaCollection, TSSchemaFragment } from '@ofzza/tsschema';
+import type { Schema } from './schema.js';
+
+type People = TSSchemaCollection<Schema>;
+
 type Person = TSSchemaFragment<People, 'Person'>; // This will work
 type PersonOrRole = TSSchemaFragment<Schema, 'Person' | 'Role'>; // This will work
 type AnyFragment = TSSchemaFragment<Schema>; // This will work
-type Teacher = TSSchemaFragment<People, 'Teacher'>; // This will fail at compile time
+// @ts-expect-error This will fail at compile time
+type Teacher = TSSchemaFragment<People, 'Teacher'>;
 ```
 
 `TSSchemaFragment<TFragment>` wraps a fragment given directly. It has no collection to resolve its `$ref`s against:
 
-```ts
+```ts showcase=ts
+import type { TSSchemaFragment } from '@ofzza/tsschema';
+import type { Schema } from './schema.js';
+
 type StandalonePerson = TSSchemaFragment<Schema['$defs']['Person']>; // This will work
 ```
 
@@ -397,12 +461,18 @@ type StandalonePerson = TSSchemaFragment<Schema['$defs']['Person']>; // This wil
 
 Names are checked against the schema. As with `TSSchemaFragment`, a union of names wraps each named property, and omitting the name wraps every property:
 
-```ts
+```ts showcase=ts
+import type { TSSchemaFragment, TSSchemaProperty } from '@ofzza/tsschema';
+import type { Schema } from './schema.js';
+
+type Person = TSSchemaFragment<Schema, 'Person'>;
+
 type PersonName = TSSchemaProperty<Person, 'name'>; // This will work
 type PersonAge = TSSchemaProperty<Schema, 'Person', 'age'>; // This will work
 type StandalonePersonRole = TSSchemaProperty<Schema['$defs']['Person'], 'role'>; // This will work
 type AnyPersonProperty = TSSchemaProperty<Schema, 'Person'>; // This will work
-type PersonEmail = TSSchemaProperty<Person, 'email'>; // This will fail at compile time
+// @ts-expect-error This will fail at compile time
+type PersonEmail = TSSchemaProperty<Person, 'email'>;
 ```
 
 A fragment which is not a model has no properties to wrap. A model given directly with no name is itself wrapped as a property, e.g. for an inline
@@ -413,10 +483,16 @@ exactly as if it had been addressed from it directly. A path goes into a nested 
 `oneOf` or `allOf` (e.g. a nullable reference), through the `items` of an array, and into the `object` or `array` part of a `type` array (e.g. a
 nullable model, `type: ['object', 'null']`):
 
-```ts
+```ts showcase=ts
+import type { TSSchemaFragment, TSSchemaProperty } from '@ofzza/tsschema';
+import type { Schema } from './schema.js';
+
+type Person = TSSchemaFragment<Schema, 'Person'>;
+
 type MentorName = TSSchemaProperty<Person, 'mentor.name'>; // This will work, same as TSSchemaProperty<Schema, 'Person', 'name'>
 type MentorMentorAge = TSSchemaProperty<Schema, 'Person', 'mentor.mentor.age'>; // This will work
-type MentorEmail = TSSchemaProperty<Person, 'email.address'>; // This will fail at compile time
+// @ts-expect-error This will fail at compile time
+type MentorEmail = TSSchemaProperty<Person, 'email.address'>;
 ```
 
 Only a path's first segment is checked at compile time: a recursive schema (`Person.mentor` → `Person`) has infinitely many valid paths, so they can not
@@ -435,11 +511,20 @@ with no `properties`, a `$ref` with no collection to resolve it against, or an a
 It infers direct names only, never dot-separated paths into nested models: a recursive schema (`Person.mentor` → `Person`) has infinitely many of them.
 Paths can still address properties, see [TSSchemaProperty](#tsschemaproperty).
 
-```ts
+```ts showcase=ts
+import type { TSSchemaFragment, TSSchemaProperty, TSSchemaName } from '@ofzza/tsschema';
+import type { Schema } from './schema.js';
+
+type PersonAge = TSSchemaProperty<Schema, 'Person', 'age'>;
+
 type DefinitionName = TSSchemaName<Schema>; // 'Person' | 'Role'
 type PropertyName = TSSchemaName<TSSchemaFragment<Schema, 'Person'>>; // 'name' | 'age' | 'role' | 'mentor'
 type SiblingPropertyName = TSSchemaName<PersonAge>; // 'name' | 'age' | 'role' | 'mentor'
 type RoleName = TSSchemaName<TSSchemaFragment<Schema, 'Role'>>; // never
+
+const definitionName: DefinitionName = 'Person';
+const siblingPropertyName: SiblingPropertyName = 'mentor';
+console.log(definitionName, siblingPropertyName);
 ```
 
 ### TSSchemaType
@@ -460,7 +545,15 @@ A model's properties listed in its `required` keyword are required, and all othe
 infers every property as optional, as does one whose `required` is not a list of literal names. The type of a property itself never includes
 `undefined`: whether it may be missing is up to its model. Here, `mentor` is not listed in `required`:
 
-```ts
+```ts showcase=ts
+import type { TSSchemaFragment, TSSchemaProperty, TSSchemaType } from '@ofzza/tsschema';
+import type { Schema } from './schema.js';
+
+type Person = TSSchemaFragment<Schema, 'Person'>;
+type PersonAge = TSSchemaProperty<Schema, 'Person', 'age'>;
+type MentorMentorAge = TSSchemaProperty<Schema, 'Person', 'mentor.mentor.age'>;
+type StandalonePersonRole = TSSchemaProperty<Schema['$defs']['Person'], 'role'>;
+
 type PersonType = TSSchemaType<Person>; // { name: string; age: number; role: 'student' | 'teacher'; mentor?: PersonType | null }
 type AgeType = TSSchemaType<PersonAge>; // number
 type MentorAgeType = TSSchemaType<MentorMentorAge>; // number
@@ -469,8 +562,12 @@ type UnresolvedRoleType = TSSchemaType<StandalonePersonRole>; // unknown
 type ResolvedRoleType = TSSchemaType<StandalonePersonRole, Schema>; // 'student' | 'teacher'
 
 const ada: PersonType = { name: 'Ada', age: 36, role: 'teacher' }; // This will work
-const nameless: PersonType = { age: 36, role: 'teacher' }; // This will fail at compile time
-const role: RoleType = 'principal'; // This will fail at compile time
+// @ts-expect-error This will fail at compile time
+const nameless: PersonType = { age: 36, role: 'teacher' };
+// @ts-expect-error This will fail at compile time
+const role: RoleType = 'principal';
+
+console.log(ada);
 ```
 
 # Roadmap

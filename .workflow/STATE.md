@@ -2,7 +2,8 @@
 
 ## Next session: start here
 
-Implementation stage, `PLAN.md` › Segment 5: Showroom documentation (approved). Next step: implement its steps 1-8.
+Implementation stage, `PLAN.md` › Segment 5: Showroom documentation, done. Next step: the next segment (see `PLAN.md` › Future segments); once
+`showroom` can present a showcase's code open, revisit the README showcases' presentation.
 
 ## Open questions
 
@@ -32,3 +33,4 @@ Nothing.
   CONTRIBUTE.md.
 - 2026-11-15: Segment 5 spike run (go-ahead "Go ahead"): every premise held; results and draft steps written into `PLAN.md` › Segment 5.
 - 2026-11-15: Segment 5 approved ("Approve").
+- 2026-11-15: Segment 5 implemented; checkpoint approved ("Apply, then commit"), hidden code panes and empty wrapper-only showcases accepted as is.

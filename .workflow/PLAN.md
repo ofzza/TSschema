@@ -64,7 +64,7 @@ Steps 1-7 implemented. Deviations from and additions to the steps above:
 
 None.
 
-## Segment 5: Showroom documentation
+## Segment 5: Showroom documentation (done)
 
 Goal: use `showroom` (`@ofzza/showroom`) to make the README samples live and checked in CI.
 
@@ -82,6 +82,8 @@ Goal: use `showroom` (`@ofzza/showroom`) to make the README samples live and che
   triggers table.
 - `showroom.json` adds `PUBLISH.md` as a documentation page (not `AGENTS.md`).
 - `package.json` `homepage` stays the GitHub URL.
+- (2026-11-15, while implementing) Values and types from earlier samples are re-declared in a short preamble per showcase ("Short preamble"),
+  not shared through more resources.
 
 ### Spike results (2026-11-15)
 
@@ -113,6 +115,14 @@ sidecar-typed fixture), plus a copy-host whose `package.json` is this package's 
    ones (the `people.json` example); add the README showcase conventions (marker, the `@ts-expect-error` idiom, imports, build first); add a
    triggers table row (a README sample change → `npm run ci:showroom`); keep `src/_showcase.test.ts` in step with the showcases.
 8. Check: `npm run ci` green, a sanity break of one showcase fails it, and a look at `npm run showroom`.
+
+### Implementation notes (2026-11-15)
+
+- Steps 1-7 done; the optional `res/sidecar/schema.json` showcase (step 4) was left out, keeping the README on its own schema. 14 showcases,
+  `npm run ci` green; breaking a "will work" line and un-breaking a "will fail" line each fail `ci:showroom` at the right README line.
+- Seen in `npm run showroom`: every showcase logs the expected values, but the showroom starts every code pane hidden, so a sample shows only its
+  (unlabelled) console output until its code button is clicked, and the 5 wrapper-only samples (no logs) show as empty boxes. Raised at the checkpoint: both
+  accepted as is ("Accept as is for now. Showroom will be updated with options to control how the showcase is presented"; "Keep as empty boxes").
 
 ### Open points
 
