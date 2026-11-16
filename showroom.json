@@ -1,7 +1,6 @@
 {
   "stack": "typescript",
   "ignore": [".workflow/*"],
-  "documentation": ["/PUBLISH.md"],
   "navigation": [
     { "title": "TSschema", "path": "/" },
     {
@@ -14,9 +13,6 @@
     },
     { "title": "Development", "path": "/#development" },
     { "title": "Contributing", "path": "CONTRIBUTE.md" },
-    { "title": "Publishing", "path": "PUBLISH.md" },
-    { "title": "License", "path": "LICENSE" },
-    { "title": "npm", "path": "https://www.npmjs.com/package/@ofzza/tsschema" },
-    { "title": "GitHub", "path": "https://github.com/ofzza/TSschema" }
+    { "title": "License", "path": "LICENSE" }
   ]
 }

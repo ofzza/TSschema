@@ -139,7 +139,9 @@ Goal: update `@ofzza/showroom` to `0.1.0-alpha.2`, and use its new features in t
   hidden code panes, with no change to the logging showcases.
 - The 5 wrapper-only type samples get `view=source` ("view=source"): an ordinary code block, still built and type checked, with no empty console.
 - `showroom.json` gets a `navigation` ("Usage sections + links"): the home page, a Usage group of the README's three Usage sections, Development,
-  Contributing, Publishing, License, and npm and GitHub links.
+  Contributing and License. The npm and GitHub links and Publishing
+  it also had were dropped on review (2026-11-16, "We don't need npm and github links in the main menu"; "We also don't need Publishing"), and
+  `PUBLISH.md` is no longer a showroom page ("Not a page any more"), reversing Segment 5's decision on it: its links open it in the code sidebar.
 - Not used: `include=markdown` (shows the raw marker), `showcaseViews` (the `ts` default fits), showcases for the codegen samples (still need
   generated files and `nodenext`).
 

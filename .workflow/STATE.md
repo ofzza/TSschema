@@ -35,3 +35,5 @@ Nothing.
 - 2026-11-15: Segment 5 implemented; checkpoint approved ("Apply, then commit"), hidden code panes and empty wrapper-only showcases accepted as is.
 - 2026-11-16: Segment 6 (showroom 0.1.0-alpha.2) planned and approved ("Approve"; "view=source"; "Usage sections + links").
 - 2026-11-16: Segment 6 implemented; checkpoint approved ("Approve and commit").
+- 2026-11-16: Fast path: npm and GitHub links dropped from the showroom navigation, on review.
+- 2026-11-16: Fast path: Publishing dropped from the showroom navigation, and `PUBLISH.md` from its pages ("Not a page any more").

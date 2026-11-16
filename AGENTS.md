@@ -141,8 +141,8 @@ tsconfig.build.json        Build config, extending tsconfig.json. `rootDir: ./sr
                            EXCLUDES test files (*.test / *.spec / *.test-d / *.spec-d), and res/
 vite.config.ts             Two Vitest projects: unit, and debug (only with VITEST_DEBUG=1)
 showroom.json              Configuration of `showroom` (the `@ofzza/showroom` devDependency), which builds the showroom: the documentation site
-                           of README.md, CONTRIBUTE.md, PUBLISH.md and LICENSE, published to GitHub Pages. Its `navigation` lists the pages, the
-                           README's Usage sections (by heading id: renaming one of those headings needs its entry updated) and npm / GitHub links
+                           of README.md, CONTRIBUTE.md and LICENSE, published to GitHub Pages. Its `navigation` lists the pages, the
+                           README's Usage sections (by heading id: renaming one of those headings needs its entry updated)
 showroom/                  Showroom build output (`npx showroom build`), gitignored
 eslint.config.js           ESLint flat config (typescript-eslint + prettier compat, ignores what .gitignore ignores)
 .prettierrc                Prettier config
