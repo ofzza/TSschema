@@ -4,7 +4,7 @@
 
 Helps generate TS data models, provides TS utility types for deep type inference and provides TS runtime utilities for type reflection, all based off of a JSON schema.
 
-See its showroom, the documentation built by [`showroom`](https://www.npmjs.com/package/@ofzza/showroom): [ofzza.github.io/tsschema](https://ofzza.github.io/tsschema/).
+See its showroom, the documentation built by [`showroom`](https://www.npmjs.com/package/@ofzza/showroom): [ofzza.github.io/TSschema](https://ofzza.github.io/TSschema/).
 
 ---
 
@@ -26,7 +26,7 @@ $ npm install @ofzza/tsschema --save
 
 # Usage
 
-> **See it in action:** in [this documentation's showroom](https://ofzza.github.io/tsschema/), the examples below run live, each shown with what it
+> **See it in action:** in [this documentation's showroom](https://ofzza.github.io/TSschema/), the examples below run live, each shown with what it
 > logs, and are type checked (all but the code generation ones, which need generated files), each showing its "type check" mark: a line marked "This
 > will fail at compile time" is preceded by `// @ts-expect-error`, which itself fails the check if the line compiles. [`src/_showcase.test.ts`](src/_showcase.test.ts) walks through the same examples as a runnable, type checked test file,
 > asserting every result. Open it in an editor with twoslash query support (e.g. VS Code with the `orta.vscode-twoslash-queries` extension) to see
@@ -592,7 +592,7 @@ console.log(ada);
   `res/types/`. Run it after changing a fixture or the code generation; the tests fail while any generated fixture is out of date.
 - `npm test` - runs every `test:*` script.
   - `npm run test:unit` - a single Vitest invocation that executes test files, runs their runtime expectations, and type checks them, reporting type errors as test failures.
-- `npm run showroom` - previews the [showroom](https://ofzza.github.io/tsschema/) (this documentation, built by [`showroom`](https://www.npmjs.com/package/@ofzza/showroom)) locally, updating it as the documentation changes.
+- `npm run showroom` - previews the [showroom](https://ofzza.github.io/TSschema/) (this documentation, built by [`showroom`](https://www.npmjs.com/package/@ofzza/showroom)) locally, updating it as the documentation changes.
 - `npm run ci` - runs every `ci:*` script: build, the showroom check (its configuration, links and showcases), ESLint, Prettier and the tests. This is what GitHub Actions runs on every pull request targeting `master` or `develop` and on every push to either, against Node 22 and 24. It also runs on `prepublishOnly`, so `npm publish` refuses to publish a failing build.
 
 To release a new version, follow the checklist and steps in [PUBLISH.md](PUBLISH.md).

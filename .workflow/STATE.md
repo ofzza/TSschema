@@ -38,3 +38,4 @@ Nothing.
 - 2026-11-16: Fast path: npm and GitHub links dropped from the showroom navigation, on review.
 - 2026-11-16: Fast path: Publishing dropped from the showroom navigation, and `PUBLISH.md` from its pages ("Not a page any more").
 - 2026-11-16: Released `0.1.0-alpha.7` to NPM (dist-tags `alpha` and `latest`), version bump committed and tagged `v0.1.0-alpha.7`.
+- 2026-11-16: Fast path: showroom links fixed to the case-sensitive `ofzza.github.io/TSschema/` (the lowercase path 404s).
