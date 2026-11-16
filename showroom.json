@@ -1,5 +1,22 @@
 {
   "stack": "typescript",
   "ignore": [".workflow/*"],
-  "documentation": ["/PUBLISH.md"]
+  "documentation": ["/PUBLISH.md"],
+  "navigation": [
+    { "title": "TSschema", "path": "/" },
+    {
+      "title": "Usage",
+      "items": [
+        { "title": "Runtime reflection", "path": "/#runtime-reflection" },
+        { "title": "Code generation", "path": "/#code-generation-schemas-from-json-files" },
+        { "title": "Type inference", "path": "/#type-inference" }
+      ]
+    },
+    { "title": "Development", "path": "/#development" },
+    { "title": "Contributing", "path": "CONTRIBUTE.md" },
+    { "title": "Publishing", "path": "PUBLISH.md" },
+    { "title": "License", "path": "LICENSE" },
+    { "title": "npm", "path": "https://www.npmjs.com/package/@ofzza/tsschema" },
+    { "title": "GitHub", "path": "https://github.com/ofzza/TSschema" }
+  ]
 }

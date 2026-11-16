@@ -2,8 +2,7 @@
 
 ## Next session: start here
 
-Implementation stage, `PLAN.md` › Segment 5: Showroom documentation, done. Next step: the next segment (see `PLAN.md` › Future segments); once
-`showroom` can present a showcase's code open, revisit the README showcases' presentation.
+Implementation stage, `PLAN.md` › Segment 6: Showroom 0.1.0-alpha.2, done. Next step: the next segment (see `PLAN.md` › Future segments).
 
 ## Open questions
 
@@ -34,3 +33,5 @@ Nothing.
 - 2026-11-15: Segment 5 spike run (go-ahead "Go ahead"): every premise held; results and draft steps written into `PLAN.md` › Segment 5.
 - 2026-11-15: Segment 5 approved ("Approve").
 - 2026-11-15: Segment 5 implemented; checkpoint approved ("Apply, then commit"), hidden code panes and empty wrapper-only showcases accepted as is.
+- 2026-11-16: Segment 6 (showroom 0.1.0-alpha.2) planned and approved ("Approve"; "view=source"; "Usage sections + links").
+- 2026-11-16: Segment 6 implemented; checkpoint approved ("Approve and commit").

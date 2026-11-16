@@ -26,9 +26,9 @@ $ npm install @ofzza/tsschema --save
 
 # Usage
 
-> **See it in action:** in [this documentation's showroom](https://ofzza.github.io/tsschema/), the examples below run live, each logging its results,
-> and are type checked (all but the code generation ones, which need generated files): a line marked "This will fail at compile time" is preceded by `// @ts-expect-error`, which itself fails the
-> check if the line compiles. [`src/_showcase.test.ts`](src/_showcase.test.ts) walks through the same examples as a runnable, type checked test file,
+> **See it in action:** in [this documentation's showroom](https://ofzza.github.io/tsschema/), the examples below run live, each shown with what it
+> logs, and are type checked (all but the code generation ones, which need generated files), each showing its "type check" mark: a line marked "This
+> will fail at compile time" is preceded by `// @ts-expect-error`, which itself fails the check if the line compiles. [`src/_showcase.test.ts`](src/_showcase.test.ts) walks through the same examples as a runnable, type checked test file,
 > asserting every result. Open it in an editor with twoslash query support (e.g. VS Code with the `orta.vscode-twoslash-queries` extension) to see
 > every inferred type live.
 
@@ -416,7 +416,7 @@ and, for a property, its parent model - so that any `$ref` it contains can be re
 `TSSchemaCollection<TCollection>` wraps a collection. Anywhere a collection is accepted below, its wrapper can be used in its place (and so can any other
 wrapper, standing in for the collection it came from):
 
-```ts showcase=ts
+```ts showcase=ts view=source
 import type { TSSchemaCollection } from '@ofzza/tsschema';
 import type { Schema } from './schema.js';
 
@@ -429,7 +429,7 @@ type People = TSSchemaCollection<Schema>; // This will work
 checked against the collection. A union of names wraps each named definition, and omitting the name wraps every definition, both resulting in a union of
 wrappers:
 
-```ts showcase=ts
+```ts showcase=ts view=source
 import type { TSSchemaCollection, TSSchemaFragment } from '@ofzza/tsschema';
 import type { Schema } from './schema.js';
 
@@ -444,7 +444,7 @@ type Teacher = TSSchemaFragment<People, 'Teacher'>;
 
 `TSSchemaFragment<TFragment>` wraps a fragment given directly. It has no collection to resolve its `$ref`s against:
 
-```ts showcase=ts
+```ts showcase=ts view=source
 import type { TSSchemaFragment } from '@ofzza/tsschema';
 import type { Schema } from './schema.js';
 
@@ -461,7 +461,7 @@ type StandalonePerson = TSSchemaFragment<Schema['$defs']['Person']>; // This wil
 
 Names are checked against the schema. As with `TSSchemaFragment`, a union of names wraps each named property, and omitting the name wraps every property:
 
-```ts showcase=ts
+```ts showcase=ts view=source
 import type { TSSchemaFragment, TSSchemaProperty } from '@ofzza/tsschema';
 import type { Schema } from './schema.js';
 
@@ -483,7 +483,7 @@ exactly as if it had been addressed from it directly. A path goes into a nested 
 `oneOf` or `allOf` (e.g. a nullable reference), through the `items` of an array, and into the `object` or `array` part of a `type` array (e.g. a
 nullable model, `type: ['object', 'null']`):
 
-```ts showcase=ts
+```ts showcase=ts view=source
 import type { TSSchemaFragment, TSSchemaProperty } from '@ofzza/tsschema';
 import type { Schema } from './schema.js';
 

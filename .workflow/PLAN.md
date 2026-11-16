@@ -129,6 +129,34 @@ sidecar-typed fixture), plus a copy-host whose `package.json` is this package's 
 - [x] Spike: does a `ts showcase` importing `@ofzza/tsschema` type check under the root tsconfig, do the `schema.ts` resource import and
       `@ts-expect-error` work, and how long does `ci:showroom` take. Resolved by the spike (2026-11-15), see Spike results.
 
+## Segment 6: Showroom 0.1.0-alpha.2 (done)
+
+Goal: update `@ofzza/showroom` to `0.1.0-alpha.2`, and use its new features in the documentation.
+
+### Decisions (2026-11-16)
+
+- Its `ts` showcases show their code, then their console, by default (`source,console`), with type check status marks: this resolves Segment 5's
+  hidden code panes, with no change to the logging showcases.
+- The 5 wrapper-only type samples get `view=source` ("view=source"): an ordinary code block, still built and type checked, with no empty console.
+- `showroom.json` gets a `navigation` ("Usage sections + links"): the home page, a Usage group of the README's three Usage sections, Development,
+  Contributing, Publishing, License, and npm and GitHub links.
+- Not used: `include=markdown` (shows the raw marker), `showcaseViews` (the `ts` default fits), showcases for the codegen samples (still need
+  generated files and `nodenext`).
+
+### Steps
+
+1. Update the devDependency to `^0.1.0-alpha.2`.
+2. README: `view=source` on the 5 wrapper-only showcases; update the "See it in action" note (code shown, type check marks).
+3. `showroom.json`: the `navigation`.
+4. AGENTS.md: › Verifying README samples (views, `view=source` for samples with nothing to log) and › Layout (`showroom.json`'s navigation).
+5. Check: `npm run ci` green, and a look at the showroom in a browser.
+
+### Implementation notes (2026-11-16)
+
+- Steps 1-5 done as planned. `npm run ci` green, `showroom check --showcases` with no warnings (navigation anchors included). In the browser: the
+  navigation as decided, the logging showcases show their code, then their console, with `build` / `type check` / `runtime` marks, and the 5
+  `view=source` ones a code block with `build` / `type check` marks.
+
 ## Future segments (not planned yet)
 
 From SPEC.md section 4, each to be planned when picked up: value validation, `readOnly` / `writeOnly`, tuples and `additionalProperties`, fuller

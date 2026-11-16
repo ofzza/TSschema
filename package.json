@@ -72,7 +72,7 @@
   "devDependencies": {
     "@eslint/compat": "^2.1.1",
     "@eslint/js": "^10.0.1",
-    "@ofzza/showroom": "^0.1.0-alpha.1",
+    "@ofzza/showroom": "^0.1.0-alpha.2",
     "@ofzza/tsstd": "^0.1.0-alpha.1",
     "@types/node": "^22.20.5",
     "eslint": "^10.11.0",
