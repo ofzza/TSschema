@@ -582,6 +582,11 @@ console.log(ada);
 - **Runtime reflection** - runtime utilities for inspecting the same model, property and path information the utility types infer. Partly
   available: navigating a schema's definitions, properties and paths, and describing their types, see [Runtime reflection](#runtime-reflection).
   Validating values is still to come.
+- **JSON schema versions** - support for the differences between JSON schema drafts, such as `definitions` next to `$defs`, `prefixItems` versus
+  `items` / `additionalItems`, and vendor keywords (`x-decorators`, `x-enumNames`) versus their 2020-12 equivalents. Not available yet: schemas are
+  read as draft-07 with `$defs`.
+- **Multiple files and URLs** - loading a schema from more than one file or URL, synchronously or asynchronously, resolving `$ref`s across them. Not
+  available yet: every `$ref` must point into the same schema's `$defs`.
 
 # Development
 

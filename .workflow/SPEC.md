@@ -87,6 +87,12 @@ a separate `<name>.enums.ts` file re-exported by the main generated file, keepin
 - The `readOnly` and `writeOnly` keywords (in inference and reflection).
 - Tuples and `additionalProperties`, in the type utilities and type descriptors alike.
 - Fuller model generation beyond `--models` type aliases.
+- Support for different JSON schema versions (added 2026-11-17): `definitions` / `#/definitions/` next to `$defs`, the other keywords that
+  differ between drafts (`items` / `additionalItems` vs 2020-12's `prefixItems`, draft 4's boolean `exclusiveMinimum` / `exclusiveMaximum`,
+  `dependencies` vs `dependentRequired` / `dependentSchemas`, …), and vendor keywords (`x-decorators`, `x-enumNames`, …) vs their 2020-12
+  equivalents.
+- Loading a schema from more than one file or URL, synchronously or asynchronously (added 2026-11-17): resolving `$ref`s across files
+  (`other.json#/$defs/X`, `$id`-based URLs).
 
 ## 5. Deliberate non-goals
 
@@ -111,6 +117,11 @@ Small: a focused library (2026-11-04). At most one zero-context review before ea
 - **Enum types vs inferred model types** (section 3). Models keep inferring literal unions; string literals are not assignable to string enums, so
   reading a model's value into a string enum needs a cast. To be probed with `tsc` and documented. Taken by `PLAN.md` › Segment 4.
 - **`export *` silently loses a name** shadowed by a local export, so generated re-exports must be explicit. Taken by `PLAN.md` › Segment 4.
+- **Version detection at type level** (section 4, JSON schema versions). The type layer can only tell drafts apart by the `$schema` literal,
+  which sidecars and `as const` keep, but a plain JSON import widens to `string`; a fallback version is needed then.
+- **Cross-file references at type level** (section 4, loading from several files). Type inference can only follow a `$ref` into another file if
+  every schema is passed to it at compile time; asynchronous loading can only help the runtime layer. Loading files or URLs must also stay out of
+  the browser-safe main entry (as `src/codegen/` does with its own subpath).
 
 ## Open points
 

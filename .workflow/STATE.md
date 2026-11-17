@@ -39,3 +39,5 @@ Nothing.
 - 2026-11-16: Fast path: Publishing dropped from the showroom navigation, and `PUBLISH.md` from its pages ("Not a page any more").
 - 2026-11-16: Released `0.1.0-alpha.7` to NPM (dist-tags `alpha` and `latest`), version bump committed and tagged `v0.1.0-alpha.7`.
 - 2026-11-16: Fast path: showroom links fixed to the case-sensitive `ofzza.github.io/TSschema/` (the lowercase path 404s).
+- 2026-11-17: Two roadmap ideas added to `SPEC.md` § 4 (with two pitfalls), `PLAN.md` › Future segments and the README Roadmap: JSON schema
+  versions, and loading from several files or URLs ("SPEC §4 + README + PLAN"; "Yes, vendor vs 2020-12").
