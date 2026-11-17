@@ -574,6 +574,8 @@ console.log(ada);
 
 `TSschema` is being built towards the following scope, all driven by a single JSON schema describing your data models:
 
+- **Properties without `type: 'object'`** - reading the properties of a schema that has `properties` but no `type: 'object'`, in type inference and
+  runtime reflection alike. Not available yet: such a schema infers `unknown` and has no properties to reflect.
 - **Deep type inference** - utility types inferring model names, property names, property paths and their types directly from the schema, at compile
   time. Partly available, see [Type inference](#type-inference). Property paths address properties (see [TSSchemaProperty](#tsschemaproperty)), while
   [TSSchemaName](#tsschemaname) deliberately infers direct names only, never paths.

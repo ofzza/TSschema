@@ -83,6 +83,9 @@ a separate `<name>.enums.ts` file re-exported by the main generated file, keepin
 
 ## 4. Ideas and wishes (Roadmap, not yet must-haves)
 
+- Reading the properties of a fragment with `properties` but no `type: 'object'` (added 2026-11-18, top of the list), at runtime and at type
+  level. Today it parses to no facets and infers `unknown`, with no properties. How to read it is left open until planned: as a model, or, as
+  JSON Schema means it, as any value that, if it is an object, has those properties.
 - Validating values against a reflected schema.
 - The `readOnly` and `writeOnly` keywords (in inference and reflection).
 - Tuples and `additionalProperties`, in the type utilities and type descriptors alike.

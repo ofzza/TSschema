@@ -161,7 +161,7 @@ Goal: update `@ofzza/showroom` to `0.1.0-alpha.2`, and use its new features in t
 
 ## Future segments (not planned yet)
 
-From SPEC.md section 4, each to be planned when picked up: value validation, `readOnly` / `writeOnly`, tuples and `additionalProperties`, fuller
+From SPEC.md section 4, each to be planned when picked up: `properties` without `type: 'object'` (first), value validation, `readOnly` / `writeOnly`, tuples and `additionalProperties`, fuller
 model generation, support for different JSON schema versions, loading from several files or URLs (sync or async).
 Also: per-layer README pages with live internal showcases (showroom proposal 12, deferred 2026-11-15).
 

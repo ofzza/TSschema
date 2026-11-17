@@ -41,3 +41,5 @@ Nothing.
 - 2026-11-16: Fast path: showroom links fixed to the case-sensitive `ofzza.github.io/TSschema/` (the lowercase path 404s).
 - 2026-11-17: Two roadmap ideas added to `SPEC.md` § 4 (with two pitfalls), `PLAN.md` › Future segments and the README Roadmap: JSON schema
   versions, and loading from several files or URLs ("SPEC §4 + README + PLAN"; "Yes, vendor vs 2020-12").
+- 2026-11-18: Roadmap idea added first to `SPEC.md` § 4, `PLAN.md` › Future segments and the README Roadmap: `properties` without
+  `type: 'object'` ("SPEC §4 + README + PLAN"; "Leave it open").
