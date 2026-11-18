@@ -48,3 +48,4 @@ Nothing.
 - 2026-11-18: Stop and report: a probe file was written to `src/` (Working files) and deleted; resumed ("Pleae resume").
 - 2026-11-18: Segment 7 implemented; notes in `PLAN.md` › Segment 7 › Implementation notes.
 - 2026-11-18: Segment 7 checkpoint approved ("Approve and commit").
+- 2026-11-18: Released `0.1.0-alpha.8` to NPM (dist-tags `alpha` and `latest`), version bump committed.
