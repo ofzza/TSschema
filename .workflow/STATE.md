@@ -2,7 +2,7 @@
 
 ## Next session: start here
 
-Implementation stage, `PLAN.md` › Segment 6: Showroom 0.1.0-alpha.2, done. Next step: the next segment (see `PLAN.md` › Future segments).
+Implementation stage, `PLAN.md` › Segment 7: Showroom 0.1.0-alpha.3, done. Next step: the next segment (see `PLAN.md` › Future segments).
 
 ## Open questions
 
@@ -43,3 +43,8 @@ Nothing.
   versions, and loading from several files or URLs ("SPEC §4 + README + PLAN"; "Yes, vendor vs 2020-12").
 - 2026-11-18: Roadmap idea added first to `SPEC.md` § 4, `PLAN.md` › Future segments and the README Roadmap: `properties` without
   `type: 'object'` ("SPEC §4 + README + PLAN"; "Leave it open").
+- 2026-11-18: Segment 7 (showroom 0.1.0-alpha.3) planned and approved ("Approve as Segment 7"; "--trust in both scripts"; "Split
+  build / deploy"; "Usage schema + res/schema.json").
+- 2026-11-18: Stop and report: a probe file was written to `src/` (Working files) and deleted; resumed ("Pleae resume").
+- 2026-11-18: Segment 7 implemented; notes in `PLAN.md` › Segment 7 › Implementation notes.
+- 2026-11-18: Segment 7 checkpoint approved ("Approve and commit").

@@ -23,7 +23,10 @@ jobs:
       matrix:
         node: [22, 24]
     steps:
+      # No credentials left in the checkout: `npm run ci` runs the repository's code, `showroom` showcases included (`--trust`)
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v7
         with:

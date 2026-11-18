@@ -58,6 +58,7 @@ How agents commit and branch is part of the workflow: see `WORKFLOW.custom.md` �
 src/
   index.ts                 Barrel, re-exports src/schema/ (type-only), and from src/reflection/ `reflect` plus the reflection classes, type
                            descriptor, constraint and annotation types (types only)
+  readme.test.ts           Tests of README.md itself: the `# Usage` schema's JSON diagram (`jsonschema` showcase) equals its `schema.ts`
   _showcase.test.ts        Public showcase, linked from the README: every export, with `// ^?` twoslash queries, plain expected-type comments,
                            AssertTypeEquality checks and `// Breakpoint:` comments. Three top-level `describe`s, one per README Usage `##` section
                            (Runtime reflection, Code generation, Type inference). Imports only the public entry points (./index.js, ./codegen/index.js)
@@ -167,10 +168,15 @@ Convention for new modules: one directory per module under `src/`, each an `inde
 - `npm run fixtures` — builds, then runs `fixtures:prepare` (deletes `res/sidecar/`, `res/module/` and `res/types/`, so removed fixtures leave nothing behind, and copies `res/*.json` into `res/sidecar/`), then the built `tsschema` once per mode: `fixtures:sidecar` over `res/sidecar/*.json`, and `fixtures:module` / `fixtures:types` over `res/*.json` into `res/module/` / `res/types/` (all with `--models --import-from ../../src/index.js`, and `--enums`, `--enums` and `--enums=object` respectively, so both enum forms are covered). The copies exist because a sidecar must sit next to its JSON file; the test also checks that they match `res/*.json`. Run it after changing a fixture or `src/codegen/`; `src/codegen/index.test.ts` fails while any committed fixture differs from what the generator would produce now. Not a `test:`/`ci:` script — CI catches stale fixtures through that test.
 - `npm test` — runs every `test:*` script.
   - `npm run test:unit` — `vitest run --project unit`, a single invocation that both executes tests and type checks them.
-- `npm run showroom` — `showroom serve`: previews the showroom (the documentation site) locally, rebuilding it as the documentation changes.
+- `npm run showroom` — `showroom serve --trust`: previews the showroom (the documentation site) locally, rebuilding it as the documentation changes.
 - `npm run ci` — runs every `ci:*` script: `ci:build`, `ci:showroom`, `ci:eslint`, `ci:prettier`, `ci:test-unit`. This is what GitHub Actions runs.
-  - `ci:showroom` — `showroom check --showcases --quiet`: checks the showroom's configuration, documentation links and showcases, and builds every
-    showcase, failing on any error. It runs after `ci:build`, as showcases importing `@ofzza/tsschema` by name resolve it to `dist/`.
+  - `ci:showroom` — `showroom check --showcases --quiet --trust`: checks the showroom's configuration, documentation links and showcases, and builds
+    every showcase, failing on any error. It runs after `ci:build`, as showcases importing `@ofzza/tsschema` by name resolve it to `dist/`.
+
+Every `showroom` command here passes `--trust`: since `showroom` 0.1.0-alpha.3, it runs a repository's code (its showcases) only when trusted, and
+otherwise asks in a terminal, or, where it can not ask (CI), builds no showcase and still passes — so a missing `--trust` silently stops checking the
+README samples. Trusting adds no exposure in CI, which runs the repository's code anyway (`npm ci`, the tests), with no credentials left in the checkout.
+
 - `npm run prepare` — builds; invoked automatically by a local `npm install`/`npm ci` and before `npm publish`, but **not** when the package is installed as a dependency.
 - `prepublishOnly` — runs `npm run ci` before `npm publish`, so a failing build is never published.
 
@@ -236,6 +242,7 @@ When `README.md` gains code samples, annotate them `// This will work` / `// Thi
 - **Failing lines.** A "will fail" line is preceded by its comment as a `// @ts-expect-error This will fail at compile time` line, rather than ending with it: the expected error then passes the check, and a line which unexpectedly compiles fails it (TS2578, unused directive).
 - **Logging.** A showcase ends with a `console.log` of the values its comments name, focused values rather than whole descriptors (the console panel shows `undefined` as `"[undefined]"`, and a reference's `target` as `"[Circular]"`).
 - **Nothing to log.** A sample declaring only types it can not log (the wrapper samples of Type inference) is a ` ```ts showcase=ts view=source ` block: shown as an ordinary code block with its status marks, never run, but still built and type checked, rather than above an empty console.
+- **Schema diagrams.** A JSON schema is drawn as a class diagram of its definitions by a **`jsonschema` showcase**: a ` ```json showcase=jsonschema ` block (strict JSON), or a link to a `.json` file alone in its paragraph (`[...](res/schema.json 'showcase=jsonschema block')`). The `# Usage` schema has one right after `schema.ts`, repeating it as JSON (the adapter reads no TypeScript), which `src/readme.test.ts` keeps equal to it; `res/schema.json` has one where the code generation section links it. They are drawn by the npm `@ofzza/tsschema` that `showroom` depends on, not by this repository's code (see [Gotchas and known issues](#gotchas-and-known-issues)), so a diagram does not show unreleased changes.
 
 Check the samples which are not showcases by hand, against `tsc --noEmit`: every "will work" line must compile and every "will fail" line must error. Do this whenever such a sample or an exported type changes. The `people.json` example (with the enums one) needs its own directory with `people.json`, its sidecar, `.models.ts` and `.enums.ts` generated by the built `tsschema --models --enums`, and a `package.json` with `"type": "module"` (it is checked under `module: nodenext`). Do it in the session scratch directory (see `WORKFLOW.md` › Working files), outside the repo, with `types: []` (the repo's `types: ["node"]` does not resolve from there).
 
@@ -266,6 +273,7 @@ Enforced by `ci:prettier` and `ci:eslint`, both of which only look at `src` — 
 - **`prepare` builds during install**, so `npm ci` compiles once and `ci:build` compiles again. The duplicate build costs about a second and is accepted.
 - **The real Node floor is 22.13.0 / 24.0.0**, not the bare major versions — imposed by `vitest@5` (`^22.12.0 || ^24.0.0 || >=26.0.0`), `vite@8` (`^20.19.0 || >=22.12.0`) and `eslint-visitor-keys@5` (`^22.13.0 || >=24`). Node 20 is not supported. `actions/setup-node` with `node-version: 22` resolves to the latest 22.x and satisfies this; a pinned older patch would not. There is no `engines` field declaring this.
 - **npm package names must be lowercase.** `@ofzza/TSschema` is rejected for new packages ("name can no longer contain capital letters"); the package is `@ofzza/tsschema`. GitHub URLs are case-insensitive, so `repository`/`homepage` keep `TSschema`. GitHub Pages paths are not: the showroom is only served at `https://ofzza.github.io/TSschema/` (the lowercase path is a 404), so every link to it keeps the repository name's case. The same applies to the `@ofzza/tsstd` devDependency, whose `package.json` name and import specifier must both be lowercase.
+- **`showroom` depends on a published `@ofzza/tsschema`, which npm installs as `node_modules/@ofzza/tsschema`.** The `jsonschema` showcase adapter reads schemas with it. It does not shadow this repository: `'@ofzza/tsschema'` imported from inside the repository still resolves to its own `dist/` through `exports` (package self-reference), under TypeScript (`bundler`), Node and Vite (checked with `showroom` 0.1.0-alpha.3); check again when updating `showroom`, as the two `dist/`s are identical right after a release, so a wrong resolution would not show. Never import that copy, and keep it out of `dependencies`.
 - **`files: ["dist"]` is an allowlist.** Anything else that must ship has to be added there. Check with `npm pack --dry-run`.
 - **The `exports` map seals deep imports.** Only `.`, `./codegen` and `./package.json` resolve, so `@ofzza/tsschema/dist/schema/JSONSchema/index.js` fails under `node16`/`nodenext`/`bundler`. If `JSONSchema/` utilities should become importable by consumers, re-export them from the barrel (or add an `exports` subpath) rather than relying on deep imports.
 - **Do not add a `paths` alias to either tsconfig.** TSC does not rewrite aliased specifiers on emit, so they would ship to `dist/` unresolvable.
@@ -328,7 +336,7 @@ Enforced by `ci:prettier` and `ci:eslint`, both of which only look at `src` — 
 
 `.github/workflows/ci.yml` runs `npm ci && npm run ci` on every pull request targeting `master` or `develop` and on every push to either, across a Node matrix of `[22, 24]` with `fail-fast: false`. In-progress runs are cancelled only for pull requests, never for `master`.
 
-`.github/workflows/showroom.yml` builds the showroom (`npx showroom build`, after `npm ci`) and publishes it to GitHub Pages ([ofzza.github.io/TSschema](https://ofzza.github.io/TSschema/)) on every push to `master`, so it shows the latest release, or when started by hand. It needs one-off GitHub repository settings, listed in `PUBLISH.md` › Showroom on GitHub Pages.
+`.github/workflows/showroom.yml` builds the showroom (`npx showroom build --trust`, after `npm ci`) in a `build` job that can only read the repository (with `persist-credentials: false`), and publishes it from a separate `deploy` job holding the `pages: write` / `id-token: write` permissions, so the repository's code never runs where it could write to Pages. It publishes to GitHub Pages ([ofzza.github.io/TSschema](https://ofzza.github.io/TSschema/)) on every push to `master`, so it shows the latest release, or when started by hand. It needs one-off GitHub repository settings, listed in `PUBLISH.md` › Showroom on GitHub Pages.
 
 **A workflow alone does not block merges.** Making it mandatory requires branch protection on `master` in GitHub repo settings, marking `CI / Node 22` and `CI / Node 24` as required status checks. That is a repo setting, not a file in this repository.
 

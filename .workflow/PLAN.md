@@ -159,6 +159,47 @@ Goal: update `@ofzza/showroom` to `0.1.0-alpha.2`, and use its new features in t
   navigation as decided, the logging showcases show their code, then their console, with `build` / `type check` / `runtime` marks, and the 5
   `view=source` ones a code block with `build` / `type check` marks.
 
+## Segment 7: Showroom 0.1.0-alpha.3 (done)
+
+Goal: update `@ofzza/showroom` to `0.1.0-alpha.3`, keep the showroom building and checking its showcases (its new trust requirement), and use its
+new `jsonschema` showcase adapter to draw the documentation's schemas.
+
+### Decisions (2026-11-18)
+
+- Approved as a plan segment ("Approve as Segment 7").
+- `--trust` in both the `ci:showroom` and `showroom` scripts, and `persist-credentials: false` on `ci.yml`'s checkout ("--trust in both
+  scripts"): without trust, `check --showcases` builds no showcase, so CI would silently stop checking the README samples; CI already runs the
+  repository's code on every pull request (`npm ci`, the tests), with a read-only token and no secrets, so trust adds no new exposure.
+- The Pages workflow is split into a read-only build job (`contents: read`, `persist-credentials: false`, `showroom build --trust`) and a deploy
+  job holding `pages: write` / `id-token: write`, as showroom documents ("Split build / deploy").
+- `jsonschema` diagrams of the Usage schema, as a `json showcase=jsonschema` block after `schema.ts` (its content duplicated as JSON, kept in step
+  by hand and by a test), and of the full fixture `res/schema.json`, linked where the README points to it, if within Mermaid's limits ("Usage
+  schema + res/schema.json"). The diagrams are drawn by the npm `@ofzza/tsschema` showroom bundles, not by this repository's code.
+
+### Steps
+
+1. Update the devDependency to `^0.1.0-alpha.3` (package.json and lockfile).
+2. Check that showcases importing `'@ofzza/tsschema'` still resolve to this repository's `dist/`, not the npm copy showroom now depends on.
+3. `--trust` in `ci:showroom` and `showroom`; `persist-credentials: false` in `ci.yml`; the split `showroom.yml`.
+4. The two `jsonschema` showcases in the README, and a test that the Usage schema's JSON block matches `schema.ts`.
+5. AGENTS.md (› Commands, › Verifying README samples, › Continuous integration), README › Development, CONTRIBUTE.md and PUBLISH.md where they
+   describe the showroom.
+6. Check: `npm run ci` green, `showroom build --trust`, and a look at the diagrams in `npm run showroom`.
+
+### Implementation notes (2026-11-18)
+
+- Steps 1-6 done as planned; `npm run ci` green (807 tests), `showroom check --showcases --trust` with no issues, `showroom build --trust`
+  builds both diagrams (`res/schema.json`'s well within Mermaid's limits).
+- Step 2: npm hoists showroom's `@ofzza/tsschema` 0.1.0-alpha.7 to `node_modules/@ofzza/tsschema`; `'@ofzza/tsschema'` from inside the repository
+  still resolves to its own `dist/` under TypeScript, Node and Vite (checked with probes in working files). Recorded as an `AGENTS.md` gotcha.
+- The test of step 4 is a new `src/readme.test.ts` (tests of `README.md` itself), not part of `src/_showcase.test.ts`, whose top-level
+  `describe`s are the Usage sections. It evaluates `schema.ts`'s object literal and compares it with the parsed JSON block; broken once on purpose
+  to check that it fails.
+- Prettier expands the Usage schema's JSON block to 45 lines in the README; in the showroom it shows as the diagram, its code a click away.
+- `showroom build` refuses an `--out-dir` outside the repository, so it was checked in its default, gitignored `showroom/`.
+- `npm audit`: 16 findings (8 moderate, 8 high) in devDependencies only (picomatch, through vite, vitest and npm-run-all2), none in production;
+  there before this update, not addressed here.
+
 ## Future segments (not planned yet)
 
 From SPEC.md section 4, each to be planned when picked up: `properties` without `type: 'object'` (first), value validation, `readOnly` / `writeOnly`, tuples and `additionalProperties`, fuller

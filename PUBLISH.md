@@ -5,7 +5,7 @@ How to release a new version to [NPM](https://www.npmjs.com/package/@ofzza/tssch
 
 ## Showroom on GitHub Pages
 
-This repository's showroom ([ofzza.github.io/TSschema](https://ofzza.github.io/TSschema/)) is built by [`showroom`](https://www.npmjs.com/package/@ofzza/showroom) from `showroom.json` and published to GitHub Pages by `.github/workflows/showroom.yml`, on every push to `master`, so it shows the latest release. Set it up once, in the GitHub repository's settings:
+This repository's showroom ([ofzza.github.io/TSschema](https://ofzza.github.io/TSschema/)) is built by [`showroom`](https://www.npmjs.com/package/@ofzza/showroom) from `showroom.json` and published to GitHub Pages by `.github/workflows/showroom.yml`, on every push to `master`, so it shows the latest release. The workflow builds it (with `--trust`, running the showcases) in a job that can only read the repository, and deploys it from a second job, the only one allowed to write to Pages. Set it up once, in the GitHub repository's settings:
 
 - [ ] **Settings › Pages › Build and deployment › Source** is "GitHub Actions".
 - [ ] **Settings › Environments › `github-pages` › Deployment branches and tags** allows `master`. GitHub only lets the default branch (`develop`) deploy to this environment, so without it the deployment fails with "Branch "master" is not allowed to deploy to github-pages due to environment protection rules". The environment appears once Pages is set up.

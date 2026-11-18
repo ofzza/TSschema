@@ -72,6 +72,52 @@ export const schema = {
 export type Schema = typeof schema;
 ```
 
+The same schema as JSON, drawn as a diagram of its definitions in [this documentation's showroom](https://ofzza.github.io/TSschema/):
+
+```json showcase=jsonschema
+{
+  "$defs": {
+    "Person": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Full name",
+          "minLength": 1,
+          "x-decorators": [
+            {
+              "name": "Required"
+            }
+          ]
+        },
+        "age": {
+          "type": "integer",
+          "minimum": 0,
+          "format": "int32"
+        },
+        "role": {
+          "$ref": "#/$defs/Role"
+        },
+        "mentor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Person"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["name", "age", "role"]
+    },
+    "Role": {
+      "enum": ["student", "teacher"]
+    }
+  }
+}
+```
+
 ## Runtime reflection
 
 `reflect(schema)` reflects a schema, from which its definitions and their properties are reflected in turn. Each reflection is typed by the part of the
@@ -344,6 +390,8 @@ For complete generated output, see this repository's test fixtures, generated fr
 [`schema.enums.ts`](res/sidecar/schema.enums.ts), the `module` mode's [`schema.ts`](res/module/schema.ts), and the `types` mode's
 [`schema.ts`](res/types/schema.ts) with its `as const` object enums (`--enums=object`) in [`schema.enums.ts`](res/types/schema.enums.ts).
 
+[`res/schema.json`](res/schema.json 'showcase=jsonschema block')
+
 Generated files have to be regenerated whenever their JSON file changes, so:
 
 - run `tsschema generate` before building or type checking (e.g. from a `prebuild` npm script), or keep `tsschema generate --watch` running while
@@ -599,7 +647,8 @@ console.log(ada);
   `res/types/`. Run it after changing a fixture or the code generation; the tests fail while any generated fixture is out of date.
 - `npm test` - runs every `test:*` script.
   - `npm run test:unit` - a single Vitest invocation that executes test files, runs their runtime expectations, and type checks them, reporting type errors as test failures.
-- `npm run showroom` - previews the [showroom](https://ofzza.github.io/TSschema/) (this documentation, built by [`showroom`](https://www.npmjs.com/package/@ofzza/showroom)) locally, updating it as the documentation changes.
+- `npm run showroom` - previews the [showroom](https://ofzza.github.io/TSschema/) (this documentation, built by [`showroom`](https://www.npmjs.com/package/@ofzza/showroom)) locally, updating it as the documentation changes. It runs with
+  `--trust`, as building the showcases runs this repository's code.
 - `npm run ci` - runs every `ci:*` script: build, the showroom check (its configuration, links and showcases), ESLint, Prettier and the tests. This is what GitHub Actions runs on every pull request targeting `master` or `develop` and on every push to either, against Node 22 and 24. It also runs on `prepublishOnly`, so `npm publish` refuses to publish a failing build.
 
 To release a new version, follow the checklist and steps in [PUBLISH.md](PUBLISH.md).
