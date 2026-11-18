@@ -14,7 +14,7 @@ Nothing.
 
 ## Running
 
-Nothing.
+- `npm run showroom` (`showroom serve --trust`) at http://localhost:5175/, for review of Segment 7's diagrams (2026-11-18).
 
 ## History
 
